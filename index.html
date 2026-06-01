@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan v0.01</title>
+<title>Chilbi Herrliberg – Schichtplan v0.02</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ── RESET & BASE ─────────────────────────────────────────── */
@@ -440,7 +440,7 @@ body {
   <div class="hero-inner container">
     <h1>Chilbi <span>Herrliberg</span></h1>
     <div class="hero-sub">Schichtplanung &amp; Anmeldung</div>
-    <div style="font-size:.72rem;opacity:.4;margin-top:6px;letter-spacing:.08em">v0.01</div>
+    <div style="font-size:.72rem;opacity:.4;margin-top:6px;letter-spacing:.08em">v0.02</div>
     <div class="hero-dates" id="heroDates"></div>
   </div>
 </div>
@@ -516,29 +516,45 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function loadData() {
+  const el = document.getElementById('loadingState');
   try {
     const r = await fetch(`${SCRIPT_URL}?action=all&_=${Date.now()}`);
-    const d = await r.json();
-    CONFIG  = d.config  || [];
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const text = await r.text();
+    let d;
+    try { d = JSON.parse(text); } catch(pe) { throw new Error('Ungültige Antwort vom Server: ' + text.slice(0,120)); }
+    // Normalisiere "Max Personen" → "MaxPersonen" (falls Sheet-Header Leerzeichen hat)
+    CONFIG  = (d.config || []).map(row => {
+      if (row['Max Personen'] !== undefined && row.MaxPersonen === undefined) {
+        row.MaxPersonen = row['Max Personen'];
+      }
+      return row;
+    });
     SIGNUPS = d.signups || [];
+    if (el) el.remove();
     buildUI();
   } catch(e) {
-    document.getElementById('loadingState').innerHTML =
-      '<div style="color:var(--red)">Fehler beim Laden. Bitte Seite neu laden.</div>';
+    if (el) el.innerHTML = `<div style="color:var(--red);font-size:.95rem">
+      ⚠ Fehler beim Laden:<br><code style="font-size:.8rem">${e.message}</code><br><br>
+      <button onclick="loadData()" style="padding:8px 18px;background:var(--gold);color:white;border:none;border-radius:8px;cursor:pointer;font-family:inherit">↺ Nochmals versuchen</button>
+    </div>`;
   }
 }
 
 // ── BUILD UI ──────────────────────────────────────────────────
 function buildUI() {
-  document.getElementById('loadingState').remove?.() ||
-    (document.getElementById('loadingState').style.display = 'none');
-
   // Days
   const dayMap = {};
   CONFIG.forEach(row => {
     if (!dayMap[row.Tag]) dayMap[row.Tag] = { id: row.Tag, label: row.TagLabel, type: dayType(row.Tag) };
   });
   DAYS = Object.values(dayMap);
+
+  if (!DAYS.length) {
+    document.getElementById('dayPanels').innerHTML =
+      '<div class="empty" style="padding:60px 20px">Noch keine Schichten im Admin erfasst.</div>';
+    return;
+  }
 
   // Hero dates
   const heroDates = document.getElementById('heroDates');
@@ -583,7 +599,7 @@ function buildTimeline(tagId, tagLabel) {
   if (!rows.length) return '<div class="empty">Keine Schichten geplant.</div>';
 
   // Time range
-  const allTimes = rows.flatMap(r => [parseTime(r.Von), parseTime(r.Bis)]);
+  const allTimes = rows.flatMap(r => { const v = parseTime(r.Von); return [v, parseTime(r.Bis, v)]; });
   const minT = Math.min(...allTimes);
   const maxT = Math.max(...allTimes);
   const spanMin = maxT - minT;
@@ -603,8 +619,10 @@ function buildTimeline(tagId, tagLabel) {
 
   const schichtRows = Object.entries(schichtMap).map(([sch, tasks]) => {
     const taskHtml = tasks.map(r => {
-      const leftPct  = ((parseTime(r.Von) - minT) / spanMin * 100).toFixed(2);
-      const widthPct = ((parseTime(r.Bis) - parseTime(r.Von)) / spanMin * 100).toFixed(2);
+      const vonM     = parseTime(r.Von);
+      const bisM     = parseTime(r.Bis, vonM);
+      const leftPct  = ((vonM - minT) / spanMin * 100).toFixed(2);
+      const widthPct = ((bisM - vonM) / spanMin * 100).toFixed(2);
       const color    = colorFor(r);
       const key      = makeKey(tagId, sch, r.Aufgabe);
       const taken    = signupsFor(tagId, sch, r.Aufgabe);
@@ -773,9 +791,12 @@ function rebuildActivePanel() {
 }
 
 // ── HELPERS ───────────────────────────────────────────────────
-function parseTime(t) {
+function parseTime(t, vonMinutes) {
   const [h, m] = String(t).split(':').map(Number);
-  return h * 60 + (m || 0);
+  let mins = h * 60 + (m || 0);
+  // Wenn Bis < Von → Schicht geht über Mitternacht → +24h
+  if (vonMinutes !== undefined && mins <= vonMinutes && mins < 720) mins += 24 * 60;
+  return mins;
 }
 function signupsFor(tag, schicht, aufgabe) {
   return SIGNUPS.filter(s => s.Tag===tag && s.Schicht===schicht && s.Aufgabe===aufgabe);
