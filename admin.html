@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chilbi Admin – Schichtverwaltung v0.01</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink:    #1a1208;
+  --paper:  #fdf6e8;
+  --cream:  #f5ead2;
+  --gold:   #c9921a;
+  --red:    #c0392b;
+  --green:  #2e7d32;
+  --border: rgba(26,18,8,.15);
+  --shadow: 0 4px 24px rgba(26,18,8,.10);
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* ── HEADER ───────────────────────────────────────────────── */
+.header {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 20px 28px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+}
+.header-badge {
+  background: var(--gold);
+  color: white;
+  font-size: .72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.header-right { margin-left: auto; display: flex; gap: 10px; }
+
+/* ── LOGIN OVERLAY ─────────────────────────────────────────── */
+.login-overlay {
+  position: fixed; inset: 0;
+  background: var(--paper);
+  z-index: 999;
+  display: flex; align-items: center; justify-content: center;
+}
+.login-box {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 360px;
+  width: 100%;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.login-box h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; margin-bottom: 8px; }
+.login-box p  { opacity: .55; font-size: .88rem; margin-bottom: 24px; }
+.login-box input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+  margin-bottom: 14px;
+  text-align: center;
+  letter-spacing: .15em;
+}
+.login-box input:focus { outline: none; border-color: var(--gold); }
+.login-error { color: var(--red); font-size: .85rem; min-height: 20px; margin-bottom: 8px; }
+
+/* ── CONTAINER ─────────────────────────────────────────────── */
+.container { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+
+/* ── SECTION CARD ──────────────────────────────────────────── */
+.card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 28px;
+  box-shadow: var(--shadow);
+}
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.25rem;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.card-title small { font-family: 'DM Sans', sans-serif; font-size: .8rem; opacity: .45; font-weight: 400; }
+
+/* ── DAY CONFIG ─────────────────────────────────────────────── */
+.day-config {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.day-card {
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  position: relative;
+}
+.day-card.vorbereitung { border-color: #90caf9; background: #f3f8fe; }
+.day-card.anlass       { border-color: #ef9a9a; background: #fef5f5; }
+.day-card.nachbereitung{ border-color: #a5d6a7; background: #f4fbf4; }
+.day-card label { font-size: .8rem; font-weight: 600; display: block; margin-bottom: 4px; opacity: .6; }
+.day-card input, .day-card select {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: .9rem;
+  background: white;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.day-card input:focus, .day-card select:focus { outline: none; border-color: var(--gold); }
+
+/* ── SCHICHT TABLE ─────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .88rem;
+  min-width: 650px;
+}
+thead th {
+  text-align: left;
+  padding: 10px 10px;
+  background: var(--cream);
+  border-bottom: 2px solid var(--border);
+  font-weight: 600;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  opacity: .65;
+  white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--cream); }
+td { padding: 8px 10px; vertical-align: middle; }
+td input, td select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: .88rem;
+  background: transparent;
+  color: var(--ink);
+  transition: border-color .15s;
+}
+td input:hover, td select:hover { border-color: var(--border); background: white; }
+td input:focus, td select:focus { outline: none; border-color: var(--gold); background: white; }
+.td-color input[type=color] { width: 36px; height: 28px; padding: 2px; cursor: pointer; }
+.td-del button {
+  border: none;
+  background: none;
+  color: var(--red);
+  cursor: pointer;
+  font-size: 1.1rem;
+  opacity: .5;
+  transition: opacity .15s;
+}
+.td-del button:hover { opacity: 1; }
+
+/* ── BUTTONS ───────────────────────────────────────────────── */
+.btn {
+  padding: 9px 20px;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: .88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn-sm { padding: 6px 14px; font-size: .82rem; }
+.btn-primary { background: var(--gold); color: white; }
+.btn-primary:hover { background: #b5820f; }
+.btn-secondary { background: var(--cream); color: var(--ink); border: 1px solid var(--border); }
+.btn-secondary:hover { background: #e8dcc4; }
+.btn-success { background: var(--green); color: white; }
+.btn-success:hover { background: #1b5e20; }
+.btn-danger { background: var(--red); color: white; }
+.btn-danger:hover { background: #a93226; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
+/* ── SIGNUP TABLE ──────────────────────────────────────────── */
+.signup-row-me td { font-weight: 500; }
+.filter-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.filter-bar input, .filter-bar select {
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: .88rem;
+}
+.filter-bar input:focus, .filter-bar select:focus { outline: none; border-color: var(--gold); }
+
+/* ── STATS BAR ─────────────────────────────────────────────── */
+.stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.stat {
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 14px 20px;
+  flex: 1;
+  min-width: 130px;
+}
+.stat-num { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; }
+.stat-lbl { font-size: .8rem; opacity: .55; }
+
+/* ── TOAST ─────────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-size: .88rem;
+  font-weight: 500;
+  z-index: 999;
+  transition: transform .3s ease;
+  pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { background: var(--green); }
+.toast.error   { background: var(--red); }
+
+/* Section tabs */
+.admin-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 28px; }
+.admin-tab {
+  padding: 12px 22px;
+  border: none; background: none;
+  font-family: inherit; font-size: .9rem; font-weight: 500;
+  color: var(--ink); opacity: .5; cursor: pointer;
+  border-bottom: 3px solid transparent; margin-bottom: -2px;
+  transition: all .2s;
+}
+.admin-tab:hover { opacity: .8; }
+.admin-tab.active { opacity: 1; border-bottom-color: var(--gold); font-weight: 700; }
+.admin-section { display: none; }
+.admin-section.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <h2>🔐 Admin</h2>
+    <p>Chilbi Herrliberg – Schichtverwaltung</p>
+    <input type="password" id="loginPw" placeholder="Passwort" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-error" id="loginError"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Einloggen</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>Chilbi Herrliberg</h1>
+  <div class="header-badge">Admin</div>
+  <span style="font-size:.75rem;opacity:.45;margin-left:4px">v0.01</span>
+  <div class="header-right">
+    <button class="btn btn-sm btn-secondary" onclick="window.open('index.html','_blank')">→ Signup-Seite</button>
+    <button class="btn btn-sm btn-secondary" onclick="loadData()">↺ Aktualisieren</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ADMIN TABS -->
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="switchSection('schichten')">Schichten verwalten</button>
+    <button class="admin-tab" onclick="switchSection('anmeldungen')">Anmeldungen</button>
+    <button class="admin-tab" onclick="switchSection('uebersicht')">Übersicht</button>
+  </div>
+
+  <!-- ─── SECTION: SCHICHTEN ─────────────────────────────── -->
+  <div class="admin-section active" id="sec-schichten">
+    <div class="card">
+      <div class="card-title">
+        Tage & Schichten
+        <small>Definiere alle Schichten mit Zeit und maximaler Personenzahl</small>
+      </div>
+
+      <div class="table-wrap">
+        <table id="configTable">
+          <thead>
+            <tr>
+              <th>Tag-ID</th>
+              <th>Tag-Bezeichnung</th>
+              <th>Schicht</th>
+              <th>Aufgabe</th>
+              <th>Von</th>
+              <th>Bis</th>
+              <th>Max. Personen</th>
+              <th>Farbe</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="configBody"></tbody>
+        </table>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="addRow()">+ Zeile hinzufügen</button>
+        <button class="btn btn-secondary" onclick="addSampleRows()">+ Vorlage laden</button>
+        <button class="btn btn-success" onclick="saveConfig()">💾 Speichern</button>
+      </div>
+
+      <div style="margin-top:16px;font-size:.82rem;opacity:.5;line-height:1.6">
+        <strong>Tag-ID:</strong> Verwende "V1", "V2" für Vorbereitung, "A1"–"A3" für Anlass, "N1" für Nachbereitung.<br>
+        <strong>Schicht:</strong> z.B. "Morgen", "Nachmittag", "Abend" – gruppiert die Aufgaben visuell.<br>
+        <strong>Aufgabe:</strong> Konkrete Tätigkeit, z.B. "Kasse", "Festwirtschaft", "Aufbau".
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION: ANMELDUNGEN ───────────────────────────── -->
+  <div class="admin-section" id="sec-anmeldungen">
+    <div class="stats" id="statsBar"></div>
+    <div class="card">
+      <div class="card-title">Alle Anmeldungen</div>
+      <div class="filter-bar">
+        <input type="text" id="filterName" placeholder="Name suchen…" oninput="renderSignups()">
+        <select id="filterTag" onchange="renderSignups()"><option value="">Alle Tage</option></select>
+        <select id="filterSchicht" onchange="renderSignups()"><option value="">Alle Schichten</option></select>
+        <button class="btn btn-sm btn-secondary" onclick="exportCSV()">⬇ CSV Export</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Datum</th><th>Name</th><th>E-Mail</th><th>Tag</th><th>Schicht</th><th>Aufgabe</th><th>Bemerkung</th>
+            </tr>
+          </thead>
+          <tbody id="signupBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION: ÜBERSICHT ─────────────────────────────── -->
+  <div class="admin-section" id="sec-uebersicht">
+    <div class="card">
+      <div class="card-title">Belegungsübersicht</div>
+      <div id="overviewContent"></div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz8UhuqtmDLOX7hFmyWkk6FhX9uT4E2IFsJs-PjN-hUHmjUXrHeuqJc5bvpZwnT-wRT4w/exec'; // ← gleiche URL wie index.html
+const ADMIN_PW   = 'chilbi2025';                   // ← muss zum Apps Script passen
+
+let CONFIG   = [];
+let SIGNUPS  = [];
+let authed   = false;
+
+const PALETTE = [
+  '#c0392b','#1565c0','#2e7d32','#6a1b9a',
+  '#00695c','#e65100','#4527a0','#00838f','#558b2f'
+];
+
+// ── LOGIN ──────────────────────────────────────────────────────
+function doLogin() {
+  const pw = document.getElementById('loginPw').value;
+  if (pw === ADMIN_PW) {
+    authed = true;
+    document.getElementById('loginOverlay').style.display = 'none';
+    loadData();
+  } else {
+    document.getElementById('loginError').textContent = 'Falsches Passwort.';
+  }
+}
+document.getElementById('loginPw').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+// ── LOAD ───────────────────────────────────────────────────────
+async function loadData() {
+  if (!authed) return;
+  try {
+    const r = await fetch(`${SCRIPT_URL}?action=all&_=${Date.now()}`);
+    const d = await r.json();
+    CONFIG  = d.config  || [];
+    SIGNUPS = d.signups || [];
+    renderConfig();
+    renderSignups();
+    renderStats();
+    renderOverview();
+  } catch(e) {
+    showToast('Ladefehler: ' + e.message, 'error');
+  }
+}
+
+// ── SECTION SWITCH ─────────────────────────────────────────────
+function switchSection(id) {
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── CONFIG TABLE ───────────────────────────────────────────────
+function renderConfig() {
+  const tbody = document.getElementById('configBody');
+  tbody.innerHTML = '';
+  CONFIG.forEach((r, i) => addRow(r));
+}
+
+function addRow(data = {}) {
+  const tbody = document.getElementById('configBody');
+  const i = tbody.rows.length;
+  const defaultColors = PALETTE;
+  const color = data.Farbe || defaultColors[i % defaultColors.length];
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input value="${esc(data.Tag||'')}" placeholder="V1 / A1 / N1"></td>
+    <td><input value="${esc(data.TagLabel||'')}" placeholder="z.B. Samstag 07.06."></td>
+    <td><input value="${esc(data.Schicht||'')}" placeholder="Morgen"></td>
+    <td><input value="${esc(data.Aufgabe||'')}" placeholder="Kasse"></td>
+    <td><input value="${esc(data.Von||'')}" placeholder="08:00" style="width:72px"></td>
+    <td><input value="${esc(data.Bis||'')}" placeholder="12:00" style="width:72px"></td>
+    <td><input type="number" value="${data.MaxPersonen||2}" min="1" max="20" style="width:60px"></td>
+    <td class="td-color"><input type="color" value="${color}"></td>
+    <td class="td-del"><button onclick="this.closest('tr').remove()" title="Löschen">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function addSampleRows() {
+  if (document.getElementById('configBody').rows.length > 0) {
+    if (!confirm('Bestehende Zeilen werden ergänzt. Weitermachen?')) return;
+  }
+  const sample = [
+    // Vorbereitung Tag 1
+    ['V1','Freitag 06.06.','Vormittag','Aufbau Festzelt','08:00','12:00',4,'#1565c0'],
+    ['V1','Freitag 06.06.','Nachmittag','Aufbau Festzelt','13:00','18:00',4,'#1565c0'],
+    ['V1','Freitag 06.06.','Nachmittag','Dekoration','13:00','17:00',3,'#6a1b9a'],
+    // Vorbereitung Tag 2
+    ['V2','Samstag 07.06.','Vormittag','Endaufbau','08:00','11:00',6,'#1565c0'],
+    ['V2','Samstag 07.06.','Vormittag','Küche vorbereiten','08:00','11:00',3,'#e65100'],
+    // Anlass Tag 1
+    ['A1','Sonntag 08.06.','Morgen','Kasse','10:00','14:00',2,'#c0392b'],
+    ['A1','Sonntag 08.06.','Morgen','Festwirtschaft','10:00','14:00',4,'#e65100'],
+    ['A1','Sonntag 08.06.','Morgen','Kinderbetreuung','10:00','13:00',2,'#6a1b9a'],
+    ['A1','Sonntag 08.06.','Abend','Kasse','14:00','20:00',2,'#c0392b'],
+    ['A1','Sonntag 08.06.','Abend','Festwirtschaft','14:00','20:00',4,'#e65100'],
+    ['A1','Sonntag 08.06.','Abend','Bar','16:00','22:00',3,'#00695c'],
+    // Anlass Tag 2
+    ['A2','Montag 09.06.','Morgen','Kasse','10:00','14:00',2,'#c0392b'],
+    ['A2','Montag 09.06.','Morgen','Festwirtschaft','10:00','14:00',4,'#e65100'],
+    ['A2','Montag 09.06.','Abend','Bar','14:00','22:00',3,'#00695c'],
+    ['A2','Montag 09.06.','Abend','Kasse','14:00','20:00',2,'#c0392b'],
+    // Anlass Tag 3
+    ['A3','Dienstag 10.06.','Morgen','Kasse','10:00','14:00',2,'#c0392b'],
+    ['A3','Dienstag 10.06.','Morgen','Festwirtschaft','10:00','14:00',4,'#e65100'],
+    ['A3','Dienstag 10.06.','Abend','Bar','14:00','20:00',3,'#00695c'],
+    ['A3','Dienstag 10.06.','Abend','Kasse','14:00','20:00',2,'#c0392b'],
+    // Nachbereitung
+    ['N1','Mittwoch 11.06.','Ganzer Tag','Abbau Festzelt','08:00','17:00',6,'#2e7d32'],
+    ['N1','Mittwoch 11.06.','Ganzer Tag','Reinigung','08:00','14:00',4,'#558b2f'],
+  ];
+  sample.forEach(r => addRow({
+    Tag: r[0], TagLabel: r[1], Schicht: r[2], Aufgabe: r[3],
+    Von: r[4], Bis: r[5], MaxPersonen: r[6], Farbe: r[7]
+  }));
+  showToast('Vorlage geladen – bitte Daten anpassen und speichern.', 'success');
+}
+
+function readConfigRows() {
+  const rows = [];
+  document.querySelectorAll('#configBody tr').forEach(tr => {
+    const inputs = tr.querySelectorAll('input, select');
+    rows.push({
+      Tag:        inputs[0].value.trim(),
+      TagLabel:   inputs[1].value.trim(),
+      Schicht:    inputs[2].value.trim(),
+      Aufgabe:    inputs[3].value.trim(),
+      Von:        inputs[4].value.trim(),
+      Bis:        inputs[5].value.trim(),
+      MaxPersonen:inputs[6].value.trim(),
+      Farbe:      inputs[7].value
+    });
+  });
+  return rows.filter(r => r.Tag && r.Aufgabe);
+}
+
+async function saveConfig() {
+  const rows = readConfigRows();
+  try {
+    const r = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'saveConfig', password: ADMIN_PW, rows })
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error);
+    CONFIG = rows;
+    showToast('✓ Schichten gespeichert!', 'success');
+    renderOverview();
+  } catch(e) {
+    showToast('Fehler: ' + e.message, 'error');
+  }
+}
+
+// ── SIGNUPS ────────────────────────────────────────────────────
+function renderSignups() {
+  // Populate filter dropdowns
+  const tagSel = document.getElementById('filterTag');
+  const schSel = document.getElementById('filterSchicht');
+  const tags   = [...new Set(SIGNUPS.map(s => s.Tag))];
+  const schs   = [...new Set(SIGNUPS.map(s => s.Schicht))];
+
+  const curTag = tagSel.value;
+  const curSch = schSel.value;
+  tagSel.innerHTML = '<option value="">Alle Tage</option>' + tags.map(t=>`<option value="${esc(t)}" ${t===curTag?'selected':''}>${esc(t)}</option>`).join('');
+  schSel.innerHTML = '<option value="">Alle Schichten</option>' + schs.map(s=>`<option value="${esc(s)}" ${s===curSch?'selected':''}>${esc(s)}</option>`).join('');
+  tagSel.value = curTag;
+  schSel.value = curSch;
+
+  const nameQ = document.getElementById('filterName').value.toLowerCase();
+  const tagQ  = tagSel.value;
+  const schQ  = schSel.value;
+
+  const filtered = SIGNUPS.filter(s =>
+    (!nameQ || s.Name.toLowerCase().includes(nameQ)) &&
+    (!tagQ  || s.Tag === tagQ) &&
+    (!schQ  || s.Schicht === schQ)
+  );
+
+  const tbody = document.getElementById('signupBody');
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;opacity:.4">Keine Einträge</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtered.map(s => `
+    <tr>
+      <td>${formatDate(s.Timestamp)}</td>
+      <td>${esc(s.Name)}</td>
+      <td>${esc(s.Email||'')}</td>
+      <td>${esc(s.Tag)}</td>
+      <td>${esc(s.Schicht)}</td>
+      <td>${esc(s.Aufgabe)}</td>
+      <td>${esc(s.Bemerkung||'')}</td>
+    </tr>
+  `).join('');
+}
+
+function renderStats() {
+  const unique = new Set(SIGNUPS.map(s => s.Name)).size;
+  const totalSlots = CONFIG.reduce((a,r) => a + (parseInt(r.MaxPersonen)||0), 0);
+  const filled     = SIGNUPS.length;
+  const pct        = totalSlots ? Math.round(filled / totalSlots * 100) : 0;
+
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat"><div class="stat-num">${SIGNUPS.length}</div><div class="stat-lbl">Anmeldungen total</div></div>
+    <div class="stat"><div class="stat-num">${unique}</div><div class="stat-lbl">Helfende Personen</div></div>
+    <div class="stat"><div class="stat-num">${filled} / ${totalSlots}</div><div class="stat-lbl">Plätze belegt</div></div>
+    <div class="stat"><div class="stat-num">${pct}%</div><div class="stat-lbl">Auslastung</div></div>
+  `;
+}
+
+function renderOverview() {
+  const tags = [...new Set(CONFIG.map(r => r.Tag))];
+  let html = '';
+  tags.forEach(tag => {
+    const tagLabel = CONFIG.find(r => r.Tag===tag)?.TagLabel || tag;
+    const rows = CONFIG.filter(r => r.Tag===tag);
+    const schichten = [...new Set(rows.map(r => r.Schicht))];
+    html += `<h3 style="font-family:'Playfair Display',serif;margin:24px 0 12px;font-size:1.1rem">${esc(tagLabel)}</h3>`;
+    schichten.forEach(sch => {
+      html += `<div style="font-size:.78rem;font-weight:700;text-transform:uppercase;opacity:.45;letter-spacing:.06em;margin-bottom:6px">${esc(sch)}</div>`;
+      const tasks = rows.filter(r => r.Schicht===sch);
+      html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">';
+      tasks.forEach(t => {
+        const taken = SIGNUPS.filter(s => s.Tag===tag && s.Schicht===sch && s.Aufgabe===t.Aufgabe);
+        const max   = parseInt(t.MaxPersonen)||1;
+        const pct   = Math.round(taken.length / max * 100);
+        const color = taken.length >= max ? 'var(--green)' : taken.length > 0 ? 'var(--gold)' : '#ccc';
+        html += `
+          <div style="border:1px solid var(--border);border-radius:8px;padding:10px 14px;min-width:180px;background:white">
+            <div style="font-weight:600;font-size:.88rem;margin-bottom:4px">${esc(t.Aufgabe)}</div>
+            <div style="font-size:.75rem;opacity:.5;margin-bottom:8px">${t.Von}–${t.Bis}</div>
+            <div style="height:4px;border-radius:2px;background:#eee;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:${color};border-radius:2px;transition:width .3s"></div>
+            </div>
+            <div style="font-size:.75rem;margin-top:6px;color:${color}">
+              ${taken.length}/${max} ${taken.map(s=>`<span style="opacity:.7">${esc(s.Name)}</span>`).join(', ')}
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+    });
+  });
+  document.getElementById('overviewContent').innerHTML = html || '<div style="opacity:.4;padding:24px">Noch keine Schichten definiert.</div>';
+}
+
+// ── EXPORT ─────────────────────────────────────────────────────
+function exportCSV() {
+  const headers = ['Timestamp','Name','Email','Tag','Schicht','Aufgabe','Bemerkung'];
+  const rows    = SIGNUPS.map(s => headers.map(h => `"${String(s[h]||'').replace(/"/g,'""')}"`).join(','));
+  const csv     = [headers.join(','), ...rows].join('\n');
+  const blob    = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8'});
+  const url     = URL.createObjectURL(blob);
+  const a       = Object.assign(document.createElement('a'), {href:url, download:'chilbi_anmeldungen.csv'});
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── HELPERS ────────────────────────────────────────────────────
+function formatDate(d) {
+  if (!d) return '';
+  try { return new Date(d).toLocaleString('de-CH'); } catch(e) { return d; }
+}
+function esc(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type?' '+type:'');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>
