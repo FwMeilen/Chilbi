@@ -360,11 +360,19 @@ function splashSubmit() {
   localStorage.setItem('chilbi_name', val);
   localStorage.setItem('chilbi_mode', splashMode);
   document.getElementById('nameDisplay').textContent = val;
-  document.getElementById('splash').style.display = 'none';
+  const sp=document.getElementById('splash'); if(sp) sp.remove();
 }
 
 function showSplash() {
-  const splash = document.getElementById('splash');
+  // Splash neu einfügen falls bereits entfernt
+  let splash = document.getElementById('splash');
+  if (!splash) {
+    splash = document.createElement('div');
+    splash.id = 'splash';
+    splash.className = 'splash';
+    splash.innerHTML = document.getElementById('splash-template').innerHTML;
+    document.body.prepend(splash);
+  }
   splash.style.display = 'flex';
   const saved = localStorage.getItem('chilbi_name') || '';
   const mode  = localStorage.getItem('chilbi_mode') || 'ff';
@@ -378,7 +386,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const mode  = localStorage.getItem('chilbi_mode') || 'ff';
   if (saved) {
     document.getElementById('nameDisplay').textContent = saved;
-    document.getElementById('splash').style.display = 'none';
+    const sp=document.getElementById('splash'); if(sp) sp.remove();
     selectOption(mode);
   } else {
     selectOption('ff');
