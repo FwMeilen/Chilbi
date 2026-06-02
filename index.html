@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan v0.08</title>
+<title>Chilbi Herrliberg – Schichtplan v0.09</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -102,7 +102,8 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 
 /* ── TIMELINE ────────────────────────────────────────────── */
 .timeline-wrap{overflow-x:auto;overflow-y:visible;padding-bottom:8px;}
-.timeline{display:grid;grid-template-columns:130px 1fr;min-width:700px;overflow:visible;}
+.timeline{display:grid;grid-template-columns:130px 1fr;overflow:visible;}
+.timeline-track-area{position:relative;}
 .ruler-row{grid-column:1/-1;display:grid;grid-template-columns:130px 1fr;position:sticky;top:0;z-index:10;background:var(--bg3);border-bottom:1px solid var(--gray-mid);}
 .ruler-spacer{background:var(--bg3);}
 .ruler-ticks{position:relative;height:24px;overflow:visible;}
@@ -219,7 +220,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">v0.08</div>
+    <div class="header-version">v0.09</div>
   </div>
 </div>
 <div class="red-stripe"></div>
@@ -292,7 +293,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; v0.08</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; v0.09</div>
 
 <script>
 const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbz8UhuqtmDLOX7hFmyWkk6FhX9uT4E2IFsJs-PjN-hUHmjUXrHeuqJc5bvpZwnT-wRT4w/exec';
@@ -600,18 +601,22 @@ function textColor(hex) {
   return (0.299*r+0.587*g+0.114*b)/255>0.55?'#1a1a1a':'#ffffff';
 }
 
+const PX_PER_MIN = 4; // 4px pro Minute → 1h = 240px
+
 function buildTimeline(day) {
   const rows = day.rows;
   if (!rows.length) return '<div class="empty">Keine Schichten geplant.</div>';
 
   const allTimes = rows.flatMap(r=>{const v=parseTime(r.Von);return[v,parseTime(r.Bis,v)];});
-  const minT=Math.min(...allTimes), maxT=Math.max(...allTimes), spanMin=maxT-minT;
+  const minT=Math.min(...allTimes), maxT=Math.max(...allTimes);
+  const totalPx = (maxT - minT) * PX_PER_MIN;
 
+  // Ruler ticks
   const startH=Math.floor(minT/60), endH=Math.ceil(maxT/60);
   let ticks='';
   for(let h=startH;h<=endH;h++){
-    const pct=((h*60-minT)/spanMin*100).toFixed(3);
-    ticks+=`<div class="hour-tick" style="left:${pct}%">${h%24}:00</div>`;
+    const px=((h*60-minT)*PX_PER_MIN);
+    ticks+=`<div class="hour-tick" style="left:${px}px">${h%24}:00</div>`;
   }
 
   const schichtMap={}, schichtOrder=[];
@@ -625,8 +630,8 @@ function buildTimeline(day) {
     gridRows+=`<div class="schicht-header-row">${esc(sch)}</div>`;
     schichtMap[sch].forEach(r=>{
       const vonM=parseTime(r.Von), bisM=parseTime(r.Bis,vonM);
-      const leftPct=((vonM-minT)/spanMin*100).toFixed(3);
-      const widePct=((bisM-vonM)/spanMin*100).toFixed(3);
+      const leftPx=((vonM-minT)*PX_PER_MIN);
+      const widePx=((bisM-vonM)*PX_PER_MIN);
       const color=r.Farbe||'#CC0000';
       const taken=SIGNUPS.filter(s=>s.Tag===r.Tag);
       const max=parseInt(r.MaxPersonen)||1;
@@ -646,23 +651,23 @@ function buildTimeline(day) {
       const pillsHtml=taken.length?`
         <div class="signup-name-cell" data-tagid="${esc(r.Tag)}"></div>
         <div class="signup-pills-cell" data-tagid="${esc(r.Tag)}">
-          <div style="position:absolute;left:calc(${leftPct}%);display:flex;flex-wrap:wrap;gap:3px;padding-top:1px;">${signupPills}</div>
+          <div style="position:absolute;left:${leftPx}px;display:flex;flex-wrap:wrap;gap:3px;padding-top:1px;">${signupPills}</div>
         </div>`:'';
 
       gridRows+=`
         <div class="task-name-cell" data-tagid="${esc(r.Tag)}">${esc(r.Aufgabe)}</div>
-          <div class="task-track-cell" data-tagid="${esc(r.Tag)}">
-            <div class="task-track">
-              <div class="task-block ${cls}"
-                style="left:${leftPct}%;width:${widePct}%;background:${blockColor};color:${fgColor}"
-                onclick="openPopupByTag('${esc(r.Tag)}')"
-                title="${esc(r.Aufgabe)} | ${esc(r.Von)}–${esc(r.Bis)}">
-                <span class="block-time">${esc(r.Von)}–${esc(r.Bis)}</span>
-                <div class="block-slots">${dots}</div>
-              </div>
+        <div class="task-track-cell" data-tagid="${esc(r.Tag)}" style="width:${totalPx}px;min-width:${totalPx}px;">
+          <div class="task-track" style="width:${totalPx}px;">
+            <div class="task-block ${cls}"
+              style="left:${leftPx}px;width:${widePx}px;background:${blockColor};color:${fgColor}"
+              onclick="openPopupByTag('${esc(r.Tag)}')"
+              title="${esc(r.Aufgabe)} | ${esc(r.Von)}–${esc(r.Bis)}">
+              <span class="block-time">${esc(r.Von)}–${esc(r.Bis)}</span>
+              <div class="block-slots">${dots}</div>
             </div>
           </div>
-          ${pillsHtml}`;
+        </div>
+        ${pillsHtml}`;
     });
   });
 
@@ -670,7 +675,10 @@ function buildTimeline(day) {
     <div class="day-header">${buildDayHeader(day.label)}</div>
     <div class="timeline-wrap">
       <div class="timeline">
-        <div class="ruler-row"><div class="ruler-spacer"></div><div class="ruler-ticks">${ticks}</div></div>
+        <div class="ruler-row">
+          <div class="ruler-spacer"></div>
+          <div class="ruler-ticks" style="width:${totalPx}px;min-width:${totalPx}px;">${ticks}</div>
+        </div>
         ${gridRows}
       </div>
     </div>`;
