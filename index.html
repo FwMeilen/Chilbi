@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan Cl0.008</title>
+<title>Chilbi Herrliberg – Schichtplan Cl0.010</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -260,7 +260,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">Cl0.008</div>
+    <div class="header-version">Cl0.010</div>
   </div>
 </div>
 <div class="red-stripe"></div>
@@ -317,7 +317,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Chilbi Herrliberg &nbsp;·&nbsp; Cl0.008</div>
+<div class="site-footer">© Chilbi Herrliberg &nbsp;·&nbsp; Cl0.010</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -419,7 +419,7 @@ async function fetchSheet(sheetName) {
   // Labels sind leer bei gviz - erste Zeile als Header verwenden
   const firstRow = rows[0];
   const headers = firstRow ? firstRow.c.map(c => c ? String(c.v||'').trim() : '') : [];
-  return rows.slice(1).filter(row => row && row.c && row.c[0] && row.c[0].v).map(row => {
+  return rows.slice(1).filter(row => row && row.c && row.c.some(c => c && c.v != null)).map(row => {
     const obj = {};
     headers.forEach((col, i) => {
       const cell = row.c ? row.c[i] : null;
