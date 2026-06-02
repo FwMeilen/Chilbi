@@ -342,9 +342,7 @@ async function loadData() {
       Name: r.Name, Tag: r.Tag, Schicht: r.Schicht, Aufgabe: r.Aufgabe,
       Timestamp: r.Timestamp
     }));
-    if (el) el.remove();
-    console.log('CONFIG loaded:', CONFIG.length, 'rows');
-    console.log('First row:', JSON.stringify(CONFIG[0]));
+    console.log('CONFIG loaded:', CONFIG.length, 'rows', 'First:', JSON.stringify(CONFIG[0]));
     buildUI();
   } catch(e) {
     if (el) el.innerHTML = `<div style="color:var(--red);padding:2rem;text-align:center">
@@ -356,11 +354,19 @@ async function loadData() {
 
 // ── BUILD UI ──────────────────────────────────────────────────
 function buildUI() {
-  const dayMap = {};
+  const el = document.getElementById('loadingState');
+  if (el) el.remove();
+  // Gruppiere nach TagLabel - ein Tab pro Datum
+  const labelMap = {}, labelOrder = [];
   CONFIG.forEach(row => {
-    if (!dayMap[row.Tag]) dayMap[row.Tag] = { id: row.Tag, label: row.TagLabel, type: dayType(row.Tag) };
+    const lbl = row.TagLabel || row.Tag;
+    if (!labelMap[lbl]) {
+      labelMap[lbl] = { id: lbl, label: lbl, type: dayType(row.Tag), rows: [] };
+      labelOrder.push(lbl);
+    }
+    labelMap[lbl].rows.push(row);
   });
-  DAYS = Object.values(dayMap);
+  DAYS = labelOrder.map(lbl => labelMap[lbl]);
 
   if (!DAYS.length) {
     document.getElementById('dayPanels').innerHTML = `<div class="empty">Noch keine Schichten erfasst. (CONFIG: ${CONFIG.length} Zeilen geladen)</div>`;
@@ -376,7 +382,7 @@ function buildUI() {
 
   document.getElementById('dayPanels').innerHTML = DAYS.map((d, i) => `
     <div class="day-panel ${i===0?'active':''}" id="panel-${i}">
-      ${buildTimeline(d.id, d.label)}
+      ${buildTimeline(d)}
     </div>
   `).join('');
 }
@@ -425,8 +431,9 @@ function switchDay(i) {
 }
 
 // ── TIMELINE ─────────────────────────────────────────────────
-function buildTimeline(tagId, tagLabel) {
-  const rows = CONFIG.filter(r => r.Tag === tagId);
+function buildTimeline(day) {
+  const tagId = day.id; const tagLabel = day.label;
+  const rows = day.rows || [];
   if (!rows.length) return '<div class="empty">Keine Schichten geplant.</div>';
 
   const allTimes = rows.flatMap(r => { const v = parseTime(r.Von); return [v, parseTime(r.Bis, v)]; });
@@ -604,7 +611,7 @@ async function doSign() {
 
 function rebuildActivePanel() {
   const d = DAYS[activeDay];
-  document.getElementById(`panel-${activeDay}`).innerHTML = buildTimeline(d.id, d.label);
+  if (d) document.getElementById(`panel-${activeDay}`).innerHTML = buildTimeline(d);
 }
 
 // ── HELPERS ───────────────────────────────────────────────────
