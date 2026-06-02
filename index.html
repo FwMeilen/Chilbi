@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan Cl0.012</title>
+<title>Chilbi Herrliberg – Schichtplan Cl0.013</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -55,69 +55,21 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 .day-title{font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text3);}
 
 /* ── TIMELINE ────────────────────────────────────────────── */
-/* Outer wrapper scrolls horizontally */
-.timeline-wrap{overflow-x:auto;overflow-y:visible;padding-bottom:8px;position:relative;}
-
-/* Inner fixed-layout grid */
-.timeline{
-  display:grid;
-  /* col 1 = task name (fixed), col 2 = track area */
-  grid-template-columns:130px 1fr;
-  min-width:700px;
-  position:relative;
-}
-
-/* Sticky ruler row spans full width */
-.ruler-row{
-  grid-column:1/-1;
-  display:grid;
-  grid-template-columns:130px 1fr;
-  position:sticky;
-  top:0;
-  z-index:10;
-  background:var(--bg3);
-  border-bottom:1px solid var(--gray-mid);
-}
-.ruler-spacer{background:var(--bg3);}
-.ruler-ticks{position:relative;height:var(--ruler-h);overflow:visible;}
-.hour-tick{position:absolute;font-size:10px;color:var(--text3);border-left:1px solid var(--gray-mid);padding-left:3px;top:5px;white-space:nowrap;}
-
-/* Schicht group */
-.schicht-group{grid-column:1/-1;display:contents;}
-.schicht-header-row{
-  grid-column:1/-1;
-  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;
-  color:var(--gray);padding:8px 0 4px;
-  border-bottom:1px solid var(--gray-mid);margin-bottom:0;
-}
-
-/* Task row: name cell + track cell */
-.task-name-cell{
-  /* sticky left */
-  position:sticky;left:0;z-index:5;
-  background:var(--bg3);
-  display:flex;align-items:center;
-  font-size:12px;font-weight:600;color:var(--text2);
-  padding-right:10px;
-  min-height:44px;
-}
-.task-track-cell{
-  position:relative;
-  height:44px;
-  display:flex;align-items:center;
-}
-.task-track{
-  position:relative;width:100%;height:36px;
-  background:rgba(0,0,0,.04);
-  border:1px solid var(--gray-mid);
-  overflow:visible;
-}
-
-/* Signup pills under block */
-.signup-name-cell{position:sticky;left:0;z-index:5;background:var(--bg3);}
-.signup-pills-cell{padding:2px 0 6px;display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start;}
-.signup-pill{font-size:11px;padding:1px 8px;background:var(--bg2);border:1px solid var(--gray-mid);color:var(--text2);}
-.signup-pill.me{background:var(--black);color:white;border-color:var(--black);}
+.timeline-wrap{overflow-x:auto;padding-bottom:16px;}
+/* Flex-Zeilen: label (sticky) + track */
+.tl-ruler{display:flex;position:sticky;top:0;z-index:10;background:var(--bg3);border-bottom:1px solid var(--gray-mid);}
+.tl-ruler-spacer{flex:0 0 130px;min-width:130px;position:sticky;left:0;z-index:6;background:var(--bg3);}
+.tl-ruler-ticks{flex:0 0 auto;position:relative;height:22px;}
+.hour-tick{position:absolute;font-size:10px;color:var(--text3);border-left:1px solid var(--gray-mid);padding-left:3px;top:4px;white-space:nowrap;}
+.tl-schicht{display:flex;align-items:stretch;min-height:26px;border-bottom:1px solid var(--gray-mid);margin-top:8px;}
+.tl-schicht-label{flex:0 0 130px;min-width:130px;position:sticky;left:0;z-index:5;background:var(--bg3);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gray);display:flex;align-items:center;padding-right:10px;}
+.tl-row{display:flex;align-items:center;min-height:44px;}
+.tl-label{flex:0 0 130px;min-width:130px;position:sticky;left:0;z-index:5;background:var(--bg3);font-size:12px;font-weight:600;color:var(--text2);padding-right:10px;}
+.tl-track{flex:0 0 auto;position:relative;height:36px;background:rgba(0,0,0,.04);border:1px solid var(--gray-mid);}
+/* Namen inline rechts vom Block */
+.tl-names{position:absolute;top:50%;transform:translateY(-50%);display:flex;gap:4px;align-items:center;white-space:nowrap;}
+.signup-pill{font-size:11px;padding:1px 7px;background:rgba(0,0,0,.12);color:inherit;border-radius:2px;font-weight:600;}
+.signup-pill.me{background:rgba(0,0,0,.35);color:white;}
 
 /* ── BLOCK STATES ────────────────────────────────────────── */
 .task-block{
@@ -132,7 +84,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 /* andere: Farbe mit Overlay-Streifen */
 .task-block.andere::after{
   content:'';position:absolute;inset:0;
-  background:repeating-linear-gradient(135deg,rgba(0,0,0,.12) 0px,rgba(0,0,0,.12) 2px,transparent 2px,transparent 6px);
+  background:repeating-linear-gradient(135deg,rgba(0,0,0,.08) 0px,rgba(0,0,0,.08) 2px,transparent 2px,transparent 8px);
   pointer-events:none;
 }
 /* mine: schwarzer Hintergrund */
@@ -277,7 +229,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">Cl0.012</div>
+    <div class="header-version">Cl0.013</div>
   </div>
 </div>
 <div class="red-stripe"></div>
@@ -344,7 +296,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl0.012</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl0.013</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -681,15 +633,17 @@ function switchDay(i) {
 }
 
 // ── TIMELINE ─────────────────────────────────────────────────
+const PX_PER_MIN = 2; // 2px pro Minute = 1h→120px
+
 function buildTimeline(day) {
-  const tagId = day.id; const tagLabel = day.label;
+  const tagLabel = day.label;
   const rows = day.rows || [];
   if (!rows.length) return '<div class="empty">Keine Schichten geplant.</div>';
 
   const allTimes = rows.flatMap(r => { const v = parseTime(r.Von); return [v, parseTime(r.Bis, v)]; });
   const minT = Math.min(...allTimes);
   const maxT = Math.max(...allTimes);
-  const spanMin = maxT - minT;
+  const totalPx = (maxT - minT) * PX_PER_MIN;
 
   const schichtMap = {};
   rows.forEach(r => {
@@ -702,84 +656,70 @@ function buildTimeline(day) {
   const endH   = Math.ceil(maxT / 60);
   let ticks = '';
   for (let h = startH; h <= endH; h++) {
-    const pct = ((h * 60 - minT) / spanMin * 100).toFixed(3);
-    ticks += `<div class="hour-tick" style="left:${pct}%">${(h%24)}:00</div>`;
+    const px = (h * 60 - minT) * PX_PER_MIN;
+    ticks += `<div class="hour-tick" style="left:${px}px">${(h%24)}:00</div>`;
   }
 
-  let gridRows = '';
+  let html = `<div class="tl-ruler">
+    <div class="tl-ruler-spacer"></div>
+    <div class="tl-ruler-ticks" style="width:${totalPx}px">${ticks}</div>
+  </div>`;
 
   Object.entries(schichtMap).forEach(([sch, tasks]) => {
-    gridRows += `<div class="schicht-header-row" style="padding-left:0"><span style="padding-left:0">${esc(sch)}</span></div>`;
+    html += `<div class="tl-schicht">
+      <div class="tl-schicht-label">${esc(sch)}</div>
+      <div style="flex:0 0 auto;width:${totalPx}px;border-bottom:1px solid var(--gray-mid);"></div>
+    </div>`;
 
     tasks.forEach(r => {
-      const vonM    = parseTime(r.Von);
-      const bisM    = parseTime(r.Bis, vonM);
-      const leftPct = ((vonM - minT) / spanMin * 100).toFixed(3);
-      const widePct = ((bisM - vonM) / spanMin * 100).toFixed(3);
-      const color   = r.Farbe || '#CC0000';
-      // Nutze r.Tag (echte ID wie A7, Sa1) für eindeutige Anmeldungs-Zuordnung
-      const rowId   = r.Tag;
-      const taken   = signupsFor(rowId, sch, r.Aufgabe);
-      const max     = parseInt(r.MaxPersonen) || 1;
-      const isFull  = taken.length >= max;
-      const isMine  = myName() && taken.some(s => s.Name === myName());
-      const hasOther= taken.length > 0 && !isMine;
+      const vonM   = parseTime(r.Von);
+      const bisM   = parseTime(r.Bis, vonM);
+      const leftPx = (vonM - minT) * PX_PER_MIN;
+      const widePx = (bisM - vonM) * PX_PER_MIN;
+      const color  = r.Farbe || '#CC0000';
+      const rowId  = r.Tag;
+      const taken  = signupsFor(rowId, sch, r.Aufgabe);
+      const max    = parseInt(r.MaxPersonen) || 1;
+      const isFull = taken.length >= max;
+      const isMine = !!myName() && taken.some(s => s.Name === myName());
+      const hasOther = taken.length > 0 && !isMine;
 
-      let cls = '';
-      let blockColor = color;
-      if      (isMine)  { cls = 'mine'; blockColor = '#1a1a1a'; }
-      else if (isFull)  { cls = 'voll'; blockColor = '#aaa'; }
-      else if (hasOther){ cls = 'andere'; }
+      let cls = '', blockColor = color;
+      if      (isMine)   { cls = 'mine'; blockColor = '#1a1a1a'; }
+      else if (isFull)   { cls = 'voll'; blockColor = '#aaa'; }
+      else if (hasOther) { cls = 'andere'; }
 
       const fgColor = (cls==='mine'||cls==='voll') ? '#ffffff' : textColor(blockColor);
-
       const dots = Array.from({length: max}, (_,i) =>
         `<div class="slot-dot${i < taken.length?' taken':''}"></div>`
       ).join('');
 
-      const signupPills = taken.map(s =>
-        `<span class="signup-pill${s.Name===myName()?' me':''}">${esc(s.Name)}</span>`
+      // Namen inline rechts vom Block
+      const nameStr = taken.map(s =>
+        `<span class="signup-pill${s.Name===myName()?' me':''}" style="color:${fgColor};background:rgba(0,0,0,.2)">${esc(s.Name)}</span>`
       ).join('');
 
-      gridRows += `
-        <div class="task-name-cell">${esc(r.Aufgabe)}</div>
-        <div class="task-track-cell">
-          <div class="task-track">
-            <div class="task-block ${cls}"
-              style="left:${leftPct}%;width:${widePct}%;background:${blockColor};color:${fgColor}"
-              onclick="openPopup('${esc(rowId)}','${esc(sch)}','${esc(r.Aufgabe)}','${esc(r.Von)}','${esc(r.Bis)}',${max},'${esc(r.Informationen||'')}')"
-              title="${esc(r.Aufgabe)} | ${esc(r.Von)}–${esc(r.Bis)}">
-              <span class="block-time">${esc(r.Von)}–${esc(r.Bis)}</span>
-              <div class="block-slots">${dots}</div>
-            </div>
+      html += `<div class="tl-row">
+        <div class="tl-label">${esc(r.Aufgabe)}</div>
+        <div class="tl-track" style="width:${totalPx}px">
+          <div class="task-block ${cls}"
+            style="left:${leftPx}px;width:${widePx}px;background:${blockColor};color:${fgColor}"
+            onclick="openPopup('${esc(rowId)}','${esc(sch)}','${esc(r.Aufgabe)}','${esc(r.Von)}','${esc(r.Bis)}',${max},'${esc(r.Informationen||'')}')"
+            title="${esc(r.Aufgabe)} | ${esc(r.Von)}–${esc(r.Bis)}">
+            <span class="block-time">${esc(r.Von)}–${esc(r.Bis)}</span>
+            <div class="block-slots">${dots}</div>
+            ${taken.length ? `<div class="tl-names">${nameStr}</div>` : ''}
           </div>
         </div>
-      `;
-
-      // Pills row: positioniert unter dem Block
-      if (taken.length) {
-        gridRows += `
-          <div class="signup-name-cell"></div>
-          <div class="signup-pills-cell" style="position:relative;">
-            <div style="position:absolute;left:${leftPct}%;display:flex;flex-wrap:wrap;gap:3px;padding-top:2px;">${signupPills}</div>
-          </div>
-        `;
-      }
+      </div>`;
     });
   });
 
   return `
     <div class="day-header">${buildDayHeader(tagLabel)}</div>
     <div class="timeline-wrap">
-      <div class="timeline">
-        <div class="ruler-row">
-          <div class="ruler-spacer"></div>
-          <div class="ruler-ticks">${ticks}</div>
-        </div>
-        ${gridRows}
-      </div>
-    </div>
-  `;
+      <div style="display:inline-block;min-width:100%">${html}</div>
+    </div>`;
 }
 
 // ── POPUP ─────────────────────────────────────────────────────
