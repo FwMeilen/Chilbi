@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan v0.05</title>
+<title>Chilbi Herrliberg – Schichtplan v0.06</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -14,8 +14,6 @@
   --text:#1a1a1a;--text2:#555;--text3:#888;
   --green:#2d6a1f;--green-light:#eaf3e6;
   --blue:#1565c0;--blue-light:#e3f2fd;
-  --name-bar-h: 46px;
-  --ruler-h: 24px;
 }
 body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--text);min-height:100vh;font-size:14px;}
 
@@ -33,9 +31,10 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 .name-input{height:32px;padding:0 10px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;background:white;color:var(--text);min-width:160px;max-width:220px;border-radius:0;}
 .name-input:focus{outline:none;border-color:var(--black);}
 .name-hint{font-size:11px;color:var(--text3);}
-.legend{margin-left:auto;display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
-.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);}
-.legend-dot{width:10px;height:10px;}
+.btn-refresh{height:30px;padding:0 12px;border:2px solid var(--black);background:var(--bg);color:var(--black);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:inherit;border-radius:0;margin-left:auto;}
+.btn-refresh:hover{background:var(--black);color:white;}
+.btn-refresh.spinning svg{animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
 
 /* ── TABS ────────────────────────────────────────────────── */
 .tabs-wrap{background:var(--bg);border-bottom:2px solid var(--black);width:100%;}
@@ -55,68 +54,27 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 .day-title{font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text3);}
 
 /* ── TIMELINE ────────────────────────────────────────────── */
-/* Outer wrapper scrolls horizontally */
-.timeline-wrap{overflow-x:auto;overflow-y:visible;padding-bottom:8px;position:relative;}
+.timeline-wrap{overflow-x:auto;overflow-y:visible;padding-bottom:8px;}
+.timeline{display:grid;grid-template-columns:130px 1fr;min-width:700px;}
 
-/* Inner fixed-layout grid */
-.timeline{
-  display:grid;
-  /* col 1 = task name (fixed), col 2 = track area */
-  grid-template-columns:130px 1fr;
-  min-width:700px;
-  position:relative;
-}
-
-/* Sticky ruler row spans full width */
-.ruler-row{
-  grid-column:1/-1;
-  display:grid;
-  grid-template-columns:130px 1fr;
-  position:sticky;
-  top:0;
-  z-index:10;
-  background:var(--bg3);
-  border-bottom:1px solid var(--gray-mid);
-}
+/* Sticky ruler */
+.ruler-row{grid-column:1/-1;display:grid;grid-template-columns:130px 1fr;position:sticky;top:0;z-index:10;background:var(--bg3);border-bottom:1px solid var(--gray-mid);}
 .ruler-spacer{background:var(--bg3);}
-.ruler-ticks{position:relative;height:var(--ruler-h);overflow:visible;}
+.ruler-ticks{position:relative;height:24px;overflow:visible;}
 .hour-tick{position:absolute;font-size:10px;color:var(--text3);border-left:1px solid var(--gray-mid);padding-left:3px;top:5px;white-space:nowrap;}
 
-/* Schicht group */
-.schicht-group{grid-column:1/-1;display:contents;}
-.schicht-header-row{
-  grid-column:1/-1;
-  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;
-  color:var(--gray);padding:8px 0 4px;
-  border-bottom:1px solid var(--gray-mid);margin-bottom:0;
-}
+/* Schicht header */
+.schicht-header-row{grid-column:1/-1;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--gray);padding:8px 0 4px;border-bottom:1px solid var(--gray-mid);}
 
-/* Task row: name cell + track cell */
-.task-name-cell{
-  /* sticky left */
-  position:sticky;left:0;z-index:5;
-  background:var(--bg3);
-  display:flex;align-items:center;
-  font-size:12px;font-weight:600;color:var(--text2);
-  padding-right:10px;
-  min-height:44px;
-}
-.task-track-cell{
-  position:relative;
-  height:44px;
-  display:flex;align-items:center;
-}
-.task-track{
-  position:relative;width:100%;height:36px;
-  background:rgba(0,0,0,.04);
-  border:1px solid var(--gray-mid);
-  overflow:visible;
-}
+/* Task cells */
+.task-name-cell{position:sticky;left:0;z-index:5;background:var(--bg3);display:flex;align-items:center;font-size:12px;font-weight:600;color:var(--text2);padding-right:10px;min-height:44px;}
+.task-track-cell{position:relative;height:44px;display:flex;align-items:center;}
+.task-track{position:relative;width:100%;height:36px;background:rgba(0,0,0,.04);border:1px solid var(--gray-mid);overflow:visible;}
 
-/* Signup pills under block */
+/* Signup pills - positioned under block */
 .signup-name-cell{position:sticky;left:0;z-index:5;background:var(--bg3);}
-.signup-pills-cell{padding:2px 0 6px;display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start;}
-.signup-pill{font-size:11px;padding:1px 8px;background:var(--bg2);border:1px solid var(--gray-mid);color:var(--text2);}
+.signup-pills-cell{padding:2px 0 6px;position:relative;}
+.signup-pill{font-size:11px;padding:1px 8px;background:var(--bg2);border:1px solid var(--gray-mid);color:var(--text2);display:inline-block;margin-right:3px;margin-bottom:2px;}
 .signup-pill.me{background:var(--black);color:white;border-color:var(--black);}
 
 /* ── BLOCK STATES ────────────────────────────────────────── */
@@ -127,37 +85,15 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   transition:filter .15s;user-select:none;overflow:hidden;padding:0 8px;
 }
 .task-block:hover{filter:brightness(1.08);}
-
-/* frei: volle Farbe, weisse Schrift (oder schwarz je nach Helligkeit) */
-/* andere: Farbe mit Overlay-Streifen */
-.task-block.andere::after{
-  content:'';position:absolute;inset:0;
-  background:repeating-linear-gradient(135deg,rgba(0,0,0,.12) 0px,rgba(0,0,0,.12) 2px,transparent 2px,transparent 6px);
-  pointer-events:none;
-}
-/* mine: schwarzer Hintergrund */
+.task-block.andere::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(0,0,0,.15) 0px,rgba(0,0,0,.15) 3px,transparent 3px,transparent 8px);pointer-events:none;}
 .task-block.mine{background:var(--black) !important;color:white !important;}
-/* voll: grau, kein Cursor */
 .task-block.voll{background:#aaa !important;cursor:not-allowed;color:white !important;}
 .task-block.voll:hover{filter:none;}
 
 .block-time{font-weight:400;font-size:10px;opacity:.9;}
 .block-slots{display:flex;gap:3px;align-items:center;margin-left:auto;}
-
-/* Slot dots: free = outlined, taken = solid white, contrast on dark */
-.slot-dot{
-  width:8px;height:8px;border-radius:50%;
-  border:2px solid rgba(255,255,255,.8);
-  background:transparent;
-  flex-shrink:0;
-}
-.slot-dot.taken{
-  background:rgba(255,255,255,.95);
-  border-color:rgba(255,255,255,.95);
-}
-/* On dark/mine blocks keep same */
-.task-block.mine .slot-dot{border-color:rgba(255,255,255,.5);}
-.task-block.mine .slot-dot.taken{background:white;border-color:white;}
+.slot-dot{width:8px;height:8px;border-radius:50%;border:2px solid rgba(255,255,255,.85);background:transparent;flex-shrink:0;}
+.slot-dot.taken{background:rgba(255,255,255,.95);border-color:rgba(255,255,255,.95);}
 
 /* ── POPUP ───────────────────────────────────────────────── */
 .popup-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:center;justify-content:center;padding:20px;}
@@ -189,7 +125,6 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 /* ── MISC ────────────────────────────────────────────────── */
 .loading{text-align:center;padding:3rem;color:var(--text3);}
 .loading svg{display:block;margin:0 auto .75rem;animation:spin 1s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
 .empty{text-align:center;padding:3rem;color:var(--text3);font-size:13px;}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--black);color:white;padding:10px 22px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;z-index:999;transition:transform .3s ease;pointer-events:none;}
 .toast.show{transform:translateX(-50%) translateY(0);}
@@ -204,7 +139,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">v0.05</div>
+    <div class="header-version">v0.06</div>
   </div>
 </div>
 <div class="red-stripe"></div>
@@ -214,12 +149,10 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <label for="myName">Dein Name oder Kürzel:</label>
   <input type="text" id="myName" class="name-input" autocomplete="name">
   <span class="name-hint">Name eingeben, dann auf Schicht klicken zum Eintragen.</span>
-  <div class="legend">
-    <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Platz frei</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--black)"></div>Du eingetragen</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--red);opacity:.45"></div>Andere eingetragen</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#aaa"></div>Voll</div>
-  </div>
+  <button class="btn-refresh" id="btnRefresh" onclick="manualRefresh()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+    Aktualisieren
+  </button>
 </div>
 
 <!-- TABS -->
@@ -267,25 +200,26 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Chilbi Herrliberg &nbsp;·&nbsp; v0.05</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; v0.06</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz8UhuqtmDLOX7hFmyWkk6FhX9uT4E2IFsJs-PjN-hUHmjUXrHeuqJc5bvpZwnT-wRT4w/exec';
+const AUTO_REFRESH_MS = 20 * 60 * 1000; // 20 Minuten
 
-let CONFIG  = [];
-let SIGNUPS = [];
-let DAYS    = [];
+let CONFIG   = [];
+let SIGNUPS  = [];
+// DAYS: gruppiert nach Datum/Label – [{label, type, rows:[...CONFIG-Zeilen]}]
+let DAYS     = [];
 let activeDay = 0;
 let currentTarget = null;
+let refreshTimer  = null;
 
-// Automatische Schriftfarbe nach Hintergrundfarbe
+// ── Schriftfarbe automatisch ──────────────────────────────────
 function textColor(hex) {
-  const r = parseInt(hex.slice(1,3),16);
-  const g = parseInt(hex.slice(3,5),16);
-  const b = parseInt(hex.slice(5,7),16);
-  // Relative luminance
-  const lum = (0.299*r + 0.587*g + 0.114*b) / 255;
-  return lum > 0.55 ? '#1a1a1a' : '#ffffff';
+  hex = hex.replace('#','');
+  if (hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
+  const r=parseInt(hex.slice(0,2),16), g=parseInt(hex.slice(2,4),16), b=parseInt(hex.slice(4,6),16);
+  return (0.299*r + 0.587*g + 0.114*b)/255 > 0.55 ? '#1a1a1a' : '#ffffff';
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -298,8 +232,59 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (e.target === document.getElementById('popupOverlay')) closePopup();
   });
   await loadData();
+  scheduleRefresh();
 });
 
+function scheduleRefresh() {
+  if (refreshTimer) clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(async () => {
+    await silentRefresh();
+    scheduleRefresh();
+  }, AUTO_REFRESH_MS);
+}
+
+async function manualRefresh() {
+  const btn = document.getElementById('btnRefresh');
+  btn.classList.add('spinning');
+  await silentRefresh();
+  btn.classList.remove('spinning');
+  scheduleRefresh(); // Reset timer
+}
+
+async function silentRefresh() {
+  // Merke aktiven Tab + Scroll-Position
+  const savedDay    = activeDay;
+  const savedScroll = document.querySelector('.timeline-wrap')?.scrollLeft || 0;
+  try {
+    const r = await fetch(`${SCRIPT_URL}?action=all&_=${Date.now()}`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = JSON.parse(await r.text());
+    CONFIG  = (d.config || []).map(normalizeRow);
+    SIGNUPS = d.signups || [];
+    rebuildDays();
+    // Restore position
+    activeDay = Math.min(savedDay, DAYS.length - 1);
+    document.querySelectorAll('.tab-btn').forEach((b,j) => b.classList.toggle('active', j===activeDay));
+    document.querySelectorAll('.day-panel').forEach((p,j) => p.classList.toggle('active', j===activeDay));
+    // Rebuild active panel
+    const d2 = DAYS[activeDay];
+    if (d2) document.getElementById(`panel-${activeDay}`).innerHTML = buildTimeline(d2);
+    // Restore scroll
+    requestAnimationFrame(() => {
+      const tw = document.querySelector('.day-panel.active .timeline-wrap');
+      if (tw) tw.scrollLeft = savedScroll;
+    });
+  } catch(e) {
+    showToast('Fehler beim Laden', 'error');
+  }
+}
+
+function normalizeRow(row) {
+  if (row['Max Personen'] !== undefined && row.MaxPersonen === undefined) row.MaxPersonen = row['Max Personen'];
+  return row;
+}
+
+// ── LOAD ─────────────────────────────────────────────────────
 async function loadData() {
   const el = document.getElementById('loadingState');
   try {
@@ -308,10 +293,7 @@ async function loadData() {
     const text = await r.text();
     let d;
     try { d = JSON.parse(text); } catch(pe) { throw new Error('Ungültige Antwort: ' + text.slice(0,120)); }
-    CONFIG = (d.config || []).map(row => {
-      if (row['Max Personen'] !== undefined && row.MaxPersonen === undefined) row.MaxPersonen = row['Max Personen'];
-      return row;
-    });
+    CONFIG  = (d.config || []).map(normalizeRow);
     SIGNUPS = d.signups || [];
     if (el) el.remove();
     buildUI();
@@ -323,14 +305,33 @@ async function loadData() {
   }
 }
 
+// ── GROUP DAYS by TagLabel ────────────────────────────────────
+// Jeder Tab = ein eindeutiges TagLabel (Datum)
+// Alle CONFIG-Zeilen mit gleichem TagLabel gehören zum selben Tag
+function rebuildDays() {
+  const labelMap = {};
+  const labelOrder = [];
+  CONFIG.forEach(row => {
+    const lbl = row.TagLabel || row.Tag;
+    if (!labelMap[lbl]) {
+      labelMap[lbl] = { label: lbl, type: dayTypeFromRows(row), rows: [] };
+      labelOrder.push(lbl);
+    }
+    labelMap[lbl].rows.push(row);
+  });
+  DAYS = labelOrder.map(lbl => labelMap[lbl]);
+}
+
+function dayTypeFromRows(row) {
+  const id = row.Tag || '';
+  if (id.startsWith('V')) return 'vorbereitung';
+  if (id.startsWith('N')) return 'nachbereitung';
+  return 'anlass';
+}
+
 // ── BUILD UI ──────────────────────────────────────────────────
 function buildUI() {
-  const dayMap = {};
-  CONFIG.forEach(row => {
-    if (!dayMap[row.Tag]) dayMap[row.Tag] = { id: row.Tag, label: row.TagLabel, type: dayType(row.Tag) };
-  });
-  DAYS = Object.values(dayMap);
-
+  rebuildDays();
   if (!DAYS.length) {
     document.getElementById('dayPanels').innerHTML = '<div class="empty">Noch keine Schichten erfasst.</div>';
     return;
@@ -345,43 +346,39 @@ function buildUI() {
 
   document.getElementById('dayPanels').innerHTML = DAYS.map((d, i) => `
     <div class="day-panel ${i===0?'active':''}" id="panel-${i}">
-      ${buildTimeline(d.id, d.label)}
+      ${buildTimeline(d)}
     </div>
   `).join('');
 }
 
+const WEEKDAYS = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+
 function dayType(id) { return id.startsWith('V')?'vorbereitung':id.startsWith('N')?'nachbereitung':'anlass'; }
 function typeName(t) { return t==='vorbereitung'?'Vorbereitung':t==='nachbereitung'?'Aufräumen':'Chilbi'; }
 
-// Tabs: nur Wochentag anzeigen (kein Datum)
-const WEEKDAYS = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 function tabLabel(label) {
-  // Hat Label bereits einen Wochentag?
   const existing = WEEKDAYS.find(w => label.includes(w));
   if (existing) return existing;
-  // Datum parsen und Wochentag zurückgeben
-  const m = label.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})?/);
+  const m = label.match(/(\d{1,2})\.(\d{1,2})\.(\d{2,4})?/);
   if (m) {
-    const d = new Date(m[3]?parseInt(m[3]):new Date().getFullYear(), parseInt(m[2])-1, parseInt(m[1]));
+    const yr = m[3] ? (m[3].length===2 ? 2000+parseInt(m[3]) : parseInt(m[3])) : new Date().getFullYear();
+    const d  = new Date(yr, parseInt(m[2])-1, parseInt(m[1]));
     if (!isNaN(d.getTime())) return WEEKDAYS[d.getDay()];
   }
-  return label; // Fallback
+  return label;
 }
 
-// Tagesheader: Wochentag gross + Datum darunter (kein Duplikat)
 function buildDayHeader(label) {
-  const m = label.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})?/);
+  const m = label.match(/(\d{1,2})\.(\d{1,2})\.(\d{2,4})?/);
   if (m) {
-    const day   = parseInt(m[1]);
-    const month = parseInt(m[2]) - 1;
-    const year  = m[3] ? parseInt(m[3]) : new Date().getFullYear();
+    const day   = parseInt(m[1]), month = parseInt(m[2])-1;
+    const year  = m[3] ? (m[3].length===2 ? 2000+parseInt(m[3]) : parseInt(m[3])) : new Date().getFullYear();
     const date  = new Date(year, month, day);
     if (!isNaN(date.getTime())) {
-      const wd  = WEEKDAYS[date.getDay()];
+      const wd = WEEKDAYS[date.getDay()];
       const dateStr = `${String(day).padStart(2,'0')}.${String(month+1).padStart(2,'0')}.${year}`;
-      const existing = WEEKDAYS.find(w => label.includes(w));
-      const titleStr = existing ? label : `${wd}, ${dateStr}`;
-      return `<div class="day-title">${esc(titleStr)}</div>`;
+      const hasWD = WEEKDAYS.some(w => label.includes(w));
+      return `<div class="day-title">${esc(hasWD ? label : wd+', '+dateStr)}</div>`;
     }
   }
   return `<div class="day-title">${esc(label)}</div>`;
@@ -394,62 +391,75 @@ function switchDay(i) {
 }
 
 // ── TIMELINE ─────────────────────────────────────────────────
-function buildTimeline(tagId, tagLabel) {
-  const rows = CONFIG.filter(r => r.Tag === tagId);
+// day = {label, type, rows:[...]}
+function buildTimeline(day) {
+  const rows = day.rows;
   if (!rows.length) return '<div class="empty">Keine Schichten geplant.</div>';
 
-  const allTimes = rows.flatMap(r => { const v = parseTime(r.Von); return [v, parseTime(r.Bis, v)]; });
-  const minT = Math.min(...allTimes);
-  const maxT = Math.max(...allTimes);
+  const allTimes = rows.flatMap(r => { const v=parseTime(r.Von); return [v, parseTime(r.Bis,v)]; });
+  const minT = Math.min(...allTimes), maxT = Math.max(...allTimes);
   const spanMin = maxT - minT;
 
+  // Ticks
+  const startH = Math.floor(minT/60), endH = Math.ceil(maxT/60);
+  let ticks = '';
+  for (let h=startH; h<=endH; h++) {
+    const pct = ((h*60-minT)/spanMin*100).toFixed(3);
+    ticks += `<div class="hour-tick" style="left:${pct}%">${h%24}:00</div>`;
+  }
+
+  // Group by Schicht (within this day)
   const schichtMap = {};
+  const schichtOrder = [];
   rows.forEach(r => {
-    if (!schichtMap[r.Schicht]) schichtMap[r.Schicht] = [];
+    if (!schichtMap[r.Schicht]) { schichtMap[r.Schicht]=[]; schichtOrder.push(r.Schicht); }
     schichtMap[r.Schicht].push(r);
   });
 
-  // Ruler ticks
-  const startH = Math.floor(minT / 60);
-  const endH   = Math.ceil(maxT / 60);
-  let ticks = '';
-  for (let h = startH; h <= endH; h++) {
-    const pct = ((h * 60 - minT) / spanMin * 100).toFixed(3);
-    ticks += `<div class="hour-tick" style="left:${pct}%">${(h%24)}:00</div>`;
-  }
-
   let gridRows = '';
-
-  Object.entries(schichtMap).forEach(([sch, tasks]) => {
-    gridRows += `<div class="schicht-header-row" style="padding-left:0"><span style="padding-left:0">${esc(sch)}</span></div>`;
-
-    tasks.forEach(r => {
+  schichtOrder.forEach(sch => {
+    gridRows += `<div class="schicht-header-row">${esc(sch)}</div>`;
+    schichtMap[sch].forEach(r => {
       const vonM    = parseTime(r.Von);
       const bisM    = parseTime(r.Bis, vonM);
-      const leftPct = ((vonM - minT) / spanMin * 100).toFixed(3);
-      const widePct = ((bisM - vonM) / spanMin * 100).toFixed(3);
+      const leftPct = ((vonM-minT)/spanMin*100).toFixed(3);
+      const widePct = ((bisM-vonM)/spanMin*100).toFixed(3);
       const color   = r.Farbe || '#CC0000';
-      const taken   = signupsFor(tagId, sch, r.Aufgabe);
-      const max     = parseInt(r.MaxPersonen) || 1;
-      const isFull  = taken.length >= max;
-      const isMine  = myName() && taken.some(s => s.Name === myName());
-      const hasOther= taken.length > 0 && !isMine;
 
-      let cls = '';
-      let blockColor = color;
-      if      (isMine)  { cls = 'mine'; blockColor = '#1a1a1a'; }
-      else if (isFull)  { cls = 'voll'; blockColor = '#aaa'; }
-      else if (hasOther){ cls = 'andere'; }
+      // ── Zustandslogik: eindeutig per ID (Tag-Spalte) ──────
+      // signupsFor nutzt jetzt nur noch die ID-Spalte (r.Tag = eindeutige ID)
+      const taken  = SIGNUPS.filter(s => s.Tag === r.Tag);
+      const max    = parseInt(r.MaxPersonen) || 1;
+      const isFull = taken.length >= max;
+      const isMine = !!myName() && taken.some(s => s.Name === myName());
+      const hasOther = taken.length > 0 && !isMine;
 
-      const fgColor = (cls==='mine'||cls==='voll') ? '#ffffff' : textColor(blockColor);
+      let cls = '', blockColor = color;
+      if      (isMine)   { cls='mine';  blockColor='#1a1a1a'; }
+      else if (isFull)   { cls='voll';  blockColor='#aaa'; }
+      else if (hasOther) { cls='andere'; }
 
-      const dots = Array.from({length: max}, (_,i) =>
-        `<div class="slot-dot${i < taken.length?' taken':''}"></div>`
+      const fgColor = (cls==='mine'||cls==='voll') ? '#fff' : textColor(blockColor);
+
+      const dots = Array.from({length:max},(_,i)=>
+        `<div class="slot-dot${i<taken.length?' taken':''}"></div>`
       ).join('');
 
-      const signupPills = taken.map(s =>
+      const signupPills = taken.map(s=>
         `<span class="signup-pill${s.Name===myName()?' me':''}">${esc(s.Name)}</span>`
       ).join('');
+
+      // Pills positioned under the block (left aligned with block start)
+      const pillsHtml = taken.length ? `
+        <div class="signup-name-cell"></div>
+        <div class="signup-pills-cell">
+          <div style="position:relative;width:100%;">
+            <div style="position:absolute;left:${leftPct}%;display:flex;flex-wrap:wrap;gap:3px;padding-top:1px;">
+              ${signupPills}
+            </div>
+          </div>
+        </div>
+      ` : '';
 
       gridRows += `
         <div class="task-name-cell">${esc(r.Aufgabe)}</div>
@@ -457,27 +467,20 @@ function buildTimeline(tagId, tagLabel) {
           <div class="task-track">
             <div class="task-block ${cls}"
               style="left:${leftPct}%;width:${widePct}%;background:${blockColor};color:${fgColor}"
-              onclick="openPopup('${esc(tagId)}','${esc(sch)}','${esc(r.Aufgabe)}','${esc(r.Von)}','${esc(r.Bis)}',${max},'${esc(r.Informationen||'')}')"
+              onclick="openPopup(${JSON.stringify(r.Tag)},${JSON.stringify(r.Schicht)},${JSON.stringify(r.Aufgabe)},${JSON.stringify(r.Von)},${JSON.stringify(r.Bis)},${max},${JSON.stringify(r.Informationen||'')})"
               title="${esc(r.Aufgabe)} | ${esc(r.Von)}–${esc(r.Bis)}">
               <span class="block-time">${esc(r.Von)}–${esc(r.Bis)}</span>
               <div class="block-slots">${dots}</div>
             </div>
           </div>
         </div>
+        ${pillsHtml}
       `;
-
-      // Pills row: only if there are signups
-      if (taken.length) {
-        gridRows += `
-          <div class="signup-name-cell"></div>
-          <div class="signup-pills-cell">${signupPills}</div>
-        `;
-      }
     });
   });
 
   return `
-    <div class="day-header">${buildDayHeader(tagLabel)}</div>
+    <div class="day-header">${buildDayHeader(day.label)}</div>
     <div class="timeline-wrap">
       <div class="timeline">
         <div class="ruler-row">
@@ -491,107 +494,75 @@ function buildTimeline(tagId, tagLabel) {
 }
 
 // ── POPUP ─────────────────────────────────────────────────────
-function openPopup(tag, schicht, aufgabe, von, bis, max, info) {
-  const name = myName();
-  currentTarget = { tag, schicht, aufgabe, von, bis, max };
-  const taken  = signupsFor(tag, schicht, aufgabe);
+function openPopup(tagId, schicht, aufgabe, von, bis, max, info) {
+  const name   = myName();
+  currentTarget = { tagId, schicht, aufgabe, von, bis, max };
+  const taken  = SIGNUPS.filter(s => s.Tag === tagId);
   const isFull = taken.length >= max;
 
   document.getElementById('popupTitle').textContent = 'Schicht eintragen';
-  document.getElementById('popupMeta').textContent  = `${tag} · ${schicht}`;
+  document.getElementById('popupMeta').textContent  = `${aufgabe} · ${von}–${bis}`;
 
-  const fullEl   = document.getElementById('popupFull');
-  const normalEl = document.getElementById('popupNormal');
-  if (isFull) {
-    fullEl.style.display = ''; normalEl.style.display = 'none';
-    document.getElementById('popupOverlay').classList.add('open');
-    return;
-  }
-  fullEl.style.display = 'none'; normalEl.style.display = '';
+  const fullEl=document.getElementById('popupFull'), normalEl=document.getElementById('popupNormal');
+  if (isFull) { fullEl.style.display=''; normalEl.style.display='none'; document.getElementById('popupOverlay').classList.add('open'); return; }
+  fullEl.style.display='none'; normalEl.style.display='';
 
   document.getElementById('popupInfo').innerHTML = `
     <div class="pi-row"><span class="pi-label">Aufgabe</span><span class="pi-value">${esc(aufgabe)}</span></div>
     <div class="pi-row"><span class="pi-label">Zeit</span><span class="pi-value">${esc(von)} – ${esc(bis)}</span></div>
     <div class="pi-row"><span class="pi-label">Belegt</span><span class="pi-value">${taken.length} / ${max}</span></div>
-    ${taken.length ? `<div class="pi-row"><span class="pi-label">Eingetragen</span><span class="pi-value">${taken.map(s=>esc(s.Name)).join(', ')}</span></div>` : ''}
+    ${taken.length?`<div class="pi-row"><span class="pi-label">Eingetragen</span><span class="pi-value">${taken.map(s=>esc(s.Name)).join(', ')}</span></div>`:''}
   `;
 
-  const treffEl = document.getElementById('popupTreffpunkt');
-  if (info && info.trim()) {
-    treffEl.style.display = '';
-    document.getElementById('popupTreffpunktText').textContent = info;
-  } else {
-    treffEl.style.display = 'none';
-  }
+  const treffEl=document.getElementById('popupTreffpunkt');
+  if (info&&info.trim()) { treffEl.style.display=''; document.getElementById('popupTreffpunktText').textContent=info; }
+  else treffEl.style.display='none';
 
-  const nameDisplay = document.getElementById('popupNameDisplay');
-  const nameHint    = document.getElementById('popupNameHint');
-  const btn         = document.getElementById('btnSign');
-  if (name) {
-    nameDisplay.textContent = name;
-    nameHint.style.display  = 'none';
-    btn.disabled = false;
-  } else {
-    nameDisplay.textContent = '–';
-    nameHint.style.display  = '';
-    btn.disabled = true;
-  }
-  btn.textContent = 'Eintragen';
+  const nameDisplay=document.getElementById('popupNameDisplay'), nameHint=document.getElementById('popupNameHint'), btn=document.getElementById('btnSign');
+  if (name) { nameDisplay.textContent=name; nameHint.style.display='none'; btn.disabled=false; }
+  else      { nameDisplay.textContent='–'; nameHint.style.display=''; btn.disabled=true; }
+  btn.textContent='Eintragen';
   document.getElementById('popupOverlay').classList.add('open');
 }
 
-function closePopup() {
-  document.getElementById('popupOverlay').classList.remove('open');
-  currentTarget = null;
-}
+function closePopup() { document.getElementById('popupOverlay').classList.remove('open'); currentTarget=null; }
 
 async function doSign() {
-  const name = myName();
-  if (!name) { showToast('Bitte zuerst Namen eingeben.', 'error'); closePopup(); return; }
-  const { tag, schicht, aufgabe } = currentTarget;
-  if (signupsFor(tag, schicht, aufgabe).some(s => s.Name === name)) {
-    showToast('Du bist bereits eingetragen.', 'error'); closePopup(); return;
-  }
-  const btn = document.getElementById('btnSign');
-  btn.disabled = true; btn.textContent = 'Speichert…';
+  const name=myName();
+  if (!name) { showToast('Bitte zuerst Namen eingeben.','error'); closePopup(); return; }
+  const { tagId, schicht, aufgabe } = currentTarget;
+  if (SIGNUPS.some(s=>s.Tag===tagId&&s.Name===name)) { showToast('Du bist bereits eingetragen.','error'); closePopup(); return; }
+  const btn=document.getElementById('btnSign');
+  btn.disabled=true; btn.textContent='Speichert…';
   try {
-    const r = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'signup', name, tag, schicht, aufgabe })
-    });
-    const d = await r.json();
+    const r=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'signup',name,tag:tagId,schicht,aufgabe})});
+    const d=await r.json();
     if (!d.ok) throw new Error(d.error);
-    SIGNUPS.push({ Name: name, Tag: tag, Schicht: schicht, Aufgabe: aufgabe });
+    SIGNUPS.push({Name:name,Tag:tagId,Schicht:schicht,Aufgabe:aufgabe});
     closePopup();
-    showToast('✓ Eingetragen: ' + name, 'success');
+    showToast('✓ Eingetragen: '+name,'success');
     rebuildActivePanel();
-  } catch(e) {
-    btn.disabled = false; btn.textContent = 'Eintragen';
-    showToast('Fehler: ' + e.message, 'error');
-  }
+  } catch(e) { btn.disabled=false; btn.textContent='Eintragen'; showToast('Fehler: '+e.message,'error'); }
 }
 
 function rebuildActivePanel() {
-  const d = DAYS[activeDay];
-  document.getElementById(`panel-${activeDay}`).innerHTML = buildTimeline(d.id, d.label);
+  const d=DAYS[activeDay];
+  if (d) document.getElementById(`panel-${activeDay}`).innerHTML=buildTimeline(d);
 }
 
 // ── HELPERS ───────────────────────────────────────────────────
-function parseTime(t, vonMinutes) {
-  const [h, m] = String(t).split(':').map(Number);
-  let mins = h * 60 + (m || 0);
-  if (vonMinutes !== undefined && mins <= vonMinutes && mins < 720) mins += 24 * 60;
+function parseTime(t,vonMinutes) {
+  const [h,m]=String(t).split(':').map(Number);
+  let mins=h*60+(m||0);
+  if (vonMinutes!==undefined&&mins<=vonMinutes&&mins<720) mins+=24*60;
   return mins;
 }
-function signupsFor(tag, schicht, aufgabe) {
-  return SIGNUPS.filter(s => s.Tag===tag && s.Schicht===schicht && s.Aufgabe===aufgabe);
-}
-function myName() { return document.getElementById('myName')?.value.trim() || localStorage.getItem('chilbi_name') || ''; }
-function esc(s) { return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function showToast(msg, type='') {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className='toast'+(type?' '+type:''); t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 3200);
+function myName(){return document.getElementById('myName')?.value.trim()||localStorage.getItem('chilbi_name')||'';}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast'+(type?' '+type:'');t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3200);
 }
 </script>
 </body>

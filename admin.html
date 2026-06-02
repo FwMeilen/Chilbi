@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung v0.05</title>
+<title>Chilbi Admin – Schichtverwaltung v0.06</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -142,7 +142,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">v0.05</span>
+      <span class="header-version">v0.06</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">→ Signup-Seite</button>
       <button class="btn btn-sm" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -165,7 +165,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
         <table>
           <thead>
             <tr>
-              <th>Tag-ID</th><th>Tag-Bezeichnung</th><th>Schicht</th><th>Aufgabe</th>
+              <th>ID</th><th>Tag-Bezeichnung</th><th>Schicht</th><th>Aufgabe</th>
               <th>Von</th><th>Bis</th><th>Max.</th><th>Farbe</th><th>Informationen / Treffpunkt</th><th></th>
             </tr>
           </thead>
@@ -178,7 +178,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
         <button class="btn btn-green" onclick="saveConfig()">💾 Speichern</button>
       </div>
       <div class="help-text">
-        <strong>Tag-ID:</strong> V1/V2 = Vorbereitung · A1/A2/A3 = Anlass · N1 = Nachbereitung<br>
+        <strong>ID:</strong> Eindeutig pro Schicht – z.B. A1, A2, A3… (ein Tab pro gleichem Datum/TagLabel)<br>
         <strong>Informationen:</strong> Wird im Anmelde-Popup als Treffpunkt angezeigt (z.B. "Treffpunkt: Gemeindehaus Herrliberg, Eingang West")
       </div>
     </div>
@@ -214,7 +214,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Chilbi Herrliberg &nbsp;·&nbsp; Admin &nbsp;·&nbsp; v0.05</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Admin &nbsp;·&nbsp; v0.06</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz8UhuqtmDLOX7hFmyWkk6FhX9uT4E2IFsJs-PjN-hUHmjUXrHeuqJc5bvpZwnT-wRT4w/exec';
@@ -274,7 +274,7 @@ function addRow(data={}) {
   const color = data.Farbe || PALETTE[i % PALETTE.length];
   const tr = document.createElement('tr');
   tr.innerHTML = `
-    <td><input value="${esc(data.Tag||'')}" placeholder="V1/A1/N1" style="width:52px"></td>
+    <td><input value="${esc(data.Tag||'')}" placeholder="A1/V1/N1" style="width:52px"></td>
     <td><input value="${esc(data.TagLabel||'')}" placeholder="z.B. Samstag 07.06."></td>
     <td><input value="${esc(data.Schicht||'')}" placeholder="Morgen"></td>
     <td><input value="${esc(data.Aufgabe||'')}" placeholder="Kasse"></td>
