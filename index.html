@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan v0.11</title>
+<title>Chilbi Herrliberg – Schichtplan v0.12</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -230,7 +230,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">v0.11</div>
+    <div class="header-version">v0.12</div>
   </div>
 </div>
 <div class="red-stripe"></div>
@@ -303,7 +303,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; v0.11</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; v0.12</div>
 
 <script>
 const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbz8UhuqtmDLOX7hFmyWkk6FhX9uT4E2IFsJs-PjN-hUHmjUXrHeuqJc5bvpZwnT-wRT4w/exec';
@@ -619,7 +619,7 @@ function textColor(hex) {
   return (0.299*r+0.587*g+0.114*b)/255>0.55?'#1a1a1a':'#ffffff';
 }
 
-const PX_PER_MIN = 2; // 2px pro Minute → 1h = 120px
+const PX_PER_MIN = 2;
 
 function buildTimeline(day) {
   const rows = day.rows;
@@ -627,7 +627,7 @@ function buildTimeline(day) {
 
   const allTimes = rows.flatMap(r=>{const v=parseTime(r.Von);return[v,parseTime(r.Bis,v)];});
   const minT=Math.min(...allTimes), maxT=Math.max(...allTimes);
-  const totalPx = (maxT - minT) * PX_PER_MIN;
+  const totalPx=(maxT-minT)*PX_PER_MIN;
 
   // Ruler
   const startH=Math.floor(minT/60), endH=Math.ceil(maxT/60);
@@ -637,22 +637,18 @@ function buildTimeline(day) {
     ticks+=`<div class="hour-tick" style="left:${px}px">${h%24}:00</div>`;
   }
 
-  // Group by Schicht
   const schichtMap={}, schichtOrder=[];
   rows.forEach(r=>{
     if(!schichtMap[r.Schicht]){schichtMap[r.Schicht]=[];schichtOrder.push(r.Schicht);}
     schichtMap[r.Schicht].push(r);
   });
 
-  let html='';
-  // Ruler row
-  html+=`<div class="tl-ruler">
+  let html=`<div class="tl-ruler">
     <div class="tl-ruler-spacer"></div>
     <div class="tl-ruler-ticks" style="width:${totalPx}px">${ticks}</div>
   </div>`;
 
   schichtOrder.forEach(sch=>{
-    // Schicht header
     html+=`<div class="tl-schicht">
       <div class="tl-schicht-label">${esc(sch)}</div>
       <div class="tl-schicht-line" style="width:${totalPx}px"></div>
@@ -675,39 +671,37 @@ function buildTimeline(day) {
       else if(hasOther){cls='andere';}
 
       const fgColor=(cls==='mine'||cls==='voll')?'#fff':textColor(blockColor);
-      const dots=Array.from({length:max},(_,i)=>`<div class="slot-dot${i<taken.length?' taken':''}"></div>`).join('');
-      const signupPills=taken.map(s=>`<span class="signup-pill${s.Name===myName()?' me':''}">${esc(s.Name)}</span>`).join('');
+      const dots=Array.from({length:max},(_,i)=>`<span class="slot-dot${i<taken.length?' taken':''}"></span>`).join('');
+      const pills=taken.map(s=>`<span class="signup-pill${s.Name===myName()?' me':''}">${esc(s.Name)}</span>`).join('');
 
-      // Task row
-      html+=`<div class="tl-row" data-tagid="${esc(r.Tag)}">
+      // Zeile: label + gesamte Track-Breite als Hintergrund, Block als Button darin
+      html+=`<div class="tl-row">
         <div class="tl-label">${esc(r.Aufgabe)}</div>
         <div class="tl-track" style="width:${totalPx}px">
-          <div class="task-block ${cls}"
-            style="left:${leftPx}px;width:${widePx}px;background:${blockColor};color:${fgColor}"
-            onclick="openPopupByTag('${esc(r.Tag)}')"
-            title="${esc(r.Aufgabe)} | ${esc(r.Von)}–${esc(r.Bis)}">
+          <button type="button" class="task-block ${cls}"
+            style="left:${leftPx}px;width:${widePx}px;background:${blockColor};color:${fgColor};border:none;"
+            onclick="openPopupByTag('${esc(r.Tag)}')">
             <span class="block-time">${esc(r.Von)}–${esc(r.Bis)}</span>
-            <div class="block-slots">${dots}</div>
-          </div>
+            <span class="block-slots">${dots}</span>
+          </button>
         </div>
       </div>`;
 
-      // Pills row
       if(taken.length){
-        html+=`<div class="tl-row" data-tagid="${esc(r.Tag)}">
+        html+=`<div class="tl-row">
           <div class="tl-label"></div>
-          <div class="tl-pills" style="width:${totalPx}px;padding-left:${leftPx}px">${signupPills}</div>
+          <div class="tl-pills" style="width:${totalPx}px;padding-left:${leftPx}px">${pills}</div>
         </div>`;
       }
     });
   });
 
-  return `
-    <div class="day-header">${buildDayHeader(day.label)}</div>
+  return `<div class="day-header">${buildDayHeader(day.label)}</div>
     <div class="timeline-wrap">
       <div style="display:inline-block;min-width:100%">${html}</div>
     </div>`;
 }
+
 
 
 // ── POPUP ─────────────────────────────────────────────────────
