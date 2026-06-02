@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan Cl0.013</title>
+<title>Chilbi Herrliberg – Schichtplan Cl0.014</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -76,7 +76,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   position:absolute;top:3px;height:calc(100% - 6px);
   cursor:pointer;display:flex;align-items:center;gap:6px;
   font-size:11px;font-weight:700;
-  transition:filter .15s;user-select:none;overflow:hidden;padding:0 8px;
+  transition:filter .15s;user-select:none;overflow:visible;padding:0 8px;
 }
 .task-block:hover{filter:brightness(1.08);}
 
@@ -229,7 +229,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">Cl0.013</div>
+    <div class="header-version">Cl0.014</div>
   </div>
 </div>
 <div class="red-stripe"></div>
@@ -296,7 +296,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl0.013</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl0.014</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -696,7 +696,7 @@ function buildTimeline(day) {
 
       // Namen inline rechts vom Block
       const nameStr = taken.map(s =>
-        `<span class="signup-pill${s.Name===myName()?' me':''}" style="color:${fgColor};background:rgba(0,0,0,.2)">${esc(s.Name)}</span>`
+        `<span style="font-size:11px;font-weight:600;color:var(--text2);background:var(--bg2);border:1px solid var(--gray-mid);padding:1px 6px;${s.Name===myName()?'background:var(--black);color:white;border-color:var(--black);':''}">${esc(s.Name)}</span>`
       ).join('');
 
       html += `<div class="tl-row">
@@ -708,8 +708,8 @@ function buildTimeline(day) {
             title="${esc(r.Aufgabe)} | ${esc(r.Von)}–${esc(r.Bis)}">
             <span class="block-time">${esc(r.Von)}–${esc(r.Bis)}</span>
             <div class="block-slots">${dots}</div>
-            ${taken.length ? `<div class="tl-names">${nameStr}</div>` : ''}
           </div>
+          ${taken.length ? `<div style="position:absolute;left:${leftPx+widePx+6}px;top:50%;transform:translateY(-50%);display:flex;gap:4px;align-items:center;pointer-events:none;">${nameStr}</div>` : ''}
         </div>
       </div>`;
     });
