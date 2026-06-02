@@ -300,18 +300,44 @@ window.addEventListener('DOMContentLoaded', async () => {
   await loadData();
 });
 
+const SHEET_ID = '1XqTNfgONmHX9GvmfOVvb94BUo_oQ04Uy7R97FVfdWyo';
+const GVIZ = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+
+async function fetchSheet(sheetName) {
+  const url = `${GVIZ}&sheet=${encodeURIComponent(sheetName)}&_=${Date.now()}`;
+  const res = await fetch(url);
+  const text = await res.text();
+  const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+  const rows = json.table.rows || [];
+  const cols = json.table.cols.map(c => c.label);
+  return rows.map(row => {
+    const obj = {};
+    cols.forEach((col, i) => {
+      const cell = row.c ? row.c[i] : null;
+      obj[col] = cell ? (cell.f != null ? String(cell.f).trim() : (cell.v != null ? String(cell.v).trim() : '')) : '';
+    });
+    return obj;
+  });
+}
+
 async function loadData() {
   const el = document.getElementById('loadingState');
   try {
-    const r = await fetch(`${SCRIPT_URL}?action=all&_=${Date.now()}`);
-    const text = await r.text();
-    let d;
-    try { d = JSON.parse(text); } catch(pe) { throw new Error('Ungültige Antwort: ' + text.slice(0,120)); }
-    CONFIG = (d.config || []).map(row => {
-      if (row['Max Personen'] !== undefined && row.MaxPersonen === undefined) row.MaxPersonen = row['Max Personen'];
-      return row;
+    const [configRows, signupRows] = await Promise.all([
+      fetchSheet('Konfiguration'),
+      fetchSheet('Anmeldungen')
+    ]);
+    CONFIG  = configRows.filter(r => r.ID || r['ID']).map(r => {
+      // Normalize column names
+      r.Tag         = r.ID || r.Tag || '';
+      r.MaxPersonen = r['Max Personen'] || r.MaxPersonen || '1';
+      r.Informationen = r.Informationen || '';
+      return r;
     });
-    SIGNUPS = d.signups || [];
+    SIGNUPS = signupRows.filter(r => r.Name).map(r => ({
+      Name: r.Name, Tag: r.Tag, Schicht: r.Schicht, Aufgabe: r.Aufgabe,
+      Timestamp: r.Timestamp
+    }));
     if (el) el.remove();
     buildUI();
   } catch(e) {
