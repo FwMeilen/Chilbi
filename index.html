@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan v0.07</title>
+<title>Chilbi Herrliberg – Schichtplan v0.08</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -69,6 +69,20 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 .my-shifts-banner{background:var(--red);color:white;padding:8px 1.5rem;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:none;}
 .my-shifts-banner.active{display:block;}
 
+/* Meine Schichten Listenansicht */
+.my-shifts-panel{display:none;padding:1.25rem 1.5rem 4rem;}
+.my-shifts-panel.active{display:block;}
+.my-shifts-empty{text-align:center;padding:3rem;color:var(--text3);font-size:13px;}
+.ms-day-block{margin-bottom:2rem;}
+.ms-day-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text3);padding-bottom:6px;border-bottom:2px solid var(--black);margin-bottom:10px;}
+.ms-shift-card{background:white;border:1px solid var(--gray-mid);border-left:4px solid var(--red);padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:16px;}
+.ms-shift-color{width:4px;align-self:stretch;border-radius:2px;flex-shrink:0;}
+.ms-shift-info{flex:1;}
+.ms-shift-name{font-size:13px;font-weight:700;margin-bottom:2px;}
+.ms-shift-time{font-size:12px;color:var(--text3);}
+.ms-shift-schicht{font-size:11px;color:var(--gray);margin-top:2px;}
+.ms-shift-treff{font-size:11px;color:var(--red-dark);margin-top:4px;background:var(--red-light);padding:3px 8px;display:inline-block;}
+
 /* ── TABS ────────────────────────────────────────────────── */
 .tabs-wrap{background:var(--bg);border-bottom:2px solid var(--black);width:100%;}
 .tabs{display:flex;overflow-x:auto;width:100%;padding:0 1.5rem;}
@@ -121,11 +135,11 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 .slot-dot.taken{background:rgba(255,255,255,.95);border-color:rgba(255,255,255,.95);}
 
 /* Meine Schichten: ausgeblendete Reihen */
-.task-row-group{display:contents;}
-.task-row-group.hidden-shift .task-name-cell,
-.task-row-group.hidden-shift .task-track-cell,
-.task-row-group.hidden-shift .signup-name-cell,
-.task-row-group.hidden-shift .signup-pills-cell{display:none;}
+.task-row-group{display:contents;} /* unused */
+.task-name-cell.hidden-shift,
+.task-track-cell.hidden-shift,
+.signup-name-cell.hidden-shift,
+.signup-pills-cell.hidden-shift{display:none;}
 
 /* ── POPUP ───────────────────────────────────────────────── */
 .popup-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:center;justify-content:center;padding:20px;}
@@ -205,7 +219,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">v0.07</div>
+    <div class="header-version">v0.08</div>
   </div>
 </div>
 <div class="red-stripe"></div>
@@ -231,13 +245,16 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   Nur meine Schichten – <span onclick="toggleMyShifts()" style="cursor:pointer;text-decoration:underline">Alle anzeigen</span>
 </div>
 
+<!-- ── MEINE SCHICHTEN PANEL ──────────────────────────────── -->
+<div class="my-shifts-panel" id="myShiftsPanel"></div>
+
 <!-- ── TABS ───────────────────────────────────────────────── -->
-<div class="tabs-wrap">
+<div class="tabs-wrap" id="tabsWrap">
   <div class="tabs" id="tabBar"></div>
 </div>
 
 <!-- ── CONTENT ────────────────────────────────────────────── -->
-<div id="dayPanels">
+<div id="dayPanels" style="">
   <div class="loading" id="loadingState" style="padding:3rem 1.5rem">
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 11-6.22-8.56"/></svg>
     Daten werden geladen…
@@ -275,7 +292,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; v0.07</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; v0.08</div>
 
 <script>
 const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbz8UhuqtmDLOX7hFmyWkk6FhX9uT4E2IFsJs-PjN-hUHmjUXrHeuqJc5bvpZwnT-wRT4w/exec';
@@ -501,18 +518,79 @@ function toggleMyShifts() {
   myShiftsMode = !myShiftsMode;
   document.getElementById('btnMyShifts').classList.toggle('active', myShiftsMode);
   document.getElementById('myShiftsBanner').classList.toggle('active', myShiftsMode);
-  applyMyShiftsFilter();
+  const panel   = document.getElementById('myShiftsPanel');
+  const tabsWrap= document.getElementById('tabsWrap');
+  const dayPanels=document.getElementById('dayPanels');
+  if (myShiftsMode) {
+    panel.classList.add('active');
+    tabsWrap.style.display  = 'none';
+    dayPanels.style.display = 'none';
+    buildMyShiftsPanel();
+  } else {
+    panel.classList.remove('active');
+    tabsWrap.style.display  = '';
+    dayPanels.style.display = '';
+  }
 }
 
-function applyMyShiftsFilter() {
+function buildMyShiftsPanel() {
   const name = myName();
-  document.querySelectorAll('.task-row-group').forEach(grp => {
-    const tagId = grp.dataset.tagid;
-    if (!myShiftsMode) { grp.classList.remove('hidden-shift'); return; }
-    const isMine = SIGNUPS.some(s => s.Tag === tagId && s.Name === name);
-    grp.classList.toggle('hidden-shift', !isMine);
+  const panel = document.getElementById('myShiftsPanel');
+  const mySignups = SIGNUPS.filter(s => s.Name === name);
+  if (!mySignups.length) {
+    panel.innerHTML = '<div class="my-shifts-empty">Du bist noch in keiner Schicht eingetragen.</div>';
+    return;
+  }
+  // Gruppiere nach Tag-Label
+  const byDay = {};
+  const dayOrder = [];
+  mySignups.forEach(s => {
+    const cfg = CONFIG.find(r => r.Tag === s.Tag);
+    if (!cfg) return;
+    const lbl = cfg.TagLabel || cfg.Tag;
+    if (!byDay[lbl]) { byDay[lbl] = []; dayOrder.push(lbl); }
+    byDay[lbl].push({s, cfg});
   });
+  // Dedupliziere dayOrder
+  const seen = new Set();
+  const uniqueOrder = dayOrder.filter(d => seen.has(d) ? false : seen.add(d));
+
+  let html = '';
+  uniqueOrder.forEach(lbl => {
+    html += `<div class="ms-day-block">
+      <div class="ms-day-title">${esc(buildDayHeaderText(lbl))}</div>`;
+    byDay[lbl].forEach(({s, cfg}) => {
+      const color = cfg.Farbe || '#CC0000';
+      html += `<div class="ms-shift-card" onclick="openPopupByTag('${esc(cfg.Tag)}')" style="cursor:pointer;border-left-color:${color}">
+        <div class="ms-shift-info">
+          <div class="ms-shift-name">${esc(cfg.Aufgabe)}</div>
+          <div class="ms-shift-time">${esc(cfg.Von)} – ${esc(cfg.Bis)}</div>
+          <div class="ms-shift-schicht">${esc(cfg.Schicht)}</div>
+          ${cfg.Informationen ? `<div class="ms-shift-treff">${esc(cfg.Informationen)}</div>` : ''}
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  panel.innerHTML = html;
 }
+
+function buildDayHeaderText(label) {
+  const m = label.match(/(\d{1,2})\.(\d{1,2})\.(\d{2,4})?/);
+  if (m) {
+    const day=parseInt(m[1]), month=parseInt(m[2])-1;
+    const yr=m[3]?(m[3].length===2?2000+parseInt(m[3]):parseInt(m[3])):new Date().getFullYear();
+    const date=new Date(yr,month,day);
+    if (!isNaN(date.getTime())) {
+      const wd=WEEKDAYS[date.getDay()];
+      const dateStr=String(day).padStart(2,'0')+'.'+String(month+1).padStart(2,'0')+'.'+yr;
+      return WEEKDAYS.some(w=>label.includes(w)) ? label : wd+', '+dateStr;
+    }
+  }
+  return label;
+}
+
+function applyMyShiftsFilter() { /* nicht mehr verwendet */ }
 
 // ── TIMELINE ─────────────────────────────────────────────────
 function textColor(hex) {
@@ -566,15 +644,14 @@ function buildTimeline(day) {
       const signupPills=taken.map(s=>`<span class="signup-pill${s.Name===myName()?' me':''}">${esc(s.Name)}</span>`).join('');
 
       const pillsHtml=taken.length?`
-        <div class="signup-name-cell"></div>
-        <div class="signup-pills-cell">
+        <div class="signup-name-cell" data-tagid="${esc(r.Tag)}"></div>
+        <div class="signup-pills-cell" data-tagid="${esc(r.Tag)}">
           <div style="position:absolute;left:calc(${leftPct}%);display:flex;flex-wrap:wrap;gap:3px;padding-top:1px;">${signupPills}</div>
-        </div>`:''  ;
+        </div>`:'';
 
       gridRows+=`
-        <div class="task-row-group" data-tagid="${esc(r.Tag)}">
-          <div class="task-name-cell">${esc(r.Aufgabe)}</div>
-          <div class="task-track-cell">
+        <div class="task-name-cell" data-tagid="${esc(r.Tag)}">${esc(r.Aufgabe)}</div>
+          <div class="task-track-cell" data-tagid="${esc(r.Tag)}">
             <div class="task-track">
               <div class="task-block ${cls}"
                 style="left:${leftPct}%;width:${widePct}%;background:${blockColor};color:${fgColor}"
@@ -585,8 +662,7 @@ function buildTimeline(day) {
               </div>
             </div>
           </div>
-          ${pillsHtml}
-        </div>`;
+          ${pillsHtml}`;
     });
   });
 
