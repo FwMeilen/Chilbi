@@ -446,7 +446,9 @@ async function loadData() {
     SIGNUPS = signupRows.filter(r => r.Name && r.Tag).map(r => ({
       Tag: r.Tag, Name: r.Name, Schicht: r.Schicht, Aufgabe: r.Aufgabe
     }));
-    console.log('CONFIG loaded:', CONFIG.length, 'rows', 'First:', JSON.stringify(CONFIG[0]));
+    console.log('CONFIG:', CONFIG.length, 'rows, first:', JSON.stringify(CONFIG[0]));
+    console.log('SIGNUPS raw:', signupRows.length, 'rows, first raw:', JSON.stringify(signupRows[0]));
+    console.log('SIGNUPS mapped:', SIGNUPS.length, 'first:', JSON.stringify(SIGNUPS[0]));
     buildUI();
   } catch(e) {
     if (el) el.innerHTML = `<div style="color:var(--red);padding:2rem;text-align:center">
