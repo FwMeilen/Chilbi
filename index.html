@@ -307,9 +307,14 @@ async function fetchSheet(sheetName) {
   const url = `${GVIZ}&sheet=${encodeURIComponent(sheetName)}&_=${Date.now()}`;
   const res = await fetch(url);
   const text = await res.text();
-  const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+  console.log('gviz response length:', text.length, 'sheet:', sheetName);
+  console.log('gviz first 300:', text.slice(0,300));
+  const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+  if (!match) { console.error('NO MATCH for setResponse in:', text.slice(0,200)); return []; }
+  const json = JSON.parse(match[1]);
   const rows = json.table.rows || [];
   const cols = json.table.cols.map(c => c.label);
+  console.log('cols:', cols, 'rows:', rows.length);
   return rows.map(row => {
     const obj = {};
     cols.forEach((col, i) => {
