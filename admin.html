@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl0.020</title>
+<title>Chilbi Admin – Schichtverwaltung Cl0.021</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -160,7 +160,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl0.020</span>
+      <span class="header-version">Cl0.021</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -183,7 +183,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
         <table>
           <thead>
             <tr>
-              <th>ID</th><th>Datum</th><th>Schicht</th><th>Aufgabe</th>
+              <th>Typ</th><th>Datum</th><th>Schicht</th><th>Aufgabe</th>
               <th>Von</th><th>Bis</th><th>Max.</th><th>Farbe</th><th>Informationen / Treffpunkt</th><th></th>
             </tr>
           </thead>
@@ -196,7 +196,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
         <button class="btn btn-green" onclick="saveConfig()">💾 Speichern</button>
       </div>
       <div class="help-text">
-        <strong>ID:</strong> Eindeutig pro Schicht (z.B. A1, A2, Sa1, Sa2…). Ein Tab pro gleichem Datum/TagLabel.<br>
+        <strong>Typ:</strong> Vorbereitung / Chilbi / Aufräumen – ID wird automatisch vergeben. Ein Tab pro gleichem Datum.<br>
         <strong>Informationen:</strong> Wird im Anmelde-Popup als Treffpunkt angezeigt (z.B. "Treffpunkt: Gemeindehaus Herrliberg, Eingang West")
       </div>
     </div>
@@ -208,7 +208,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <div class="card">
       <div class="card-title">Alle Anmeldungen</div>
       <div class="filter-bar">
-        <input type="text" id="filterName" placeholder="Name suchen…" oninput="renderSignups()">
+        <input type="text" id="filterName" placeholder="ID suchen…" oninput="renderSignups()">
         <select id="filterTag" onchange="renderSignups()"><option value="">Alle Tage</option></select>
         <select id="filterSchicht" onchange="renderSignups()"><option value="">Alle Schichten</option></select>
         <select id="filterAufgabe" onchange="renderSignups()"><option value="">Alle Aufgaben</option></select>
@@ -279,7 +279,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl0.020</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl0.021</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -331,6 +331,38 @@ function switchSection(id, btn) {
   btn.classList.add('active');
 }
 
+
+// Auto-ID Vergabe
+const idCounters = {V:0, A:0, N:0};
+function getNextId(prefix) {
+  const existing = [...document.querySelectorAll('#configBody tr')]
+    .map(tr => tr.querySelector('input[type=hidden]')?.value || '')
+    .filter(id => id.startsWith(prefix));
+  const nums = existing.map(id => parseInt(id.slice(prefix.length))||0);
+  const max = nums.length ? Math.max(...nums) : 0;
+  return prefix + (max + 1);
+}
+
+function updateRowId(i) {
+  const sel = document.getElementById('rowtype-' + i);
+  const hidden = document.getElementById('rowtag-' + i);
+  if (!hidden || !sel) return;
+  if (!hidden.value || !hidden.value.startsWith(sel.value)) {
+    hidden.value = getNextId(sel.value);
+  }
+}
+
+function initRowId(i, existingTag) {
+  const hidden = document.getElementById('rowtag-' + i);
+  const sel = document.getElementById('rowtype-' + i);
+  if (!hidden || !sel) return;
+  if (existingTag) {
+    hidden.value = existingTag;
+  } else {
+    hidden.value = getNextId(sel.value);
+  }
+}
+
 // ── CONFIG TABLE ───────────────────────────────────────────────
 function renderConfig() {
   document.getElementById('configBody').innerHTML = '';
@@ -343,7 +375,11 @@ function addRow(data={}) {
   const color = data.Farbe || PALETTE[i % PALETTE.length];
   const tr = document.createElement('tr');
   tr.innerHTML = `
-    <td><input value="${esc(data.Tag||'')}" placeholder="A1/Sa1/Mo1" style="width:52px"></td>
+    <td><select id="rowtype-${i}" style="width:110px;padding:4px 6px;border:1px solid var(--gray-mid);font-family:inherit;font-size:12px;" onchange="updateRowId(${i})">
+      <option value="V" ${(data.Tag||'').startsWith('V')?'selected':''}>Vorbereitung</option>
+      <option value="A" ${(data.Tag||'').startsWith('A')||!(data.Tag||'').match(/^[VN]/)?'selected':''}>Chilbi</option>
+      <option value="N" ${(data.Tag||'').startsWith('N')?'selected':''}>Aufräumen</option>
+    </select><input type="hidden" id="rowtag-${i}" value="${esc(data.Tag||'')}"></td>
     <td><input value="${esc(data.Datum||data.TagLabel||'')}" placeholder="z.B. 14.08.2026"></td>
     <td><input value="${esc(data.Schicht||'')}" placeholder="Morgen"></td>
     <td><input value="${esc(data.Aufgabe||'')}" placeholder="Kasse"></td>
@@ -365,7 +401,7 @@ function addRow(data={}) {
   `;
   tbody.appendChild(tr);
   // Init color picker after DOM insert
-  requestAnimationFrame(() => initColorPicker(i, color));
+  requestAnimationFrame(() => { initColorPicker(i, color); initRowId(i, data.Tag||''); });
 }
 
 function addSampleRows() {
@@ -392,7 +428,7 @@ function addSampleRows() {
 function readConfigRows() {
   return [...document.querySelectorAll('#configBody tr')].map(tr => {
     const inp = tr.querySelectorAll('input,select');
-    return { Tag:inp[0].value.trim(), Datum:inp[1].value.trim(),TagLabel:inp[1].value.trim(), Schicht:inp[2].value.trim(),
+    const hiddenTag = tr.querySelector('input[type=hidden]'); return { Tag:hiddenTag?hiddenTag.value.trim():inp[0]?.value?.trim()||'', Datum:inp[1].value.trim(),TagLabel:inp[1].value.trim(), Schicht:inp[2].value.trim(),
              Aufgabe:inp[3].value.trim(), Von:inp[4].value.trim(), Bis:inp[5].value.trim(),
              MaxPersonen:inp[6].value.trim(), Farbe:getRowColor(inp[7]?.closest('tr')), Informationen:inp[8]?.value.trim()||'' };
   }).filter(r => r.Tag && r.Aufgabe);
@@ -414,13 +450,16 @@ async function saveConfig() {
 function renderSignups() {
   const tagSel = document.getElementById('filterTag');
   const schSel = document.getElementById('filterSchicht');
-  const tags = [...new Set(SIGNUPS.map(s=>s.Tag))];
+  // Tags sortiert nach Datum aus CONFIG
+  const tagDates = {};
+  SIGNUPS.forEach(s=>{ const cfg=CONFIG.find(r=>r.Tag===s.Tag)||{}; tagDates[s.Tag]=cfg.Datum||cfg.TagLabel||s.Tag; });
+  const tags = [...new Set(SIGNUPS.map(s=>s.Tag))].sort((a,b)=>String(tagDates[a]).localeCompare(String(tagDates[b]),'de'));
   const schs = [...new Set(SIGNUPS.map(s=>s.Schicht))];
   const curTag = tagSel.value, curSch = schSel.value;
   const aufgSel = document.getElementById('filterAufgabe');
   const curAufg = aufgSel?.value || '';
   const aufgs = [...new Set(SIGNUPS.map(s=>s.Aufgabe))].sort();
-  tagSel.innerHTML = '<option value="">Alle Tage</option>' + tags.map(t=>`<option value="${esc(t)}"${t===curTag?' selected':''}>${esc(t)}</option>`).join('');
+  tagSel.innerHTML = '<option value="">Alle Tage</option>' + tags.map(t=>`<option value="${esc(t)}"${t===curTag?' selected':''}>${esc(tagDates[t]||t)}</option>`).join('');
   schSel.innerHTML = '<option value="">Alle Schichten</option>' + schs.map(s=>`<option value="${esc(s)}"${s===curSch?' selected':''}>${esc(s)}</option>`).join('');
   if(aufgSel) aufgSel.innerHTML = '<option value="">Alle Aufgaben</option>' + aufgs.map(a=>`<option value="${esc(a)}"${a===curAufg?' selected':''}>${esc(a)}</option>`).join('');
   tagSel.value = curTag; schSel.value = curSch; if(aufgSel) aufgSel.value = curAufg;
@@ -428,7 +467,7 @@ function renderSignups() {
   const nameQ = document.getElementById('filterName').value.toLowerCase();
   const aufgQ = document.getElementById('filterAufgabe')?.value || '';
   const filtered = SIGNUPS.filter(s =>
-    (!nameQ || s.Name.toLowerCase().includes(nameQ)) &&
+    (!nameQ || String(s.Tag||'').toLowerCase().includes(nameQ)) &&
     (!curTag || s.Tag===curTag) && (!curSch || s.Schicht===curSch) &&
     (!aufgQ || s.Aufgabe===aufgQ)
   );
