@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan Cl0.014</title>
+<title>Chilbi Herrliberg – Schichtplan Cl0.015</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -229,7 +229,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">Cl0.014</div>
+    <div class="header-version">Cl0.015</div>
   </div>
 </div>
 <div class="red-stripe"></div>
@@ -296,7 +296,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl0.014</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl0.015</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -353,16 +353,29 @@ function splashSubmit() {
   localStorage.setItem('chilbi_name', val);
   localStorage.setItem('chilbi_mode', splashMode);
   document.getElementById('nameDisplay').textContent = val;
-  document.getElementById('splash').remove();
+  document.getElementById('splash').style.display = 'none';
 }
 
 function splashShow() {
-  const existing = document.getElementById('splash');
-  if (existing) { existing.style.display='flex'; }
-  else {
-    // Splash neu erstellen
-    location.reload();
+  const splash = document.getElementById('splash');
+  if (!splash) return;
+  const saved = localStorage.getItem('chilbi_name') || '';
+  const mode  = localStorage.getItem('chilbi_mode') || 'ff';
+  splashMode = mode;
+  document.getElementById('opt-ff').classList.toggle('selected', mode==='ff');
+  document.getElementById('opt-guest').classList.toggle('selected', mode==='guest');
+  const inp = document.getElementById('splashInput');
+  inp.value = saved;
+  if (mode === 'ff') {
+    inp.maxLength=3; inp.placeholder='MUS'; inp.className='splash-input';
+    document.getElementById('splashLabel').textContent='Dein Kürzel (3 Grossbuchstaben)';
+  } else {
+    inp.maxLength=40; inp.placeholder='Vorname Name'; inp.className='splash-input guest';
+    document.getElementById('splashLabel').textContent='Dein Name';
   }
+  document.getElementById('splashError').textContent='';
+  splash.style.display = 'flex';
+  inp.focus();
 }
 
 function myName() { return localStorage.getItem('chilbi_name') || ''; }
@@ -372,7 +385,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const mode  = localStorage.getItem('chilbi_mode') || 'ff';
   if (saved) {
     document.getElementById('nameDisplay').textContent = saved;
-    document.getElementById('splash').remove();
+    document.getElementById('splash').style.display = 'none';
     splashMode = mode;
   } else {
     splashSelect('ff');
