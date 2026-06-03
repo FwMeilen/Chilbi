@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl0.012</title>
+<title>Chilbi Admin – Schichtverwaltung Cl0.016</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -121,6 +121,20 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
 .color-custom-row{display:flex;align-items:center;gap:6px;border-top:1px solid var(--gray-mid);padding-top:6px;}
 .color-custom-row label{font-size:10px;color:var(--text3);white-space:nowrap;}
 .color-custom-input{width:28px;height:24px;padding:1px;border:1px solid var(--gray-mid);cursor:pointer;}
+
+/* ── PRINT ───────────────────────────────────────────────── */
+@media print {
+  body{background:white;}
+  .site-header,.red-stripe,.admin-tabs,.filter-bar,.btn-row,.stats,.card-title .btn,
+  .login-overlay,.toast,.site-footer,.header-right{display:none!important;}
+  .card{box-shadow:none;border:none;padding:0;}
+  .container{padding:0;}
+  .print-day{page-break-after:always;}
+  .print-day:last-child{page-break-after:auto;}
+  @page{size:A3 landscape;margin:15mm;}
+}
+.print-btn{height:30px;padding:0 12px;border:2px solid var(--black);background:var(--bg);color:var(--black);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;font-family:inherit;border-radius:0;margin-right:6px;}
+.print-btn:hover{background:var(--black);color:white;}
 </style>
 </head>
 <body>
@@ -142,7 +156,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl0.012</span>
+      <span class="header-version">Cl0.016</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">→ Signup-Seite</button>
       <button class="btn btn-sm" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -197,7 +211,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Datum</th><th>Name</th><th>Tag</th><th>Schicht</th><th>Aufgabe</th></tr></thead>
+          <thead><tr><th>Tag</th><th>ID</th><th>Schicht</th><th>Aufgabe</th><th>Name</th><th>Timestamp</th></tr></thead>
           <tbody id="signupBody"></tbody>
         </table>
       </div>
@@ -207,14 +221,16 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   <!-- ÜBERSICHT -->
   <div class="admin-section" id="sec-uebersicht">
     <div class="card">
-      <div class="card-title">Belegungsübersicht</div>
+      <div class="card-title">Belegungsübersicht
+        <span style="margin-left:auto;display:flex;gap:6px;" id="printBtns"></span>
+      </div>
       <div id="overviewContent"></div>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl0.012</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl0.016</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -363,15 +379,29 @@ function renderSignups() {
     tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text3)">Keine Einträge</td></tr>`;
     return;
   }
-  tbody.innerHTML = filtered.map(s => `
-    <tr>
-      <td>${esc(formatDate(s.Timestamp))}</td>
-      <td style="font-weight:600">${esc(s.Name)}</td>
+  // Sortierung: TagLabel → ID → Schicht → Aufgabe → Name
+  filtered.sort((a,b) => {
+    const cfgA = CONFIG.find(r=>r.Tag===a.Tag)||{};
+    const cfgB = CONFIG.find(r=>r.Tag===b.Tag)||{};
+    const lblA = cfgA.TagLabel||a.Tag||'';
+    const lblB = cfgB.TagLabel||b.Tag||'';
+    if (lblA !== lblB) return lblA.localeCompare(lblB,'de');
+    if (a.Tag !== b.Tag) return String(a.Tag).localeCompare(String(b.Tag),'de',{numeric:true});
+    if (a.Schicht !== b.Schicht) return String(a.Schicht||'').localeCompare(String(b.Schicht||''),'de');
+    if (a.Aufgabe !== b.Aufgabe) return String(a.Aufgabe||'').localeCompare(String(b.Aufgabe||''),'de');
+    return String(a.Name||'').localeCompare(String(b.Name||''),'de');
+  });
+  tbody.innerHTML = filtered.map(s => {
+    const cfg = CONFIG.find(r=>r.Tag===s.Tag)||{};
+    return `<tr>
+      <td>${esc(cfg.TagLabel||s.Tag)}</td>
       <td>${esc(s.Tag)}</td>
       <td>${esc(s.Schicht)}</td>
       <td>${esc(s.Aufgabe)}</td>
-    </tr>
-  `).join('');
+      <td style="font-weight:600">${esc(s.Name)}</td>
+      <td style="color:var(--text3);font-size:11px">${esc(formatDate(s.Timestamp))}</td>
+    </tr>`;
+  }).join('');
 }
 
 function renderStats() {
@@ -387,18 +417,48 @@ function renderStats() {
   `;
 }
 
+const WEEKDAYS = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+function dayHeaderText(label) {
+  const m = label.match(/(\d{1,2})\.(\d{1,2})\.(\d{2,4})?/);
+  if (m) {
+    const day=parseInt(m[1]),month=parseInt(m[2])-1;
+    const yr=m[3]?(m[3].length===2?2000+parseInt(m[3]):parseInt(m[3])):new Date().getFullYear();
+    const date=new Date(yr,month,day);
+    if(!isNaN(date.getTime())){
+      const wd=WEEKDAYS[date.getDay()];
+      return wd+', '+String(day).padStart(2,'0')+'.'+String(month+1).padStart(2,'0')+'.'+yr;
+    }
+  }
+  return label;
+}
+
 function renderOverview() {
-  const tags = [...new Set(CONFIG.map(r=>r.Tag))];
+  // Gruppiere nach TagLabel
+  const labelMap={}, labelOrder=[];
+  CONFIG.forEach(r=>{
+    const lbl=r.TagLabel||r.Tag;
+    if(!labelMap[lbl]){labelMap[lbl]=[];labelOrder.push(lbl);}
+    labelMap[lbl].push(r);
+  });
+
+  // Druckbuttons pro Tag
+  const printBtns = document.getElementById('printBtns');
+  if (printBtns) {
+    printBtns.innerHTML = labelOrder.map((lbl,i)=>`
+      <button class="print-btn" onclick="printDay('day-${i}')" title="Tag drucken (A3)">🖨 ${esc(dayHeaderText(lbl).split(',')[0])}</button>
+    `).join('');
+  }
+
   let html = '';
-  tags.forEach(tag => {
-    const label = CONFIG.find(r=>r.Tag===tag)?.TagLabel || tag;
-    const rows  = CONFIG.filter(r=>r.Tag===tag);
-    const schs  = [...new Set(rows.map(r=>r.Schicht))];
-    html += `<div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:20px 0 8px;padding-bottom:4px;border-bottom:2px solid var(--black)">${esc(label)}</div>`;
+  labelOrder.forEach((lbl,i) => {
+    const rows = labelMap[lbl];
+    const schs = [...new Set(rows.map(r=>r.Schicht))];
+    html += `<div class="print-day" id="day-${i}">
+      <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:24px 0 8px;padding-bottom:6px;border-bottom:2px solid var(--black)">${esc(dayHeaderText(lbl))}</div>`;
     schs.forEach(sch => {
       html += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray);margin:10px 0 5px">${esc(sch)}</div>`;
       rows.filter(r=>r.Schicht===sch).forEach(t => {
-        const taken = SIGNUPS.filter(s=>s.Tag===tag&&s.Schicht===sch&&s.Aufgabe===t.Aufgabe);
+        const taken = SIGNUPS.filter(s=>String(s.Tag)===String(t.Tag));
         const max   = parseInt(t.MaxPersonen)||1;
         const pct   = Math.min(100, Math.round(taken.length/max*100));
         const barColor = taken.length>=max ? 'var(--green)' : taken.length>0 ? 'var(--red)' : 'var(--gray-mid)';
@@ -410,8 +470,39 @@ function renderOverview() {
         </div>`;
       });
     });
+    html += '</div>';
   });
   document.getElementById('overviewContent').innerHTML = html || '<div style="padding:2rem;color:var(--text3);text-align:center">Noch keine Schichten definiert.</div>';
+}
+
+function printDay(dayId) {
+  const el = document.getElementById(dayId);
+  if (!el) return;
+  const win = window.open('','_blank','width=1200,height=800');
+  win.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <title>Schichtplan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0;}
+      body{font-family:'Open Sans',Arial,sans-serif;font-size:12px;padding:15mm;}
+      @page{size:A3 landscape;margin:15mm;}
+      .ov-task{display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid #eee;}
+      .ov-task-name{font-weight:700;min-width:160px;}
+      .ov-task-time{min-width:100px;color:#666;}
+      .ov-bar-wrap{flex:1;height:8px;background:#eee;}
+      .ov-bar{height:100%;}
+      .ov-persons{min-width:200px;font-size:11px;}
+      h2{font-size:16px;font-weight:700;text-transform:uppercase;margin-bottom:16px;padding-bottom:6px;border-bottom:2px solid black;}
+      .sch-title{font-size:10px;font-weight:700;text-transform:uppercase;color:#666;margin:12px 0 4px;}
+    </style>
+  </head><body>`);
+  win.document.write('<h2>' + el.querySelector('[style*="border-bottom:2px"]')?.textContent + '</h2>');
+  el.querySelectorAll('.ov-task').forEach(t => win.document.write(t.outerHTML));
+  win.document.write('</body></html>');
+  win.document.close();
+  win.focus();
+  setTimeout(()=>win.print(), 800);
 }
 
 function exportCSV() {
