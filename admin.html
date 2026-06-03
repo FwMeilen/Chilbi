@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl0.019</title>
+<title>Chilbi Admin – Schichtverwaltung Cl0.020</title>
+<meta property="og:title" content="Chilbi Herrliberg – Admin">
+<meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
+<meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
+<meta property="og:url" content="https://chilbi.feuerwehrmeilen.ch/admin.html">
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -156,7 +160,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl0.019</span>
+      <span class="header-version">Cl0.020</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -275,7 +279,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl0.019</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl0.020</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -536,33 +540,84 @@ function renderOverview() {
 }
 
 function printDay(dayId) {
-  const el = document.getElementById(dayId);
-  if (!el) return;
-  const win = window.open('','_blank','width=1200,height=800');
+  // Finde den Tag-Index aus der dayId (z.B. "day-2")
+  const idx = parseInt(dayId.split('-')[1]);
+  const labelMap={}, labelOrder=[];
+  CONFIG.forEach(r=>{
+    const lbl=r.Datum||r.TagLabel||r.Tag;
+    if(!labelMap[lbl]){labelMap[lbl]=[];labelOrder.push(lbl);}
+    labelMap[lbl].push(r);
+  });
+  const lbl = labelOrder[idx];
+  if (!lbl) return;
+  const rows = labelMap[lbl];
+
+  // Zeitbereich berechnen
+  function parseT(t,von){const[h,m]=String(t).split(':').map(Number);let mins=h*60+(m||0);if(von!==undefined&&mins<=von&&mins<720)mins+=24*60;return mins;}
+  const allT = rows.flatMap(r=>{const v=parseT(r.Von);return[v,parseT(r.Bis,v)];});
+  const minT=Math.min(...allT), maxT=Math.max(...allT);
+  const PX=3; // 3px pro Minute
+  const totalPx=(maxT-minT)*PX;
+
+  // Schichten gruppieren
+  const schMap={}, schOrder=[];
+  rows.forEach(r=>{if(!schMap[r.Schicht]){schMap[r.Schicht]=[];schOrder.push(r.Schicht);}schMap[r.Schicht].push(r);});
+
+  // Ruler
+  let rulerHtml='';
+  for(let h=Math.floor(minT/60);h<=Math.ceil(maxT/60);h++){
+    const px=(h*60-minT)*PX;
+    rulerHtml+=`<div style="position:absolute;left:${px}px;font-size:9px;color:#666;border-left:1px solid #ddd;padding-left:2px;top:2px;white-space:nowrap">${h%24}:00</div>`;
+  }
+
+  // Schichten HTML
+  let schHtml='';
+  schOrder.forEach(sch=>{
+    schHtml+=`<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#666;margin:12px 0 4px;border-bottom:1px solid #ccc;padding-bottom:2px">${sch}</div>`;
+    schMap[sch].forEach(r=>{
+      const vonM=parseT(r.Von), bisM=parseT(r.Bis,vonM);
+      const leftPx=(vonM-minT)*PX, widePx=(bisM-vonM)*PX;
+      const taken=SIGNUPS.filter(s=>String(s.Tag)===String(r.Tag));
+      const max=parseInt(r.MaxPersonen)||1;
+      const color=r.Farbe||'#CC0000';
+      // Namen
+      const namedLines = taken.map(s=>`<div style="border-bottom:1px solid rgba(255,255,255,.4);padding:1px 4px;font-size:9px">${s.Name}</div>`).join('');
+      // Leere Zeilen für Stift
+      const emptyLines = Array.from({length:Math.max(0,max-taken.length)},()=>`<div style="border-bottom:1px solid rgba(255,255,255,.4);padding:1px 4px;font-size:9px">&nbsp;</div>`).join('');
+      schHtml+=`<div style="display:flex;align-items:center;margin-bottom:4px;">
+        <div style="width:120px;min-width:120px;font-size:10px;font-weight:600;padding-right:8px">${r.Aufgabe}</div>
+        <div style="position:relative;width:${totalPx}px;height:auto;min-height:20px;">
+          <div style="position:absolute;left:${leftPx}px;width:${widePx}px;background:${color};min-height:20px;padding:2px 0;">
+            ${namedLines}${emptyLines}
+          </div>
+        </div>
+      </div>`;
+    });
+  });
+
+  const titleText = dayHeaderText(lbl);
+  const win=window.open('','_blank','width=1400,height=900');
   win.document.write(`<!DOCTYPE html><html><head>
-    <meta charset="UTF-8">
-    <title>Schichtplan</title>
+    <meta charset="UTF-8"><title>Schichtplan ${titleText}</title>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
       *{box-sizing:border-box;margin:0;padding:0;}
-      body{font-family:'Open Sans',Arial,sans-serif;font-size:12px;padding:15mm;}
-      @page{size:A3 landscape;margin:15mm;}
-      .ov-task{display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid #eee;}
-      .ov-task-name{font-weight:700;min-width:160px;}
-      .ov-task-time{min-width:100px;color:#666;}
-      .ov-bar-wrap{flex:1;height:8px;background:#eee;}
-      .ov-bar{height:100%;}
-      .ov-persons{min-width:200px;font-size:11px;}
-      h2{font-size:16px;font-weight:700;text-transform:uppercase;margin-bottom:16px;padding-bottom:6px;border-bottom:2px solid black;}
-      .sch-title{font-size:10px;font-weight:700;text-transform:uppercase;color:#666;margin:12px 0 4px;}
+      body{font-family:'Open Sans',Arial,sans-serif;font-size:11px;padding:12mm;}
+      @page{size:A3 landscape;margin:12mm;}
     </style>
-  </head><body>`);
-  win.document.write('<h2>' + el.querySelector('[style*="border-bottom:2px"]')?.textContent + '</h2>');
-  el.querySelectorAll('.ov-task').forEach(t => win.document.write(t.outerHTML));
-  win.document.write('</body></html>');
+  </head><body>
+    <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:12px;padding-bottom:8px;border-bottom:3px solid black;">
+      <div style="font-size:18px;font-weight:700;text-transform:uppercase">${titleText}</div>
+      <div style="font-size:11px;color:#666">Stützpunktfeuerwehr Meilen · Chilbi Herrliberg</div>
+    </div>
+    <div style="position:relative;height:22px;margin-left:120px;margin-bottom:8px;border-bottom:1px solid #ddd;">
+      <div style="position:relative;width:${totalPx}px;">${rulerHtml}</div>
+    </div>
+    ${schHtml}
+  </body></html>`);
   win.document.close();
   win.focus();
-  setTimeout(()=>win.print(), 800);
+  setTimeout(()=>win.print(), 1000);
 }
 
 function exportCSV() {
