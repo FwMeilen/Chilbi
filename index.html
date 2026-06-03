@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan Cl0.019</title>
+<title>Chilbi Herrliberg – Schichtplan Cl0.020</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -147,6 +147,8 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 .toast.show{transform:translateX(-50%) translateY(0);}
 .toast.success{background:var(--green);}
 .toast.error{background:var(--red);}
+.center-msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.9);background:var(--black);color:white;padding:24px 36px;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;z-index:998;text-align:center;opacity:0;transition:all .25s ease;pointer-events:none;max-width:80vw;}
+.center-msg.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
 .site-footer{background:var(--black);color:#666;font-size:11px;text-align:center;padding:1rem;}
 
 /* ── SPLASH ──────────────────────────────────────────────── */
@@ -229,7 +231,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">Cl0.019</div>
+    <div class="header-version">Cl0.020</div>
   </div>
 </div>
 <div class="red-stripe"></div>
@@ -288,7 +290,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
         </div>
         <div class="btn-row">
           <button class="btn" onclick="closePopup()">Abbrechen</button>
-          <button class="btn btn-red" id="btnSign" onclick="doSign()">Eintragen</button>
+          <button class="btn btn-red" id="btnSign" onclick="doSign()">In diese Schicht eintragen</button>
         </div>
       </div>
     </div>
@@ -296,7 +298,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl0.019</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl0.020</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -483,9 +485,9 @@ function buildMyShiftsPanel() {
     html += `<div class="ms-day-block"><div class="ms-day-title">${esc(buildDayHeaderText(lbl))}</div>`;
     byDay[lbl].forEach(({s, cfg}) => {
       html += `<div class="ms-card" onclick="openPopup('${esc(cfg.Tag)}','${esc(cfg.Schicht)}','${esc(cfg.Aufgabe)}','${esc(cfg.Von)}','${esc(cfg.Bis)}',${parseInt(cfg.MaxPersonen)||1},'${esc(cfg.Informationen||'')}')">
+        <div class="ms-card-schicht">${esc(cfg.Schicht)}</div>
         <div class="ms-card-name">${esc(cfg.Aufgabe)}</div>
         <div class="ms-card-time">${esc(cfg.Von)} – ${esc(cfg.Bis)}</div>
-        <div class="ms-card-schicht">${esc(cfg.Schicht)}</div>
         ${cfg.Informationen ? `<div class="ms-card-treff">${esc(cfg.Informationen)}</div>` : ''}
       </div>`;
     });
@@ -795,7 +797,7 @@ async function doSign() {
   if (!name) { showToast('Bitte zuerst Namen eingeben.', 'error'); closePopup(); return; }
   const { tag, schicht, aufgabe } = currentTarget;
   if (signupsFor(tag, schicht, aufgabe).some(s => s.Name === name)) {
-    showToast('Du bist bereits eingetragen.', 'error'); closePopup(); return;
+    closePopup(); showCenterMsg('Du bist bereits in dieser Schicht eingetragen.'); return;
   }
   const btn = document.getElementById('btnSign');
   btn.disabled = true; btn.textContent = 'Speichert…';
