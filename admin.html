@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl0.018</title>
+<title>Chilbi Admin – Schichtverwaltung Cl0.019</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -156,7 +156,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl0.018</span>
+      <span class="header-version">Cl0.019</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -166,20 +166,20 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
 
 <div class="container">
   <div class="admin-tabs">
-    <button class="admin-tab active" onclick="switchSection('schichten',this)">Schichten</button>
-    <button class="admin-tab" onclick="switchSection('anmeldungen',this)">Anmeldungen</button>
+    <button class="admin-tab active" onclick="switchSection('anmeldungen',this)">Anmeldungen</button>
     <button class="admin-tab" onclick="switchSection('uebersicht',this)">Übersicht</button>
+    <button class="admin-tab" onclick="switchSection('schichten',this)" style="margin-left:auto;color:var(--gray);border-color:var(--gray-mid);">⚙ Schichten einrichten</button>
   </div>
 
   <!-- SCHICHTEN -->
-  <div class="admin-section active" id="sec-schichten">
+  <div class="admin-section" id="sec-schichten">
     <div class="card">
       <div class="card-title">Schichten &amp; Aufgaben <small>Definiere alle Schichten mit Zeit, Personenzahl und Treffpunkt-Info</small></div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>ID</th><th>Tag-Bezeichnung</th><th>Schicht</th><th>Aufgabe</th>
+              <th>ID</th><th>Datum</th><th>Schicht</th><th>Aufgabe</th>
               <th>Von</th><th>Bis</th><th>Max.</th><th>Farbe</th><th>Informationen / Treffpunkt</th><th></th>
             </tr>
           </thead>
@@ -199,7 +199,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 
   <!-- ANMELDUNGEN -->
-  <div class="admin-section" id="sec-anmeldungen">
+  <div class="admin-section active" id="sec-anmeldungen">
     <div class="stats" id="statsBar"></div>
     <div class="card">
       <div class="card-title">Alle Anmeldungen</div>
@@ -207,17 +207,20 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
         <input type="text" id="filterName" placeholder="Name suchen…" oninput="renderSignups()">
         <select id="filterTag" onchange="renderSignups()"><option value="">Alle Tage</option></select>
         <select id="filterSchicht" onchange="renderSignups()"><option value="">Alle Schichten</option></select>
+        <select id="filterAufgabe" onchange="renderSignups()"><option value="">Alle Aufgaben</option></select>
+        <select id="sortColSel" onchange="sortCol=this.value;renderSignups()">
+          <option value="TagLabel">Sortierung: Tag</option>
+          <option value="Tag">Sortierung: ID</option>
+          <option value="Schicht">Sortierung: Schicht</option>
+          <option value="Aufgabe">Sortierung: Aufgabe</option>
+          <option value="Name">Sortierung: Name</option>
+        </select>
         <button class="btn btn-sm" onclick="exportCSV()">⬇ CSV</button>
       </div>
       <div class="table-wrap">
         <table>
           <thead><tr>
-  <th onclick="sortSignups('TagLabel')" style="cursor:pointer">Tag ↕</th>
-  <th onclick="sortSignups('Tag')" style="cursor:pointer">ID ↕</th>
-  <th onclick="sortSignups('Schicht')" style="cursor:pointer">Schicht ↕</th>
-  <th onclick="sortSignups('Aufgabe')" style="cursor:pointer">Aufgabe ↕</th>
-  <th onclick="sortSignups('Name')" style="cursor:pointer">Name ↕</th>
-  <th>Timestamp</th><th></th>
+  <th>Tag</th><th>ID</th><th>Schicht</th><th>Aufgabe</th><th>Name</th><th>Timestamp</th><th></th>
 </tr></thead>
           <tbody id="signupBody"></tbody>
         </table>
@@ -272,7 +275,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl0.018</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl0.019</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -337,7 +340,7 @@ function addRow(data={}) {
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td><input value="${esc(data.Tag||'')}" placeholder="A1/Sa1/Mo1" style="width:52px"></td>
-    <td><input value="${esc(data.TagLabel||'')}" placeholder="z.B. Samstag 07.06."></td>
+    <td><input value="${esc(data.Datum||data.TagLabel||'')}" placeholder="z.B. 14.08.2026"></td>
     <td><input value="${esc(data.Schicht||'')}" placeholder="Morgen"></td>
     <td><input value="${esc(data.Aufgabe||'')}" placeholder="Kasse"></td>
     <td><input value="${esc(data.Von||'')}" placeholder="08:00" style="width:58px"></td>
@@ -385,7 +388,7 @@ function addSampleRows() {
 function readConfigRows() {
   return [...document.querySelectorAll('#configBody tr')].map(tr => {
     const inp = tr.querySelectorAll('input,select');
-    return { Tag:inp[0].value.trim(), TagLabel:inp[1].value.trim(), Schicht:inp[2].value.trim(),
+    return { Tag:inp[0].value.trim(), Datum:inp[1].value.trim(),TagLabel:inp[1].value.trim(), Schicht:inp[2].value.trim(),
              Aufgabe:inp[3].value.trim(), Von:inp[4].value.trim(), Bis:inp[5].value.trim(),
              MaxPersonen:inp[6].value.trim(), Farbe:getRowColor(inp[7]?.closest('tr')), Informationen:inp[8]?.value.trim()||'' };
   }).filter(r => r.Tag && r.Aufgabe);
@@ -410,14 +413,20 @@ function renderSignups() {
   const tags = [...new Set(SIGNUPS.map(s=>s.Tag))];
   const schs = [...new Set(SIGNUPS.map(s=>s.Schicht))];
   const curTag = tagSel.value, curSch = schSel.value;
+  const aufgSel = document.getElementById('filterAufgabe');
+  const curAufg = aufgSel?.value || '';
+  const aufgs = [...new Set(SIGNUPS.map(s=>s.Aufgabe))].sort();
   tagSel.innerHTML = '<option value="">Alle Tage</option>' + tags.map(t=>`<option value="${esc(t)}"${t===curTag?' selected':''}>${esc(t)}</option>`).join('');
   schSel.innerHTML = '<option value="">Alle Schichten</option>' + schs.map(s=>`<option value="${esc(s)}"${s===curSch?' selected':''}>${esc(s)}</option>`).join('');
-  tagSel.value = curTag; schSel.value = curSch;
+  if(aufgSel) aufgSel.innerHTML = '<option value="">Alle Aufgaben</option>' + aufgs.map(a=>`<option value="${esc(a)}"${a===curAufg?' selected':''}>${esc(a)}</option>`).join('');
+  tagSel.value = curTag; schSel.value = curSch; if(aufgSel) aufgSel.value = curAufg;
 
   const nameQ = document.getElementById('filterName').value.toLowerCase();
+  const aufgQ = document.getElementById('filterAufgabe')?.value || '';
   const filtered = SIGNUPS.filter(s =>
     (!nameQ || s.Name.toLowerCase().includes(nameQ)) &&
-    (!curTag || s.Tag===curTag) && (!curSch || s.Schicht===curSch)
+    (!curTag || s.Tag===curTag) && (!curSch || s.Schicht===curSch) &&
+    (!aufgQ || s.Aufgabe===aufgQ)
   );
 
   const tbody = document.getElementById('signupBody');
@@ -430,7 +439,7 @@ function renderSignups() {
   tbody.innerHTML = filtered.map((s,idx) => {
     const cfg = CONFIG.find(r=>r.Tag===s.Tag)||{};
     return `<tr>
-      <td>${esc(cfg.TagLabel||s.Tag)}</td>
+      <td>${esc(cfg.Datum||cfg.TagLabel||s.Tag)}</td>
       <td>${esc(s.Tag)}</td>
       <td>${esc(s.Schicht)}</td>
       <td>${esc(s.Aufgabe)}</td>
@@ -448,7 +457,7 @@ function sortSignupsData(arr){
     const cfgA=CONFIG.find(r=>r.Tag===a.Tag)||{};
     const cfgB=CONFIG.find(r=>r.Tag===b.Tag)||{};
     let vA,vB;
-    if(sortCol==='TagLabel'){vA=cfgA.TagLabel||a.Tag||'';vB=cfgB.TagLabel||b.Tag||'';}
+    if(sortCol==='TagLabel'){vA=cfgA.Datum||cfgA.TagLabel||a.Tag||'';vB=cfgB.Datum||cfgB.TagLabel||b.Tag||'';}
     else{vA=String(a[sortCol]||'');vB=String(b[sortCol]||'');}
     const c=vA.localeCompare(vB,'de',{numeric:true});
     return sortAsc?c:-c;
@@ -487,7 +496,7 @@ function renderOverview() {
   // Gruppiere nach TagLabel
   const labelMap={}, labelOrder=[];
   CONFIG.forEach(r=>{
-    const lbl=r.TagLabel||r.Tag;
+    const lbl=r.Datum||r.Datum||r.TagLabel||r.Tag;
     if(!labelMap[lbl]){labelMap[lbl]=[];labelOrder.push(lbl);}
     labelMap[lbl].push(r);
   });
