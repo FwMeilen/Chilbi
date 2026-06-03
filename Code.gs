@@ -1,26 +1,24 @@
 // ============================================================
 // Chilbi Herrliberg – Schichtplanung Backend
-// Google Apps Script  |  v0.03
+// Google Apps Script  |  Cl0.019
 // ============================================================
 
-const SHEET_ID  = 'DEINE_SHEET_ID_HIER'; // ← ersetzen
-const ADMIN_PW  = 'chilbi2025';           // ← Passwort ändern
-
+const SHEET_ID  = '1XqTNfgONmHX9GvmfOVvb94BUo_oQ04Uy7R97FVfdWyo';
+const ADMIN_PW  = 'chilbi2025';
 const SS        = SpreadsheetApp.openById(SHEET_ID);
-const SH_CONFIG = 'Konfiguration'; // Spalten: Tag|TagLabel|Von|Bis|Schicht|Aufgabe|MaxPersonen|Farbe|Informationen
-const SH_SIGNUP = 'Anmeldungen';   // Spalten: Timestamp|Name|Tag|Schicht|Aufgabe
+const SH_CONFIG = 'Konfiguration'; // Schema: ID|Datum|Von|Bis|Schicht|Aufgabe|Max Personen|Farbe|Informationen
+const SH_SIGNUP = 'Anmeldungen';   // Schema: Tag|Name|Schicht|Aufgabe|Timestamp
 
-// ── GET ──────────────────────────────────────────────────────
 function doGet(e) {
   return jsonResponse({ config: getConfig(), signups: getSignups() });
 }
 
-// ── POST ─────────────────────────────────────────────────────
 function doPost(e) {
   try {
     const p = JSON.parse(e.postData.contents);
-    if (p.action === 'signup')      return jsonResponse(saveSignup(p));
-    if (p.action === 'unsignup')    return jsonResponse(removeSignup(p));
+    if (p.action === 'signup')     return jsonResponse(saveSignup(p));
+    if (p.action === 'unsignup')   return jsonResponse(removeSignup(p));
+    if (p.action === 'editSignup') return jsonResponse(editSignup(p));
     if (p.action === 'saveConfig') {
       if (p.password !== ADMIN_PW) return jsonResponse({ ok: false, error: 'Falsches Passwort' });
       return jsonResponse(saveConfig(p.rows));
@@ -31,7 +29,6 @@ function doPost(e) {
   }
 }
 
-// ── HELPERS ───────────────────────────────────────────────────
 function getConfig() {
   const sh = SS.getSheetByName(SH_CONFIG);
   if (!sh) return [];
@@ -67,7 +64,6 @@ function saveSignup(p) {
 function removeSignup(p) {
   const sh = SS.getSheetByName(SH_SIGNUP);
   const rows = sh.getDataRange().getValues();
-  // Schema: Tag|Name|Schicht|Aufgabe|Timestamp → Spalte 0=Tag, 1=Name
   for (let i = rows.length - 1; i >= 1; i--) {
     if (String(rows[i][0]) === String(p.tag) && String(rows[i][1]) === String(p.name)) {
       sh.deleteRow(i + 1);
@@ -91,10 +87,11 @@ function editSignup(p) {
 
 function saveConfig(rows) {
   const sh = SS.getSheetByName(SH_CONFIG);
+  const lastRow = sh.getLastRow();
   if (lastRow > 1) sh.getRange(2, 1, lastRow - 1, 9).clearContent();
   if (rows.length > 0) {
     const data = rows.map(r => [
-      r.Tag, r.TagLabel, r.Von, r.Bis,
+      r.Tag, r.Datum || r.TagLabel, r.Von, r.Bis,
       r.Schicht, r.Aufgabe, r.MaxPersonen, r.Farbe, r.Informationen || ''
     ]);
     sh.getRange(2, 1, data.length, 9).setValues(data);
