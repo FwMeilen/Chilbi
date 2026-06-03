@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl0.016</title>
+<title>Chilbi Admin – Schichtverwaltung Cl0.017</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -156,7 +156,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl0.016</span>
+      <span class="header-version">Cl0.017</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">→ Signup-Seite</button>
       <button class="btn btn-sm" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -230,7 +230,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl0.016</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl0.017</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -261,9 +261,13 @@ async function loadData() {
     const d = JSON.parse(text);
     CONFIG  = (d.config || []).map(row => {
       if (row['Max Personen'] !== undefined && row.MaxPersonen === undefined) row.MaxPersonen = row['Max Personen'];
+      if (row['ID'] !== undefined) row.Tag = String(row['ID']);
       return row;
     });
-    SIGNUPS = d.signups || [];
+    SIGNUPS = (d.signups || []).map(s => {
+      s.Tag = String(s.Tag || '');
+      return s;
+    });
     renderConfig();
     renderSignups();
     renderStats();
