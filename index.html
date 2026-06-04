@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan Cl0.021</title>
+<title>Chilbi Herrliberg – Schichtplan Cl0.023</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -33,6 +33,14 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 .name-input{height:32px;padding:0 10px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;background:white;color:var(--text);min-width:160px;max-width:220px;border-radius:0;}
 .name-input:focus{outline:none;border-color:var(--black);}
 .name-hint{font-size:11px;color:var(--text3);}
+/* Slider */
+.toggle-wrap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);}
+.toggle-switch{position:relative;width:36px;height:20px;cursor:pointer;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--gray-mid);transition:.2s;border-radius:20px;}
+.toggle-slider:before{content:'';position:absolute;height:14px;width:14px;left:3px;bottom:3px;background:white;transition:.2s;border-radius:50%;}
+.toggle-switch input:checked + .toggle-slider{background:var(--red);}
+.toggle-switch input:checked + .toggle-slider:before{transform:translateX(16px);}
 .legend{margin-left:auto;display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
 .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);}
 .legend-dot{width:10px;height:10px;}
@@ -231,7 +239,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">Cl0.021</div>
+    <div class="header-version">Cl0.023</div>
   </div>
 </div>
 <div class="red-stripe"></div>
@@ -241,6 +249,14 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <label>Angemeldet als:</label>
   <div class="name-display" id="nameDisplay">–</div>
   <span class="name-change" onclick="splashShow()">(ändern)</span>
+  <div class="toggle-wrap" style="margin-left:12px">
+    <span>Kürzel</span>
+    <label class="toggle-switch">
+      <input type="checkbox" id="nameToggle" onchange="toggleNameDisplay(this.checked)">
+      <span class="toggle-slider"></span>
+    </label>
+    <span>Namen</span>
+  </div>
   <div class="btn-group">
     <button class="btn-myshifts" id="btnMyShifts" onclick="toggleMyShifts()">Meine Schichten</button>
     <button class="btn-myshifts" id="btnICS" onclick="downloadICS()" style="display:none" title="Als Kalender (.ics) herunterladen">📅 Kalender</button>
@@ -313,13 +329,15 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl0.021</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl0.023</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
 
 let CONFIG  = [];
 let SIGNUPS = [];
+let KUERZEL = {}; // {kuerzel: 'Vorname Nachname'}
+let showNames = false; // false=Kürzel, true=Namen
 let DAYS    = [];
 let activeDay = 0;
 let currentTarget = null;
@@ -397,6 +415,18 @@ function splashShow() {
 
 function myName() { return localStorage.getItem('chilbi_name') || ''; }
 
+function displayName(kuerzel) {
+  if (!showNames) return kuerzel;
+  return KUERZEL[kuerzel] || kuerzel;
+}
+
+function toggleNameDisplay(checked) {
+  showNames = checked;
+  // Rebuild aktives Panel
+  if (!myShiftsMode) rebuildActivePanel();
+  else buildMyShiftsPanel();
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
   const saved = localStorage.getItem('chilbi_name');
   const mode  = localStorage.getItem('chilbi_mode') || 'ff';
@@ -436,8 +466,8 @@ async function silentRefresh() {
   const savedDay = activeDay;
   const savedScroll = document.querySelector('.day-panel.active .timeline-wrap')?.scrollLeft || 0;
   try {
-    const [configRows, signupRows] = await Promise.all([
-      fetchSheet('Konfiguration'), fetchSheet('Anmeldungen')
+    const [configRows, signupRows, kuerzelRows] = await Promise.all([
+      fetchSheet('Konfiguration'), fetchSheet('Anmeldungen'), fetchSheet('Kürzel')
     ]);
     CONFIG = configRows.filter(r => r.ID || r['ID']).map(r => {
       r.Tag = r.ID || r.Tag || '';
@@ -448,6 +478,18 @@ async function silentRefresh() {
     SIGNUPS = signupRows.filter(r => r.Name && r.Tag).map(r => ({
       Tag: r.Tag, Name: r.Name, Schicht: r.Schicht, Aufgabe: r.Aufgabe
     }));
+    KUERZEL = {};
+    (kuerzelRows||[]).forEach(r => {
+      const k = (r.Kürzel||r['Kürzel']||'').trim();
+      const name = ((r.Vorname||'').trim() + ' ' + (r.Nachname||'').trim()).trim();
+      if (k && name) KUERZEL[k] = name;
+    });
+    KUERZEL = {};
+    (kuerzelRows||[]).forEach(r => {
+      const k = (r.Kürzel||r['Kürzel']||'').trim();
+      const name = ((r.Vorname||'').trim() + ' ' + (r.Nachname||'').trim()).trim();
+      if (k && name) KUERZEL[k] = name;
+    });
     buildUI();
     activeDay = Math.min(savedDay, DAYS.length - 1);
     document.querySelectorAll('.tab-btn').forEach((b,j) => b.classList.toggle('active', j===activeDay));
@@ -601,12 +643,12 @@ async function fetchSheet(sheetName) {
 async function loadData() {
   const el = document.getElementById('loadingState');
   try {
-    const [configRows, signupRows] = await Promise.all([
+    const [configRows, signupRows, kuerzelRows] = await Promise.all([
       fetchSheet('Konfiguration'),
-      fetchSheet('Anmeldungen')
+      fetchSheet('Anmeldungen'),
+      fetchSheet('Kürzel')
     ]);
     CONFIG  = configRows.filter(r => r.ID || r['ID']).map(r => {
-      // Normalize column names
       r.Tag         = r.ID || r.Tag || '';
       r.MaxPersonen = r['Max Personen'] || r.MaxPersonen || '1';
       r.Informationen = r.Informationen || '';
@@ -615,6 +657,12 @@ async function loadData() {
     SIGNUPS = signupRows.filter(r => r.Name && r.Tag).map(r => ({
       Tag: r.Tag, Name: r.Name, Schicht: r.Schicht, Aufgabe: r.Aufgabe
     }));
+    KUERZEL = {};
+    (kuerzelRows||[]).forEach(r => {
+      const k = (r.Kürzel||r['Kürzel']||'').trim();
+      const name = ((r.Vorname||'').trim() + ' ' + (r.Nachname||'').trim()).trim();
+      if (k && name) KUERZEL[k] = name;
+    });
     buildUI();
   } catch(e) {
     if (el) el.innerHTML = `<div style="color:var(--red);padding:2rem;text-align:center">
@@ -766,7 +814,7 @@ function buildTimeline(day) {
 
       // Namen inline rechts vom Block
       const nameStr = taken.map(s =>
-        `<span style="font-size:11px;font-weight:600;color:var(--text2);background:var(--bg2);border:1px solid var(--gray-mid);padding:1px 6px;${s.Name===myName()?'background:var(--black);color:white;border-color:var(--black);':''}">${esc(s.Name)}</span>`
+        `<span style="font-size:11px;font-weight:600;color:var(--text2);background:var(--bg2);border:1px solid var(--gray-mid);padding:1px 6px;${s.Name===myName()?'background:var(--black);color:white;border-color:var(--black);':''}">${esc(displayName(s.Name))}</span>`
       ).join('');
 
       html += `<div class="tl-row">
