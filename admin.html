@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.033</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.034</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -169,7 +169,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.033</span>
+      <span class="header-version">Cl1.034</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -394,7 +394,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.033</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.034</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -526,7 +526,7 @@ function importCSV(input) {
 function addRow(data={}) {
   const tbody = document.getElementById('configBody');
   const i = tbody.rows.length;
-  const color = data.Farbe || PALETTE[i % PALETTE.length];
+  const color = rgbToHex(data.Farbe) || PALETTE[i % PALETTE.length];
   const tr = document.createElement('tr');
   tr.innerHTML = `
     <td><select id="rowtype-${i}" style="width:110px;padding:4px 6px;border:1px solid var(--gray-mid);font-family:inherit;font-size:12px;" onchange="updateRowId(${i})">
@@ -908,7 +908,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.033</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.034</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
@@ -939,6 +939,7 @@ const BRAND_COLORS = [
 ];
 
 function initColorPicker(i, initColor) {
+  initColor = rgbToHex(initColor) || '#CC0000';
   const swatchesEl = document.getElementById('cpswatches-' + i);
   if (!swatchesEl) return;
   swatchesEl.innerHTML = BRAND_COLORS.map(c =>
@@ -1067,7 +1068,7 @@ function buildAufgabenColorList() {
   if (!list) return;
   list.innerHTML = aufgaben.map(a => {
     const firstEntry = CONFIG.find(r => r.Aufgabe === a && r.Farbe && r.Farbe !== 'none');
-    const defaultColor = firstEntry?.Farbe || '#CC0000';
+    const defaultColor = rgbToHex(firstEntry?.Farbe) || '#CC0000';
     const color = saved[a] !== undefined ? saved[a] : defaultColor;
     const isNone = color === 'none';
     return `<div style="display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid var(--gray-mid);">
@@ -1329,6 +1330,22 @@ async function fetchGvizSheet(sheetName) {
     });
     return obj;
   });
+}
+
+function rgbToHex(color) {
+  if (!color || color === 'none') return color;
+  if (color.startsWith('#')) return color;
+  const m = color.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+  if (!m) return '#CC0000';
+  return '#' + [m[1],m[2],m[3]].map(x=>parseInt(x).toString(16).padStart(2,'0')).join('');
+}
+
+function textColor(hex) {
+  if (!hex || hex === 'none') return '#000000';
+  const h = hex.replace('#','');
+  if (h.length !== 6) return '#000000';
+  const r=parseInt(h.substr(0,2),16), g=parseInt(h.substr(2,2),16), b=parseInt(h.substr(4,2),16);
+  return (r*299+g*587+b*114)/1000 > 128 ? '#000000' : '#ffffff';
 }
 
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
