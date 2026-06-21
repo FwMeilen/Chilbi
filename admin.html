@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.039</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.040</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -161,7 +161,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <div class="login-error" id="loginError"></div>
     <button class="btn btn-red" style="width:100%" onclick="doLogin()">Einloggen</button>
     <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--gray-mid);text-align:center;font-size:11px;color:var(--text3);">
-      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.039</strong>
+      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.040</strong>
     </div>
   </div>
 </div>
@@ -172,7 +172,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.039</span>
+      <span class="header-version">Cl1.040</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -380,7 +380,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.039</div>
+<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.040</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -800,11 +800,12 @@ function renderOverview() {
         const max   = parseInt(t.MaxPersonen)||1;
         const pct   = Math.min(100, Math.round(taken.length/max*100));
         const barColor = taken.length>=max ? 'var(--green)' : taken.length>0 ? 'var(--red)' : 'var(--gray-mid)';
+        const isClosed = String(t.Geschlossen)==='1'||t.Geschlossen===true;
         html += `<div class="ov-task">
-          <div class="ov-task-name">${esc(t.Aufgabe)}</div>
+          <div class="ov-task-name">${esc(t.Aufgabe)}${isClosed?' 🔒':''}</div>
           <div class="ov-task-time">${esc(t.Von)}–${esc(t.Bis)}</div>
-          <div class="ov-bar-wrap"><div class="ov-bar" style="width:${pct}%;background:${barColor}"></div></div>
-          <div class="ov-persons" style="color:${barColor}">${taken.length}/${max} ${taken.map(s=>`<span style="font-weight:700">${esc(s.Name)}</span>`).join(', ')}</div>
+          <div class="ov-bar-wrap"><div class="ov-bar" style="width:${pct}%;background:${isClosed?'#888':barColor}"></div></div>
+          <div class="ov-persons" style="color:${isClosed?'#888':barColor}">${taken.length}/${max} ${taken.map(s=>`<span style="font-weight:700">${esc(s.Name)}</span>`).join(', ')}</div>
         </div>`;
       });
     });
@@ -867,14 +868,19 @@ function printDay(dayId) {
       const widePx=((bisM-vonM)*PX).toFixed(1);
       const taken=SIGNUPS.filter(s=>String(s.Tag)===String(r.Tag));
       const max=parseInt(r.MaxPersonen)||1;
-      const lineH=14; // px pro Zeile
+      const isClosed=String(r.Geschlossen)==='1'||r.Geschlossen===true;
+      const lineH=14;
       const blockH=Math.max(lineH, max*lineH);
       const namedLines=taken.map(s=>`<div style="border-bottom:1px solid #bbb;padding:1px 3px;font-size:8px;font-weight:700;height:${lineH}px;line-height:${lineH}px;overflow:hidden">${s.Name}</div>`).join('');
       const emptyLines=Array.from({length:Math.max(0,max-taken.length)},()=>`<div style="border-bottom:1px solid #bbb;height:${lineH}px;"></div>`).join('');
       schHtml+=`<div style="display:flex;align-items:flex-start;margin-bottom:2px;height:${blockH}px;">
-        <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;font-size:8px;font-weight:700;padding-right:6px;padding-top:2px;line-height:1.2">${r.Aufgabe}<br><span style="font-weight:400;color:#888">${r.Von}–${r.Bis}</span></div>
+        <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;font-size:8px;font-weight:700;padding-right:6px;padding-top:2px;line-height:1.2">
+          ${r.Aufgabe}${isClosed?' 🔒':''}<br>
+          <span style="font-weight:400;color:#888">${r.Von}–${r.Bis}</span><br>
+          <span style="font-weight:700;color:${taken.length>=max?'#c00':'#555'}">${taken.length}/${max}</span>
+        </div>
         <div style="position:relative;width:${TRACK_W}px;height:${blockH}px;background:#f8f8f8;border:1px solid #ddd;">
-          <div style="position:absolute;left:${leftPx}px;width:${widePx}px;height:${blockH}px;border:1.5px solid #333;background:white;overflow:hidden;">
+          <div style="position:absolute;left:${leftPx}px;width:${widePx}px;height:${blockH}px;border:1.5px solid #333;background:${isClosed?'#f0f0f0':'white'};overflow:hidden;">
             ${namedLines}${emptyLines}
           </div>
         </div>
@@ -897,7 +903,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.039</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.040</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
