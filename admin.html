@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.007</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.008</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -160,7 +160,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.007</span>
+      <span class="header-version">Cl1.008</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -307,7 +307,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.007</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.008</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -471,9 +471,7 @@ function readConfigRows() {
 async function saveConfig() {
   const rows = readConfigRows();
   try {
-    const r = await fetch(SCRIPT_URL, { method:'POST', body: JSON.stringify({action:'saveConfig',password:ADMIN_PW,rows}) });
-    const d = await r.json();
-    if (!d.ok) throw new Error(d.error);
+    await fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({action:'saveConfig',password:ADMIN_PW,rows}) });
     CONFIG = rows;
     showToast('✓ Schichten gespeichert!', 'success');
     renderOverview();
@@ -709,7 +707,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.007</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.008</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
@@ -805,9 +803,7 @@ function closeEditPopup(){document.getElementById('editPopupOverlay').style.disp
 async function saveEditSignup(){
   const updated={action:'editSignup',tag:document.getElementById('editTag').value.trim(),name:document.getElementById('editName').value.trim(),schicht:document.getElementById('editSchicht').value.trim(),aufgabe:document.getElementById('editAufgabe').value.trim(),oldTag:editOriginal.Tag,oldName:editOriginal.Name};
   try{
-    const r=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(updated)});
-    const d=await r.json();
-    if(!d.ok)throw new Error(d.error);
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(updated)});
     closeEditPopup();showToast('Gespeichert','success');await loadData();
   }catch(e){showToast('Fehler: '+e.message,'error');}
 }
@@ -815,9 +811,7 @@ function confirmDeleteSignup(){document.getElementById('confirmPopupOverlay').st
 function closeConfirmPopup(){document.getElementById('confirmPopupOverlay').style.display='none';}
 async function doDeleteSignup(){
   try{
-    const r=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'unsignup',tag:editOriginal.Tag,name:editOriginal.Name})});
-    const d=await r.json();
-    if(!d.ok)throw new Error(d.error);
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'unsignup',tag:editOriginal.Tag,name:editOriginal.Name})});
     closeConfirmPopup();closeEditPopup();showToast('Gelöscht','success');await loadData();
   }catch(e){showToast('Fehler: '+e.message,'error');}
 }
