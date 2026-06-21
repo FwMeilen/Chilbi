@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.018</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.019</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -160,7 +160,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.018</span>
+      <span class="header-version">Cl1.019</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -330,7 +330,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.018</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.019</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -763,7 +763,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.018</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.019</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
@@ -968,7 +968,8 @@ async function loadTage() {
 }
 
 function renderTage() {
-  const datums = [...new Set(CONFIG.map(r => r.Datum||r.TagLabel||r.Tag).filter(Boolean))].sort();
+  // Nur Datum-Spalte, Zeilen ohne Datum ignorieren
+  const datums = [...new Set(CONFIG.map(r => r.Datum).filter(d => d && d.match(/\d/)))].sort();
   const tbody = document.getElementById('tageBody');
   if (!tbody) return;
   tbody.innerHTML = datums.map(datum => {
@@ -977,14 +978,33 @@ function renderTage() {
     return `<tr>
       <td style="padding:8px;font-weight:600">${esc(datum)}</td>
       <td style="padding:8px">
-        <select onchange="TAGE_TYPEN['${esc(datum)}']=this.value" style="padding:4px 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:12px;">
-          <option value="Vorbereitung" ${typ==='Vorbereitung'?'selected':''}>Vorbereitung</option>
-          <option value="Chilbi" ${typ==='Chilbi'?'selected':''}>Chilbi</option>
-          <option value="Aufräumen" ${typ==='Aufräumen'?'selected':''}>Aufräumen</option>
-        </select>
+        <input type="text" value="${esc(typ)}"
+          onchange="TAGE_TYPEN['${esc(datum)}']=this.value"
+          style="padding:4px 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:12px;width:160px;"
+          placeholder="Vorbereitung / Chilbi / Aufräumen">
       </td>
     </tr>`;
   }).join('');
+  // Möglichkeit neue Tage hinzuzufügen
+  tbody.innerHTML += `<tr id="tageAddRow">
+    <td style="padding:8px">
+      <input type="text" id="newTageDatum" placeholder="z.B. 14.08.2026"
+        style="padding:4px 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:12px;width:120px;">
+    </td>
+    <td style="padding:8px;display:flex;gap:8px;align-items:center;">
+      <input type="text" id="newTageTyp" placeholder="Chilbi"
+        style="padding:4px 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:12px;width:160px;">
+      <button class="btn btn-sm" onclick="addTageRow()">+</button>
+    </td>
+  </tr>`;
+}
+
+function addTageRow() {
+  const datum = document.getElementById('newTageDatum').value.trim();
+  const typ   = document.getElementById('newTageTyp').value.trim() || 'Chilbi';
+  if (!datum) return;
+  TAGE_TYPEN[datum] = typ;
+  renderTage();
 }
 
 function autoDetectTyp(datum, config) {
