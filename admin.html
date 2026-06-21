@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.002</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.007</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -160,7 +160,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.002</span>
+      <span class="header-version">Cl1.007</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -172,6 +172,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   <div class="admin-tabs">
     <button class="admin-tab active" onclick="switchSection('anmeldungen',this)">Anmeldungen</button>
     <button class="admin-tab" onclick="switchSection('uebersicht',this)">Übersicht</button>
+    <button class="admin-tab" onclick="switchSection('einstellungen',this)">Einstellungen</button>
     <button class="admin-tab" onclick="switchSection('schichten',this)" style="margin-left:auto;color:var(--gray);border-color:var(--gray-mid);">⚙ Schichten einrichten</button>
   </div>
 
@@ -232,6 +233,33 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     </div>
   </div>
 
+  <!-- EINSTELLUNGEN -->
+  <div class="admin-section" id="sec-einstellungen">
+    <div class="card">
+      <div class="card-title">Einstellungen Schichtplan</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <tr style="border-bottom:1px solid var(--gray-mid);">
+          <td style="padding:14px 0;font-weight:600;">Farben anzeigen</td>
+          <td style="padding:14px 0;color:var(--text3);font-size:12px;">Bei deaktiviert werden alle Schichtblöcke einheitlich grau mit schwarzem Rand dargestellt</td>
+          <td style="padding:14px 0;text-align:right;white-space:nowrap;">
+            <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;">
+              <span>Aus</span>
+              <span style="position:relative;display:inline-block;width:44px;height:24px;">
+                <input type="checkbox" id="settingColors" checked onchange="saveSetting('showColors',this.checked)" style="opacity:0;position:absolute;width:100%;height:100%;cursor:pointer;margin:0;z-index:1;">
+                <span id="settingTrack" style="position:absolute;inset:0;background:var(--red);border-radius:24px;transition:.2s;"></span>
+                <span id="settingKnob" style="position:absolute;height:18px;width:18px;left:23px;top:3px;background:white;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></span>
+              </span>
+              <span>Ein</span>
+            </label>
+          </td>
+        </tr>
+      </table>
+      <div style="margin-top:16px;font-size:12px;color:var(--text3);">
+        Einstellungen werden lokal gespeichert und gelten für diesen Browser.
+      </div>
+    </div>
+  </div>
+
   <!-- ÜBERSICHT -->
   <div class="admin-section" id="sec-uebersicht">
     <div class="card" style="border-top-color:var(--black)">
@@ -279,7 +307,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.002</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.007</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -321,6 +349,7 @@ async function loadData() {
     renderSignups();
     renderStats();
     renderOverview();
+    loadSettings();
   } catch(e) { showToast('Ladefehler: ' + e.message, 'error'); }
 }
 
@@ -680,7 +709,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.002</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.007</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
@@ -791,6 +820,27 @@ async function doDeleteSignup(){
     if(!d.ok)throw new Error(d.error);
     closeConfirmPopup();closeEditPopup();showToast('Gelöscht','success');await loadData();
   }catch(e){showToast('Fehler: '+e.message,'error');}
+}
+
+function loadSettings() {
+  const showColors = localStorage.getItem('chilbi_showColors') !== 'false';
+  const cb = document.getElementById('settingColors');
+  if (cb) {
+    cb.checked = showColors;
+    updateSettingUI(showColors);
+  }
+}
+
+function saveSetting(key, value) {
+  localStorage.setItem('chilbi_' + key, value);
+  updateSettingUI(value);
+}
+
+function updateSettingUI(checked) {
+  const track = document.getElementById('settingTrack');
+  const knob  = document.getElementById('settingKnob');
+  if (track) track.style.background = checked ? 'var(--red)' : 'var(--gray-mid)';
+  if (knob)  knob.style.left = checked ? '23px' : '3px';
 }
 
 function formatDate(d) { try{return new Date(d).toLocaleString('de-CH');}catch(e){return d||'';} }
