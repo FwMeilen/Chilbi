@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.008</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.009</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -160,7 +160,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.008</span>
+      <span class="header-version">Cl1.009</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -307,7 +307,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.008</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.009</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -461,10 +461,31 @@ function addSampleRows() {
 
 function readConfigRows() {
   return [...document.querySelectorAll('#configBody tr')].map(tr => {
-    const inp = tr.querySelectorAll('input,select');
-    const hiddenTag = tr.querySelector('input[type=hidden]'); return { Tag:hiddenTag?hiddenTag.value.trim():inp[0]?.value?.trim()||'', Datum:inp[1].value.trim(),TagLabel:inp[1].value.trim(), Schicht:inp[2].value.trim(),
-             Aufgabe:inp[3].value.trim(), Von:inp[4].value.trim(), Bis:inp[5].value.trim(),
-             MaxPersonen:inp[6].value.trim(), Farbe:getRowColor(inp[7]?.closest('tr')), Informationen:inp[8]?.value.trim()||'', Geschlossen: tr.querySelector('.row-closed')?.checked ? '1' : '0' };
+    // Nur sichtbare Inputs (nicht hidden), in DOM-Reihenfolge
+    const visibleInputs = [...tr.querySelectorAll('input:not([type=hidden]),select:not(.row-closed)')];
+    const hiddenTag = tr.querySelector('input[type=hidden]');
+    // visibleInputs: [0]=Typ-Select, [1]=Datum, [2]=Schicht, [3]=Aufgabe, [4]=Von, [5]=Bis, [6]=Max, [7]=ColorCustom
+    // Informationen: letztes text-input vor der Checkbox
+    const textInputs = [...tr.querySelectorAll('input[type=text],input[type=number],input:not([type=hidden]):not([type=color]):not([type=checkbox])')];
+    // Direkte Referenz per Platzhalter
+    const datumInp   = tr.querySelector('input[placeholder="z.B. 14.08.2026"]') || visibleInputs[1];
+    const schichtInp = tr.querySelector('input[placeholder="Morgen"]')           || visibleInputs[2];
+    const aufgabeInp = tr.querySelector('input[placeholder="Kasse"]')            || visibleInputs[3];
+    const vonInp     = tr.querySelector('input[placeholder="08:00"]')            || visibleInputs[4];
+    const bisInp     = tr.querySelector('input[placeholder="12:00"]')            || visibleInputs[5];
+    const maxInp     = tr.querySelector('input[type=number]');
+    const infoInp    = tr.querySelector('input[placeholder="Treffpunkt / Hinweise…"]');
+    const closed     = tr.querySelector('.row-closed')?.checked ? '1' : '0';
+    const tag        = hiddenTag?.value.trim() || '';
+    return {
+      Tag: tag, Datum: datumInp?.value.trim()||'', TagLabel: datumInp?.value.trim()||'',
+      Schicht: schichtInp?.value.trim()||'', Aufgabe: aufgabeInp?.value.trim()||'',
+      Von: vonInp?.value.trim()||'', Bis: bisInp?.value.trim()||'',
+      MaxPersonen: maxInp?.value.trim()||'2',
+      Farbe: getRowColor(tr),
+      Informationen: infoInp?.value.trim()||'',
+      Geschlossen: closed
+    };
   }).filter(r => r.Tag && r.Aufgabe);
 }
 
@@ -707,7 +728,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.008</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.009</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
