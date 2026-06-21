@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan Cl1.004</title>
+<title>Chilbi Herrliberg – Schichtplan Cl1.002</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -239,7 +239,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">Cl1.004</div>
+    <div class="header-version">Cl1.002</div>
   </div>
 </div>
 <div class="red-stripe"></div>
@@ -329,7 +329,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.004</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.002</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -338,7 +338,6 @@ let CONFIG  = [];
 let SIGNUPS = [];
 let KUERZEL = {}; // {kuerzel: 'Vorname Nachname'}
 let showNames = false; // false=Kürzel, true=Namen
-function showColors() { return localStorage.getItem('chilbi_showColors') !== 'false'; }
 let DAYS    = [];
 let activeDay = 0;
 let currentTarget = null;
@@ -856,14 +855,12 @@ function buildTimeline(day) {
 
       let cls = '', blockColor = color;
       const isClosed = !!r.Geschlossen;
-      const useColor = showColors();
       if      (isClosed) { cls = 'voll'; blockColor = '#888'; }
-      else if (isMine)   { cls = 'mine'; blockColor = useColor ? '#1a1a1a' : '#1a1a1a'; }
+      else if (isMine)   { cls = 'mine'; blockColor = '#1a1a1a'; }
       else if (isFull)   { cls = 'voll'; blockColor = '#aaa'; }
-      else if (hasOther) { cls = 'andere'; blockColor = useColor ? color : '#e0e0e0'; }
-      else               { blockColor = useColor ? color : '#f0f0f0'; }
+      else if (hasOther) { cls = 'andere'; }
 
-      const fgColor = (cls==='mine'||cls==='voll') ? '#ffffff' : (useColor ? textColor(blockColor) : '#1a1a1a');
+      const fgColor = (cls==='mine'||cls==='voll') ? '#ffffff' : textColor(blockColor);
       const dots = Array.from({length: max}, (_,i) =>
         `<div class="slot-dot${i < taken.length?' taken':''}"></div>`
       ).join('');
@@ -877,7 +874,7 @@ function buildTimeline(day) {
         <div class="tl-label">${esc(r.Aufgabe)}</div>
         <div class="tl-track" style="width:${totalPx}px">
           <div class="task-block ${cls}"
-            style="left:${leftPx}px;width:${widePx}px;background:${blockColor};color:${fgColor};${useColor?'':`border:2px solid #333;`}"
+            style="left:${leftPx}px;width:${widePx}px;background:${blockColor};color:${fgColor}"
             onclick="if(!${isClosed?'true':'false'})openPopup('${esc(rowId)}','${esc(sch)}','${esc(r.Aufgabe)}','${esc(r.Von)}','${esc(r.Bis)}',${max},'${esc(r.Informationen||'')}');"
             title="${esc(r.Aufgabe)} | ${esc(r.Von)}–${esc(r.Bis)}">
             <span class="block-time">${esc(r.Von)}–${esc(r.Bis)}</span>
@@ -961,21 +958,18 @@ async function doSign() {
   const btn = document.getElementById('btnSign');
   btn.disabled = true; btn.textContent = 'Speichert…';
   try {
-    // no-cors wegen Google Apps Script CORS-Einschränkung
-    await fetch(SCRIPT_URL, {
+    const r = await fetch(SCRIPT_URL, {
       method: 'POST',
-      mode: 'no-cors',
       body: JSON.stringify({ action: 'signup', name, tag, schicht, aufgabe })
     });
-    // Optimistisch hinzufügen + Sheet nachladen zur Bestätigung
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error);
     SIGNUPS.push({ Tag: tag, Name: name, Schicht: schicht, Aufgabe: aufgabe });
     closePopup();
     showToast('✓ Eingetragen: ' + name, 'success');
     rebuildActivePanel();
-    // Nach 2s neu laden zur Bestätigung
-    setTimeout(() => silentRefresh(), 2000);
   } catch(e) {
-    btn.disabled = false; btn.textContent = 'In diese Schicht eintragen';
+    btn.disabled = false; btn.textContent = 'Eintragen';
     showToast('Fehler: ' + e.message, 'error');
   }
 }
