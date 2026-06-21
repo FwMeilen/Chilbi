@@ -467,7 +467,7 @@ async function silentRefresh() {
   const savedScroll = document.querySelector('.day-panel.active .timeline-wrap')?.scrollLeft || 0;
   try {
     const [configRows, signupRows, kuerzelRows] = await Promise.all([
-      fetchSheet('Konfiguration'), fetchSheet('Anmeldungen'), fetchKuerzel()
+      fetchSheet('Konfiguration'), fetchSheet('Anmeldungen'), fetchKuerzelSheet()
     ]);
     CONFIG = configRows.filter(r => r.ID || r['ID']).map(r => {
       r.Tag = r.ID || r.Tag || '';
@@ -478,14 +478,6 @@ async function silentRefresh() {
     SIGNUPS = signupRows.filter(r => r.Name && r.Tag).map(r => ({
       Tag: r.Tag, Name: r.Name, Schicht: r.Schicht, Aufgabe: r.Aufgabe
     }));
-    KUERZEL = {};
-    (kuerzelRows||[]).forEach(r => {
-      const k = (r['Kürzel']||r['Kuerzel']||r.Kürzel||r.Kuerzel||'').trim();
-      const vorname = (r['Vorname']||r.Vorname||'').trim();
-      const nachname = (r['Name']||r.Name||r['Nachname']||r.Nachname||'').trim();
-      const name = [vorname, nachname].filter(Boolean).join(' ');
-      if (k && name) KUERZEL[k] = name;
-    });
     KUERZEL = {};
     (kuerzelRows||[]).forEach(r => {
       const k = (r['Kürzel']||r['Kuerzel']||r.Kürzel||r.Kuerzel||'').trim();
@@ -610,9 +602,10 @@ function buildDayHeaderText(label) {
 }
 
 const SHEET_ID = '1XqTNfgONmHX9GvmfOVvb94BUo_oQ04Uy7R97FVfdWyo';
+const KUERZEL_SHEET_ID = '1bK6IuVpAdLyYc9_NPbJxFMkvCZ0fNvadJABBUM-Rc0M';
 const GVIZ = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
-async function fetchKuerzel() {
+async function fetchKuerzelSheet() {
   const url = `https://docs.google.com/spreadsheets/d/1bK6IuVpAdLyYc9_NPbJxFMkvCZ0fNvadJABBUM-Rc0M/gviz/tq?tqx=out:json&_=${Date.now()}`;
   try {
     const res = await fetch(url);
@@ -669,13 +662,38 @@ async function fetchSheet(sheetName) {
   });
 }
 
+async function fetchKuerzelSheet() {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/1bK6IuVpAdLyYc9_NPbJxFMkvCZ0fNvadJABBUM-Rc0M/gviz/tq?tqx=out:json&_=${Date.now()}`;
+    const res = await fetch(url);
+    const text = await res.text();
+    const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+    if (!match) return [];
+    const json = JSON.parse(match[1]);
+    const rows = json.table.rows || [];
+    const gvizLabels = json.table.cols.map(c => c.label ? c.label.trim() : '');
+    const hasLabels = gvizLabels.some(l => l !== '');
+    let headers, dataRows;
+    if (hasLabels) { headers = gvizLabels; dataRows = rows; }
+    else { headers = rows[0]?.c.map(c => c ? String(c.v||'').trim() : '') || []; dataRows = rows.slice(1); }
+    return dataRows.filter(row => row && row.c && row.c.some(c => c && c.v != null)).map(row => {
+      const obj = {};
+      headers.forEach((col, i) => {
+        const cell = row.c ? row.c[i] : null;
+        obj[col] = cell ? (cell.f != null ? String(cell.f).trim() : (cell.v != null ? String(cell.v).trim() : '')) : '';
+      });
+      return obj;
+    });
+  } catch(e) { console.warn('Kürzel-Sheet Ladefehler:', e); return []; }
+}
+
 async function loadData() {
   const el = document.getElementById('loadingState');
   try {
     const [configRows, signupRows, kuerzelRows] = await Promise.all([
       fetchSheet('Konfiguration'),
       fetchSheet('Anmeldungen'),
-      fetchKuerzel()
+      fetchKuerzelSheet()
     ]);
     CONFIG  = configRows.filter(r => r.ID || r['ID']).map(r => {
       r.Tag         = r.ID || r.Tag || '';
