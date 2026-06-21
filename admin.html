@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.020</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.021</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -169,7 +169,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.020</span>
+      <span class="header-version">Cl1.021</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -355,7 +355,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.020</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.021</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -829,7 +829,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.020</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.021</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
@@ -1108,7 +1108,12 @@ async function fetchGvizSheet(sheetName) {
     const obj = {};
     headers.forEach((col, i) => {
       const cell = row.c ? row.c[i] : null;
-      obj[col] = cell ? (cell.v != null ? String(cell.v).trim() : '') : '';
+      if (!cell) { obj[col] = ''; return; }
+      // Für Datumswerte: cell.f (formatted) bevorzugen
+      const val = (cell.f != null && String(cell.f).match(/\d{1,2}\.\d{1,2}/))
+        ? String(cell.f).trim()
+        : (cell.v != null ? String(cell.v).trim() : '');
+      obj[col] = val;
     });
     return obj;
   });
