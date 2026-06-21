@@ -6,7 +6,7 @@
 const SHEET_ID  = '1XqTNfgONmHX9GvmfOVvb94BUo_oQ04Uy7R97FVfdWyo';
 const ADMIN_PW  = 'chilbi2025';
 const SS        = SpreadsheetApp.openById(SHEET_ID);
-const SH_CONFIG = 'Konfiguration'; // Schema: ID|Datum|Von|Bis|Schicht|Aufgabe|Max Personen|Farbe|Informationen
+const SH_CONFIG = 'Konfiguration'; // Schema: ID|Datum|Von|Bis|Schicht|Aufgabe|Max Personen|Farbe|Informationen|Geschlossen
 const SH_SIGNUP = 'Anmeldungen';   // Schema: Tag|Name|Schicht|Aufgabe|Timestamp
 
 function doGet(e) {
@@ -88,13 +88,13 @@ function editSignup(p) {
 function saveConfig(rows) {
   const sh = SS.getSheetByName(SH_CONFIG);
   const lastRow = sh.getLastRow();
-  if (lastRow > 1) sh.getRange(2, 1, lastRow - 1, 9).clearContent();
+  if (lastRow > 1) sh.getRange(2, 1, lastRow - 1, 10).clearContent();
   if (rows.length > 0) {
     const data = rows.map(r => [
       r.Tag, r.Datum || r.TagLabel, r.Von, r.Bis,
-      r.Schicht, r.Aufgabe, r.MaxPersonen, r.Farbe, r.Informationen || ''
+      r.Schicht, r.Aufgabe, r.MaxPersonen, r.Farbe, r.Informationen || '', r.Geschlossen || '0'
     ]);
-    sh.getRange(2, 1, data.length, 9).setValues(data);
+    sh.getRange(2, 1, data.length, 10).setValues(data);
   }
   return { ok: true };
 }
