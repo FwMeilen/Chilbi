@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.016</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.017</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -160,7 +160,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.016</span>
+      <span class="header-version">Cl1.017</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -331,7 +331,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.016</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.017</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -374,7 +374,7 @@ async function loadData() {
     renderStats();
     renderOverview();
     loadSettings();
-    renderTage();
+    loadTage();
     if(localStorage.getItem('chilbi_autoColor')!=='false') buildAufgabenColorList();
   } catch(e) { showToast('Ladefehler: ' + e.message, 'error'); }
 }
@@ -764,7 +764,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.016</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.017</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
@@ -959,14 +959,22 @@ function applyAutoColors() {
 // ── TAGE ──────────────────────────────────────────────────────
 let TAGE_TYPEN = {}; // {datum: 'Chilbi'|'Vorbereitung'|'Aufräumen'}
 
+async function loadTage() {
+  try {
+    const rows = await fetchGvizSheet('Tage');
+    TAGE_TYPEN = {};
+    rows.forEach(r => { if(r.Datum) TAGE_TYPEN[r.Datum] = r.Typ || 'Chilbi'; });
+  } catch(e) { console.warn('Tage nicht geladen:', e); }
+  renderTage();
+}
+
 function renderTage() {
   const datums = [...new Set(CONFIG.map(r => r.Datum||r.TagLabel||r.Tag).filter(Boolean))].sort();
-  const saved = JSON.parse(localStorage.getItem('chilbi_tageTypen') || '{}');
-  TAGE_TYPEN = {...saved};
   const tbody = document.getElementById('tageBody');
   if (!tbody) return;
   tbody.innerHTML = datums.map(datum => {
     const typ = TAGE_TYPEN[datum] || autoDetectTyp(datum, CONFIG);
+    TAGE_TYPEN[datum] = typ;
     return `<tr>
       <td style="padding:8px;font-weight:600">${esc(datum)}</td>
       <td style="padding:8px">
@@ -989,8 +997,10 @@ function autoDetectTyp(datum, config) {
   return 'Chilbi';
 }
 
-function saveTage() {
-  localStorage.setItem('chilbi_tageTypen', JSON.stringify(TAGE_TYPEN));
+async function saveTage() {
+  const rows = Object.entries(TAGE_TYPEN).map(([datum, typ]) => ({Datum: datum, Typ: typ}));
+  await fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify({action:'saveTage', password:ADMIN_PW, rows})});
   showToast('✓ Tage gespeichert', 'success');
 }
 
@@ -1002,6 +1012,30 @@ function loadAutoColorSetting() {
 }
 
 function formatDate(d) { try{return new Date(d).toLocaleString('de-CH');}catch(e){return d||'';} }
+const SHEET_ID_ADMIN = '1XqTNfgONmHX9GvmfOVvb94BUo_oQ04Uy7R97FVfdWyo';
+async function fetchGvizSheet(sheetName) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID_ADMIN}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&_=${Date.now()}`;
+  const res = await fetch(url);
+  const text = await res.text();
+  const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+  if (!match) return [];
+  const json = JSON.parse(match[1]);
+  const rows = json.table.rows || [];
+  const gvizLabels = json.table.cols.map(c => c.label ? c.label.trim() : '');
+  const hasLabels = gvizLabels.some(l => l !== '');
+  let headers, dataRows;
+  if (hasLabels) { headers = gvizLabels; dataRows = rows; }
+  else { headers = rows[0]?.c.map(c => c ? String(c.v||'').trim() : '') || []; dataRows = rows.slice(1); }
+  return dataRows.filter(row => row && row.c && row.c[0] && row.c[0].v != null).map(row => {
+    const obj = {};
+    headers.forEach((col, i) => {
+      const cell = row.c ? row.c[i] : null;
+      obj[col] = cell ? (cell.v != null ? String(cell.v).trim() : '') : '';
+    });
+    return obj;
+  });
+}
+
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(type?' '+type:'');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
 </script>
