@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.029</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.032</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -169,7 +169,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.029</span>
+      <span class="header-version">Cl1.032</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -181,6 +181,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   <div class="admin-tabs">
     <button class="admin-tab active" onclick="switchSection('anmeldungen',this)">Anmeldungen</button>
     <button class="admin-tab" onclick="switchSection('uebersicht',this)">Übersicht</button>
+    <button class="admin-tab" onclick="switchSection('schichtplan',this)">Schichten bearbeiten</button>
     <button class="admin-tab" onclick="switchSection('einstellungen',this)">Einstellungen</button>
   </div>
 
@@ -211,6 +212,14 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
           <tbody id="signupBody"></tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+  <!-- SCHICHTEN BEARBEITEN -->
+  <div class="admin-section" id="sec-schichtplan">
+    <div class="card">
+      <div class="card-title">Schichten bearbeiten</div>
+      <div id="schichtplanContent"></div>
     </div>
   </div>
 
@@ -360,8 +369,32 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     </div>
   </div>
 </div>
+
+<!-- EDIT SCHICHT POPUP -->
+<div id="editSchichtOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:white;max-width:500px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.25);">
+    <div style="background:var(--black);color:white;padding:16px 20px;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Schicht bearbeiten</div>
+    <div style="padding:20px;">
+      <input type="hidden" id="esTag">
+      <table style="width:100%;font-size:13px;border-collapse:collapse;">
+        <tr><td style="padding:6px 0;font-weight:600;width:120px">Datum</td><td><input id="esDatum" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;"></td></tr>
+        <tr><td style="padding:6px 0;font-weight:600">Schicht</td><td><input id="esSchicht" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;"></td></tr>
+        <tr><td style="padding:6px 0;font-weight:600">Aufgabe</td><td><input id="esAufgabe" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;"></td></tr>
+        <tr><td style="padding:6px 0;font-weight:600">Von</td><td><input id="esVon" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;" placeholder="08:00"></td></tr>
+        <tr><td style="padding:6px 0;font-weight:600">Bis</td><td><input id="esBis" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;" placeholder="12:00"></td></tr>
+        <tr><td style="padding:6px 0;font-weight:600">Max Personen</td><td><input id="esMax" type="number" min="1" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;"></td></tr>
+        <tr><td style="padding:6px 0;font-weight:600">Informationen</td><td><input id="esInfo" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;" placeholder="Treffpunkt…"></td></tr>
+        <tr><td style="padding:6px 0;font-weight:600">Gesperrt</td><td><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;margin-top:4px;"><input type="checkbox" id="esGeschlossen" style="width:16px;height:16px;accent-color:var(--red);"> Schicht für neue Einträge sperren</label></td></tr>
+      </table>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;">
+        <button class="btn btn-sm" onclick="closeEditSchicht()">Abbrechen</button>
+        <button class="btn btn-green btn-sm" onclick="saveEditSchicht()">💾 Speichern</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.029</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.032</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -411,6 +444,7 @@ async function loadData() {
 
 function switchSection(id, btn) {
   document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  if (id === 'schichtplan') setTimeout(buildSchichtplan, 50);
   document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('sec-'+id).classList.add('active');
   btn.classList.add('active');
@@ -874,7 +908,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.029</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.032</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
@@ -1139,6 +1173,131 @@ function loadAutoColorSetting() {
   const cb = document.getElementById('settingAutoColor');
   if (cb) cb.checked = auto;
   if (auto) toggleAutoColor(true);
+}
+
+// ── SCHICHTEN BEARBEITEN ──────────────────────────────────────
+function buildSchichtplan() {
+  const content = document.getElementById('schichtplanContent');
+  if (!content) return;
+
+  // Gruppiere nach Datum
+  const labelMap={}, labelOrder=[];
+  CONFIG.forEach(r=>{
+    const lbl=r.Datum||r.TagLabel||'';
+    if(!lbl||!lbl.match(/\d/)) return;
+    if(!labelMap[lbl]){labelMap[lbl]=[];labelOrder.push(lbl);}
+    labelMap[lbl].push(r);
+  });
+
+  if (!labelOrder.length) { content.innerHTML='<div class="empty">Noch keine Schichten erfasst.</div>'; return; }
+
+  function parseT(t,von){const[h,m]=String(t).split(':').map(Number);let mins=h*60+(m||0);if(von!==undefined&&mins<=von&&mins<720)mins+=24*60;return mins;}
+
+  let html = '';
+  labelOrder.forEach(lbl => {
+    const rows = labelMap[lbl];
+    const allT = rows.flatMap(r=>{const v=parseT(r.Von);return[v,parseT(r.Bis,v)];});
+    const minT=Math.min(...allT), maxT=Math.max(...allT);
+    const spanMin=maxT-minT;
+    const PX=2;
+    const totalPx=spanMin*PX;
+
+    // Schichten gruppieren
+    const schMap={}, schOrder=[];
+    rows.forEach(r=>{if(!schMap[r.Schicht]){schMap[r.Schicht]=[];schOrder.push(r.Schicht);}schMap[r.Schicht].push(r);});
+
+    // Ruler
+    let ticks='';
+    for(let h=Math.floor(minT/60);h<=Math.ceil(maxT/60);h++){
+      const px=(h*60-minT)*PX;
+      ticks+=`<div style="position:absolute;left:${px}px;font-size:9px;color:#888;border-left:1px solid #ddd;padding-left:2px;top:4px;white-space:nowrap">${h%24}:00</div>`;
+    }
+
+    html += `<div style="margin-bottom:24px;">
+      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:8px 0 6px;border-bottom:2px solid var(--black);margin-bottom:8px;">${esc(dayHeaderText(lbl))}</div>
+      <div style="overflow-x:auto;padding-bottom:8px;">
+        <div style="display:inline-block;min-width:100%">
+          <div style="display:flex;margin-bottom:4px;">
+            <div style="width:130px;min-width:130px;"></div>
+            <div style="position:relative;width:${totalPx}px;height:22px;border-bottom:1px solid #eee;">${ticks}</div>
+          </div>`;
+
+    schOrder.forEach(sch => {
+      html += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;margin:8px 0 3px 130px;border-bottom:1px solid #eee;padding-bottom:2px">${esc(sch)}</div>`;
+      schMap[sch].forEach(r => {
+        const vonM=parseT(r.Von), bisM=parseT(r.Bis,vonM);
+        const leftPx=((vonM-minT)*PX).toFixed(1);
+        const widePx=((bisM-vonM)*PX).toFixed(1);
+        const color = r.Farbe==='none'?'#e0e0e0':(r.Farbe||'#CC0000');
+        const isClosed = String(r.Geschlossen)==='1'||r.Geschlossen===true;
+        const taken = SIGNUPS.filter(s=>String(s.Tag)===String(r.Tag)||String(s.ID)===String(r.Tag));
+        const max = parseInt(r.MaxPersonen||r['Max Personen'])||1;
+        const fg = textColor(color);
+        html += `<div style="display:flex;align-items:center;margin-bottom:3px;">
+          <div style="width:130px;min-width:130px;font-size:11px;font-weight:600;padding-right:8px;color:var(--text2)">${esc(r.Aufgabe)}</div>
+          <div style="position:relative;width:${totalPx}px;height:34px;background:rgba(0,0,0,.04);border:1px solid #eee;">
+            <div style="position:absolute;left:${leftPx}px;width:${widePx}px;height:34px;background:${isClosed?'#888':color};color:${isClosed?'white':fg};cursor:pointer;display:flex;align-items:center;padding:0 8px;gap:6px;font-size:10px;overflow:hidden;${r.Farbe==='none'?'border:2px solid #333;':''}"
+              onclick="openEditSchicht('${esc(r.Tag)}')"
+              title="Klicken zum Bearbeiten">
+              <span style="font-weight:400;white-space:nowrap">${esc(r.Von)}–${esc(r.Bis)}</span>
+              <span style="font-weight:700;white-space:nowrap">${esc(r.Aufgabe)}</span>
+              <span style="margin-left:auto;opacity:.7">${taken.length}/${max}${isClosed?' 🔒':''}</span>
+            </div>
+          </div>
+        </div>`;
+      });
+    });
+    html += `</div></div></div>`;
+  });
+  content.innerHTML = html;
+}
+
+function openEditSchicht(tagId) {
+  const r = CONFIG.find(row => String(row.Tag) === String(tagId) || String(row.ID) === String(tagId));
+  if (!r) return;
+  document.getElementById('esTag').value = r.Tag || r.ID || '';
+  document.getElementById('esDatum').value = r.Datum || r.TagLabel || '';
+  document.getElementById('esSchicht').value = r.Schicht || '';
+  document.getElementById('esAufgabe').value = r.Aufgabe || '';
+  document.getElementById('esVon').value = r.Von || '';
+  document.getElementById('esBis').value = r.Bis || '';
+  document.getElementById('esMax').value = r.MaxPersonen || r['Max Personen'] || '1';
+  document.getElementById('esInfo').value = r.Informationen || '';
+  document.getElementById('esGeschlossen').checked = r.Geschlossen === true || String(r.Geschlossen) === '1';
+  document.getElementById('editSchichtOverlay').style.display = 'flex';
+}
+
+function closeEditSchicht() {
+  document.getElementById('editSchichtOverlay').style.display = 'none';
+}
+
+async function saveEditSchicht() {
+  const tag = document.getElementById('esTag').value;
+  const updated = CONFIG.map(r => {
+    if (String(r.Tag||r.ID) !== String(tag)) return r;
+    return {
+      ...r,
+      Datum: document.getElementById('esDatum').value.trim(),
+      Schicht: document.getElementById('esSchicht').value.trim(),
+      Aufgabe: document.getElementById('esAufgabe').value.trim(),
+      Von: document.getElementById('esVon').value.trim(),
+      Bis: document.getElementById('esBis').value.trim(),
+      MaxPersonen: document.getElementById('esMax').value.trim(),
+      Informationen: document.getElementById('esInfo').value.trim(),
+      Geschlossen: document.getElementById('esGeschlossen').checked ? '1' : '0'
+    };
+  });
+  await fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify({action:'saveConfig', password:ADMIN_PW, rows: updated.map(r => ({
+      Tag: r.Tag||r.ID, Datum: r.Datum||r.TagLabel, Von: r.Von, Bis: r.Bis,
+      Schicht: r.Schicht, Aufgabe: r.Aufgabe,
+      MaxPersonen: r.MaxPersonen||r['Max Personen'],
+      Farbe: r.Farbe||'#CC0000', Informationen: r.Informationen||'',
+      Geschlossen: r.Geschlossen||'0'
+    }))})});
+  closeEditSchicht();
+  showToast('✓ Schicht gespeichert', 'success');
+  setTimeout(() => loadData(), 2000);
 }
 
 function formatDate(d) { try{return new Date(d).toLocaleString('de-CH');}catch(e){return d||'';} }
