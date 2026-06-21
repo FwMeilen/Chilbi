@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.015</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.016</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -160,7 +160,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.015</span>
+      <span class="header-version">Cl1.016</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -173,37 +173,6 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <button class="admin-tab active" onclick="switchSection('anmeldungen',this)">Anmeldungen</button>
     <button class="admin-tab" onclick="switchSection('uebersicht',this)">Übersicht</button>
     <button class="admin-tab" onclick="switchSection('einstellungen',this)">Einstellungen</button>
-    <button class="admin-tab" onclick="switchSection('schichten',this)" style="margin-left:auto;color:var(--gray);border-color:var(--gray-mid);">⚙ Schichten einrichten</button>
-  </div>
-
-  <!-- SCHICHTEN -->
-  <div class="admin-section" id="sec-schichten">
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-        <div class="card-title" style="margin-bottom:0">Schichten &amp; Aufgaben <small>Definiere alle Schichten mit Zeit, Personenzahl und Treffpunkt-Info</small></div>
-        <button class="btn btn-green" onclick="saveConfig()" style="flex-shrink:0">💾 Speichern</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Typ</th><th>Datum</th><th>Schicht</th><th>Aufgabe</th>
-              <th>Von</th><th>Bis</th><th>Max.</th><th>Farbe</th><th>Informationen / Treffpunkt</th><th title="Schicht schliessen">🔒</th><th></th>
-            </tr>
-          </thead>
-          <tbody id="configBody"></tbody>
-        </table>
-      </div>
-      <div class="btn-row">
-        <button class="btn" onclick="addRow()">+ Zeile</button>
-        <button class="btn" onclick="addSampleRows()">+ Vorlage laden</button>
-        <button class="btn btn-green" onclick="saveConfig()">💾 Speichern</button>
-      </div>
-      <div class="help-text">
-        <strong>Typ:</strong> Vorbereitung / Chilbi / Aufräumen – ID wird automatisch vergeben. Ein Tab pro gleichem Datum.<br>
-        <strong>Informationen:</strong> Wird im Anmelde-Popup als Treffpunkt angezeigt (z.B. "Treffpunkt: Gemeindehaus Herrliberg, Eingang West")
-      </div>
-    </div>
   </div>
 
   <!-- ANMELDUNGEN -->
@@ -238,8 +207,54 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
 
   <!-- EINSTELLUNGEN -->
   <div class="admin-section" id="sec-einstellungen">
+
+    <!-- 1. TAGE -->
     <div class="card">
-      <div class="card-title">Einstellungen Schichtplan</div>
+      <div class="card-title">Tage &amp; Typen <small>Definiere für jedes Datum den Typ (Vorbereitung/Chilbi/Aufräumen)</small></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Datum</th><th>Typ</th></tr></thead>
+          <tbody id="tageBody"></tbody>
+        </table>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-sm" onclick="saveTage()">💾 Tage speichern</button>
+      </div>
+      <div class="help-text">Daten werden automatisch aus den Schichten gelesen. Hier kannst du den Typ pro Tag festlegen.</div>
+    </div>
+
+    <!-- 2. SCHICHTEN EINRICHTEN -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <div class="card-title" style="margin-bottom:0">Schichten &amp; Aufgaben <small>Definiere alle Schichten mit Zeit, Personenzahl und Treffpunkt-Info</small></div>
+        <button class="btn btn-green" onclick="saveConfig()" style="flex-shrink:0">💾 Speichern</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Typ</th><th>Datum</th><th>Schicht</th><th>Aufgabe</th>
+              <th>Von</th><th>Bis</th><th>Max.</th><th>Farbe</th><th>Informationen / Treffpunkt</th><th title="Schicht schliessen">🔒</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="configBody"></tbody>
+        </table>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="addRow()">+ Zeile</button>
+        <button class="btn" onclick="addSampleRows()">+ Vorlage laden</button>
+        <button class="btn btn-green" onclick="saveConfig()">💾 Speichern</button>
+      </div>
+      <div class="help-text">
+        <strong>Typ:</strong> Vorbereitung / Chilbi / Aufräumen – ID wird automatisch vergeben. Ein Tab pro gleichem Datum.<br>
+        <strong>Informationen:</strong> Wird im Anmelde-Popup als Treffpunkt angezeigt (z.B. "Treffpunkt: Gemeindehaus Herrliberg, Eingang West")
+      </div>
+    </div>
+  </div>
+
+    <!-- 3. FARBEN -->
+    <div class="card">
+      <div class="card-title">Farb-Einstellungen</div>
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <tr style="border-bottom:1px solid var(--gray-mid);">
           <td style="padding:14px 0;font-weight:600;">Farb-Modus</td>
@@ -249,28 +264,24 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
               <span>Pro Schicht</span>
               <span style="position:relative;display:inline-block;width:44px;height:24px;">
                 <input type="checkbox" id="settingAutoColor" onchange="toggleAutoColor(this.checked)" checked style="opacity:0;position:absolute;width:100%;height:100%;cursor:pointer;margin:0;z-index:1;">
-                <span id="autoColorTrack" style="position:absolute;inset:0;background:var(--gray-mid);border-radius:24px;transition:.2s;"></span>
-                <span id="autoColorKnob" style="position:absolute;height:18px;width:18px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></span>
+                <span id="autoColorTrack" style="position:absolute;inset:0;background:var(--red);border-radius:24px;transition:.2s;"></span>
+                <span id="autoColorKnob" style="position:absolute;height:18px;width:18px;left:23px;top:3px;background:white;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></span>
               </span>
               <span>Nach Aufgaben</span>
             </label>
           </td>
         </tr>
       </table>
-      <div id="autoColorSection" style="display:none;margin-top:16px;">
+      <div id="autoColorSection" style="margin-top:16px;">
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Farben nach Aufgabe</div>
         <div id="aufgabenColorList"></div>
         <div style="margin-top:12px;display:flex;gap:8px;">
           <button class="btn btn-red btn-sm" onclick="applyAutoColors()">Farben auf alle Schichten anwenden</button>
         </div>
-      </div>
-      <table style="display:none;width:100%;border-collapse:collapse;font-size:13px;">
-
-      </table>
-      <div style="margin-top:16px;font-size:12px;color:var(--text3);">
-        ⚠ Achtung: Bestehende Farben werden beim Anwenden überschrieben.
+        <div style="margin-top:8px;font-size:12px;color:var(--text3);">⚠ Achtung: Bestehende Farben werden beim Anwenden überschrieben.</div>
       </div>
     </div>
+
   </div>
 
   <!-- ÜBERSICHT -->
@@ -320,7 +331,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.015</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.016</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -363,7 +374,8 @@ async function loadData() {
     renderStats();
     renderOverview();
     loadSettings();
-    if(localStorage.getItem('chilbi_autoColor')==='true') buildAufgabenColorList();
+    renderTage();
+    if(localStorage.getItem('chilbi_autoColor')!=='false') buildAufgabenColorList();
   } catch(e) { showToast('Ladefehler: ' + e.message, 'error'); }
 }
 
@@ -641,8 +653,14 @@ function renderOverview() {
   labelOrder.forEach((lbl,i) => {
     const rows = labelMap[lbl];
     const schs = [...new Set(rows.map(r=>r.Schicht))];
+    const dayTotal = rows.reduce((s,r)=>s+(parseInt(r.MaxPersonen)||0),0);
+    const dayTaken = rows.reduce((s,r)=>s+SIGNUPS.filter(sg=>String(sg.Tag)===String(r.Tag)).length,0);
+    const dayFree  = dayTotal - dayTaken;
     html += `<div class="print-day" id="day-${i}">
-      <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:24px 0 8px;padding-bottom:6px;border-bottom:2px solid var(--black)">${esc(dayHeaderText(lbl))}</div>`;
+      <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:24px 0 8px;padding-bottom:6px;border-bottom:2px solid var(--black);display:flex;justify-content:space-between;align-items:baseline">
+        <span>${esc(dayHeaderText(lbl))}</span>
+        <span style="font-size:11px;font-weight:400;color:var(--gray)">${dayTaken}/${dayTotal} besetzt &nbsp;·&nbsp; <span style="color:${dayFree>0?'var(--green)':'var(--gray)'}">${dayFree} frei</span></span>
+      </div>`;
     schs.forEach(sch => {
       html += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray);margin:10px 0 5px">${esc(sch)}</div>`;
       rows.filter(r=>r.Schicht===sch).forEach(t => {
@@ -746,7 +764,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.015</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.016</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
@@ -936,6 +954,44 @@ function applyAutoColors() {
     setRowColor(rowIdx, color);
   });
   showToast('Farben angewendet – bitte speichern!', 'success');
+}
+
+// ── TAGE ──────────────────────────────────────────────────────
+let TAGE_TYPEN = {}; // {datum: 'Chilbi'|'Vorbereitung'|'Aufräumen'}
+
+function renderTage() {
+  const datums = [...new Set(CONFIG.map(r => r.Datum||r.TagLabel||r.Tag).filter(Boolean))].sort();
+  const saved = JSON.parse(localStorage.getItem('chilbi_tageTypen') || '{}');
+  TAGE_TYPEN = {...saved};
+  const tbody = document.getElementById('tageBody');
+  if (!tbody) return;
+  tbody.innerHTML = datums.map(datum => {
+    const typ = TAGE_TYPEN[datum] || autoDetectTyp(datum, CONFIG);
+    return `<tr>
+      <td style="padding:8px;font-weight:600">${esc(datum)}</td>
+      <td style="padding:8px">
+        <select onchange="TAGE_TYPEN['${esc(datum)}']=this.value" style="padding:4px 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:12px;">
+          <option value="Vorbereitung" ${typ==='Vorbereitung'?'selected':''}>Vorbereitung</option>
+          <option value="Chilbi" ${typ==='Chilbi'?'selected':''}>Chilbi</option>
+          <option value="Aufräumen" ${typ==='Aufräumen'?'selected':''}>Aufräumen</option>
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function autoDetectTyp(datum, config) {
+  const row = config.find(r => (r.Datum||r.TagLabel||r.Tag) === datum);
+  if (!row) return 'Chilbi';
+  const id = String(row.Tag||'');
+  if (id.startsWith('V')) return 'Vorbereitung';
+  if (id.startsWith('N')) return 'Aufräumen';
+  return 'Chilbi';
+}
+
+function saveTage() {
+  localStorage.setItem('chilbi_tageTypen', JSON.stringify(TAGE_TYPEN));
+  showToast('✓ Tage gespeichert', 'success');
 }
 
 function loadAutoColorSetting() {
