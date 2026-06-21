@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.003</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.002</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -139,10 +139,6 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
 }
 .print-btn{height:30px;padding:0 12px;border:2px solid var(--black);background:var(--bg);color:var(--black);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;font-family:inherit;border-radius:0;margin-right:6px;}
 .print-btn:hover{background:var(--black);color:white;}
-
-/* Toggle Switch */
-#settingColors:checked + span { background: var(--red) !important; }
-#settingColors:checked + span #settingColorsKnob { transform: translateX(20px); }
 </style>
 </head>
 <body>
@@ -164,7 +160,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.003</span>
+      <span class="header-version">Cl1.002</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -176,7 +172,6 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   <div class="admin-tabs">
     <button class="admin-tab active" onclick="switchSection('anmeldungen',this)">Anmeldungen</button>
     <button class="admin-tab" onclick="switchSection('uebersicht',this)">Übersicht</button>
-    <button class="admin-tab" onclick="switchSection('einstellungen',this)">Einstellungen</button>
     <button class="admin-tab" onclick="switchSection('schichten',this)" style="margin-left:auto;color:var(--gray);border-color:var(--gray-mid);">⚙ Schichten einrichten</button>
   </div>
 
@@ -237,30 +232,6 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     </div>
   </div>
 
-  <!-- EINSTELLUNGEN -->
-  <div class="admin-section" id="sec-einstellungen">
-    <div class="card">
-      <div class="card-title">Einstellungen Schichtplan</div>
-      <table style="width:100%;border-collapse:collapse;font-size:13px;">
-        <tr style="border-bottom:1px solid var(--gray-mid);">
-          <td style="padding:14px 0;font-weight:600;">Farben anzeigen</td>
-          <td style="padding:14px 0;color:var(--text3);font-size:12px;">Bei deaktiviert werden alle Schichtblöcke einheitlich grau mit schwarzem Rand dargestellt</td>
-          <td style="padding:14px 0;text-align:right;">
-            <label class="toggle-switch" style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
-              <input type="checkbox" id="settingColors" checked onchange="saveSetting('showColors',this.checked)" style="opacity:0;width:0;height:0;">
-              <span style="position:absolute;inset:0;background:var(--gray-mid);border-radius:24px;transition:.2s;">
-                <span id="settingColorsKnob" style="position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.2s;"></span>
-              </span>
-            </label>
-          </td>
-        </tr>
-      </table>
-      <div style="margin-top:16px;font-size:12px;color:var(--text3);">
-        Einstellungen werden lokal gespeichert und gelten für alle Besucher die diesen Browser verwenden.
-      </div>
-    </div>
-  </div>
-
   <!-- ÜBERSICHT -->
   <div class="admin-section" id="sec-uebersicht">
     <div class="card" style="border-top-color:var(--black)">
@@ -308,7 +279,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.003</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.002</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -350,7 +321,6 @@ async function loadData() {
     renderSignups();
     renderStats();
     renderOverview();
-    loadSettings();
   } catch(e) { showToast('Ladefehler: ' + e.message, 'error'); }
 }
 
@@ -710,7 +680,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.003</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.002</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
@@ -821,26 +791,6 @@ async function doDeleteSignup(){
     if(!d.ok)throw new Error(d.error);
     closeConfirmPopup();closeEditPopup();showToast('Gelöscht','success');await loadData();
   }catch(e){showToast('Fehler: '+e.message,'error');}
-}
-
-// ── EINSTELLUNGEN ─────────────────────────────────────────────
-function loadSettings() {
-  const showColors = localStorage.getItem('chilbi_showColors') !== 'false';
-  const cb = document.getElementById('settingColors');
-  if (cb) cb.checked = showColors;
-  updateToggleKnob(showColors);
-}
-
-function saveSetting(key, value) {
-  localStorage.setItem('chilbi_' + key, value);
-  updateToggleKnob(value);
-}
-
-function updateToggleKnob(checked) {
-  const knob = document.getElementById('settingColorsKnob');
-  const span = document.querySelector('#settingColors + span');
-  if (knob) knob.style.transform = checked ? 'translateX(20px)' : '';
-  if (span) span.style.background = checked ? 'var(--red)' : 'var(--gray-mid)';
 }
 
 function formatDate(d) { try{return new Date(d).toLocaleString('de-CH');}catch(e){return d||'';} }
