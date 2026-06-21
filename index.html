@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan Cl1.041</title>
+<title>Chilbi Herrliberg – Schichtplan Cl1.042</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -242,7 +242,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">Cl1.041</div>
+    <div class="header-version">Cl1.042</div>
   </div>
 </div>
 <div class="red-stripe"></div>
@@ -340,7 +340,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.041</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.042</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -602,16 +602,19 @@ function downloadICS() {
     const month=String(parseInt(m[2])).padStart(2,'0');
     const yr=m[3]?(m[3].length===2?'20'+m[3]:m[3]):String(new Date().getFullYear());
     const dateStr=yr+month+day;
-    const vonH=String(cfg.Von||'00:00').replace(':','')+'00';
-    const bisH=String(cfg.Bis||'00:00').replace(':','')+'00';
+    // Start: Schichtbeginn -10 Min
+    function t2m(t){const[h,mm]=(t||'00:00').split(':').map(Number);return h*60+(mm||0);}
+    function m2s(mins){const norm=((mins%1440)+1440)%1440;return String(Math.floor(norm/60)).padStart(2,'0')+String(norm%60).padStart(2,'0')+'00';}
+    const vonH=m2s(t2m(cfg.Von)-10);
+    const bisH=m2s(t2m(cfg.Bis));
     const uid=`${s.Tag}-${name.replace(/\s/g,'')}-${Date.now()}@chilbi`;
+    const desc=(cfg.Informationen||'').replace(/,/g,'\\,');
     ics.push('BEGIN:VEVENT');
     ics.push(`UID:${uid}`);
     ics.push(`DTSTART:${dateStr}T${vonH}`);
     ics.push(`DTEND:${dateStr}T${bisH}`);
-    ics.push(`SUMMARY:Chilbi - ${cfg.Aufgabe} (${cfg.Schicht})`);
-    if (cfg.Informationen) ics.push(`LOCATION:${cfg.Informationen}`);
-    ics.push(`DESCRIPTION:Schicht: ${cfg.Schicht}\nAufgabe: ${cfg.Aufgabe}\nZeit: ${cfg.Von}–${cfg.Bis}`);
+    ics.push(`SUMMARY:Chilbi Herrliberg - ${cfg.Aufgabe}`);
+    if (desc) ics.push(`DESCRIPTION:${desc}`);
     ics.push('END:VEVENT');
   });
   ics.push('END:VCALENDAR');
@@ -793,7 +796,7 @@ function buildUI() {
   document.getElementById('tabBar').innerHTML = DAYS.map((d, i) => `
     <button class="tab-btn ${i===0?'active':''}" onclick="switchDay(${i})">
       ${esc(tabLabel(d.label))}
-      ${d.type ? `<span class="tab-type" style="background:var(--red-light);color:var(--red);border-color:var(--red);font-size:10px;padding:1px 5px;margin-left:5px;font-weight:700;letter-spacing:.04em;border:1px solid;display:inline-block;vertical-align:middle">${esc(d.type)}</span>` : ""}
+      ${d.type ? `<span class="tab-type" style="${d.type.toLowerCase().includes('chilbi')?'background:var(--red-light);color:var(--red);border-color:var(--red);':'background:#e8f0fe;color:#1a73e8;border-color:#1a73e8;'} font-size:10px;padding:1px 5px;margin-left:5px;font-weight:700;letter-spacing:.04em;border:1px solid;display:inline-block;vertical-align:middle">${esc(d.type)}</span>` : ""}
     </button>
   `).join('');
 
