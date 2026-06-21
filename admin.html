@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.010</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.014</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -160,7 +160,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.010</span>
+      <span class="header-version">Cl1.014</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -242,20 +242,30 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
       <div class="card-title">Einstellungen Schichtplan</div>
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <tr style="border-bottom:1px solid var(--gray-mid);">
-          <td style="padding:14px 0;font-weight:600;">Farben anzeigen</td>
-          <td style="padding:14px 0;color:var(--text3);font-size:12px;">Bei deaktiviert werden alle Schichtblöcke einheitlich grau mit schwarzem Rand dargestellt</td>
+          <td style="padding:14px 0;font-weight:600;">Farb-Modus</td>
+          <td style="padding:14px 0;color:var(--text3);font-size:12px;">Auto: Farben werden nach Aufgabe vergeben. Manuell: Farbe pro Schicht im Schichten-Tab</td>
           <td style="padding:14px 0;text-align:right;white-space:nowrap;">
             <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;">
-              <span>Aus</span>
+              <span>Manuell</span>
               <span style="position:relative;display:inline-block;width:44px;height:24px;">
-                <input type="checkbox" id="settingColors" checked onchange="saveSetting('showColors',this.checked)" style="opacity:0;position:absolute;width:100%;height:100%;cursor:pointer;margin:0;z-index:1;">
-                <span id="settingTrack" style="position:absolute;inset:0;background:var(--red);border-radius:24px;transition:.2s;"></span>
-                <span id="settingKnob" style="position:absolute;height:18px;width:18px;left:23px;top:3px;background:white;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></span>
+                <input type="checkbox" id="settingAutoColor" onchange="toggleAutoColor(this.checked)" style="opacity:0;position:absolute;width:100%;height:100%;cursor:pointer;margin:0;z-index:1;">
+                <span id="autoColorTrack" style="position:absolute;inset:0;background:var(--gray-mid);border-radius:24px;transition:.2s;"></span>
+                <span id="autoColorKnob" style="position:absolute;height:18px;width:18px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></span>
               </span>
-              <span>Ein</span>
+              <span>Auto</span>
             </label>
           </td>
         </tr>
+      </table>
+      <div id="autoColorSection" style="display:none;margin-top:16px;">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Farben nach Aufgabe</div>
+        <div id="aufgabenColorList"></div>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button class="btn btn-red btn-sm" onclick="applyAutoColors()">Farben auf alle Schichten anwenden</button>
+        </div>
+      </div>
+      <table style="display:none;width:100%;border-collapse:collapse;font-size:13px;">
+
       </table>
       <div style="margin-top:16px;font-size:12px;color:var(--text3);">
         Einstellungen werden lokal gespeichert und gelten für diesen Browser.
@@ -310,7 +320,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.010</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.014</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -353,6 +363,7 @@ async function loadData() {
     renderStats();
     renderOverview();
     loadSettings();
+    if(localStorage.getItem('chilbi_autoColor')==='true') buildAufgabenColorList();
   } catch(e) { showToast('Ladefehler: ' + e.message, 'error'); }
 }
 
@@ -424,7 +435,11 @@ function addRow(data={}) {
         <div class="color-swatches" id="cpswatches-${i}"></div>
         <div class="color-custom-row">
           <label>🎨</label>
-          <input type="color" class="color-custom-input" id="cpcustom-${i}" value="${color}" oninput="setRowColor(${i},this.value)">
+          <input type="color" class="color-custom-input" id="cpcustom-${i}" value="${color!=='none'?color:'#CC0000'}" oninput="setRowColor(${i},this.value)">
+        </div>
+        <div style="border-top:1px solid var(--gray-mid);padding-top:5px;margin-top:2px;">
+          <div class="color-swatch${color==='none'?' selected':''}" style="background:white;border:2px solid #333;width:100%;border-radius:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#333;height:22px;"
+            onclick="setRowColor(${i},'none')">Ohne</div>
         </div>
       </div>
     </div></td>
@@ -731,7 +746,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.010</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.014</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
@@ -774,8 +789,12 @@ function initColorPicker(i, initColor) {
 function setRowColor(i, color) {
   const prev = document.getElementById('cprev-' + i);
   const custom = document.getElementById('cpcustom-' + i);
-  if (prev) { prev.style.background = color; prev.dataset.color = color; }
-  if (custom) custom.value = color;
+  if (prev) {
+    prev.style.background = color === 'none' ? 'white' : color;
+    prev.style.border = color === 'none' ? '2px solid #333' : '1px solid var(--gray-mid)';
+    prev.dataset.color = color;
+  }
+  if (custom && color !== 'none') custom.value = color;
   // Update swatch selection
   const swatches = document.querySelectorAll(`#cpswatches-${i} .color-swatch`);
   swatches.forEach(s => s.classList.toggle('selected', s.style.background === hexToRgb(color) || s.style.background === color));
@@ -785,7 +804,10 @@ function setRowColor(i, color) {
 function getRowColor(tr) {
   if (!tr) return '#CC0000';
   const prev = tr.querySelector('.color-preview');
-  return prev ? (prev.dataset.color || prev.style.background || '#CC0000') : '#CC0000';
+  if (!prev) return '#CC0000';
+  const c = prev.dataset.color || '';
+  if (c === 'none') return 'none';
+  return c || prev.style.background || '#CC0000';
 }
 
 function toggleColorPicker(i) {
@@ -841,6 +863,7 @@ async function doDeleteSignup(){
 }
 
 function loadSettings() {
+  loadAutoColorSetting();
   const showColors = localStorage.getItem('chilbi_showColors') !== 'false';
   const cb = document.getElementById('settingColors');
   if (cb) {
@@ -859,6 +882,64 @@ function updateSettingUI(checked) {
   const knob  = document.getElementById('settingKnob');
   if (track) track.style.background = checked ? 'var(--red)' : 'var(--gray-mid)';
   if (knob)  knob.style.left = checked ? '23px' : '3px';
+}
+
+function toggleAutoColor(checked) {
+  localStorage.setItem('chilbi_autoColor', checked);
+  document.getElementById('autoColorSection').style.display = checked ? '' : 'none';
+  const track = document.getElementById('autoColorTrack');
+  const knob  = document.getElementById('autoColorKnob');
+  if (track) track.style.background = checked ? 'var(--red)' : 'var(--gray-mid)';
+  if (knob)  knob.style.left = checked ? '23px' : '3px';
+  // Farbpicker in Schichten ausblenden/anzeigen
+  document.querySelectorAll('.color-picker-wrap').forEach(el => {
+    el.style.display = checked ? 'none' : '';
+  });
+  if (checked) buildAufgabenColorList();
+}
+
+function buildAufgabenColorList() {
+  const aufgaben = [...new Set(CONFIG.map(r => r.Aufgabe).filter(Boolean))].sort();
+  const saved = JSON.parse(localStorage.getItem('chilbi_aufgabenColors') || '{}');
+  const list = document.getElementById('aufgabenColorList');
+  if (!list) return;
+  list.innerHTML = aufgaben.map(a => {
+    const color = saved[a] || '#CC0000';
+    return `<div style="display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid var(--gray-mid);">
+      <span style="flex:1;font-size:13px;font-weight:600">${esc(a)}</span>
+      <input type="color" value="${color}" onchange="saveAufgabeColor('${esc(a)}',this.value)"
+        style="width:36px;height:26px;padding:1px;border:1px solid var(--gray-mid);cursor:pointer;">
+    </div>`;
+  }).join('');
+}
+
+function saveAufgabeColor(aufgabe, color) {
+  const saved = JSON.parse(localStorage.getItem('chilbi_aufgabenColors') || '{}');
+  saved[aufgabe] = color;
+  localStorage.setItem('chilbi_aufgabenColors', JSON.stringify(saved));
+}
+
+function applyAutoColors() {
+  if (!confirm('Achtung: Alle bestehenden Farben in den Schichten werden mit den Aufgaben-Farben überschrieben. Fortfahren?')) return;
+  const saved = JSON.parse(localStorage.getItem('chilbi_aufgabenColors') || '{}');
+  // Alle Zeilen in der Tabelle updaten
+  document.querySelectorAll('#configBody tr').forEach(tr => {
+    const aufgabeInp = tr.querySelector('input[placeholder="Kasse"]');
+    if (!aufgabeInp) return;
+    const aufgabe = aufgabeInp.value.trim();
+    const color = saved[aufgabe];
+    if (!color) return;
+    const rowIdx = [...document.querySelectorAll('#configBody tr')].indexOf(tr);
+    setRowColor(rowIdx, color);
+  });
+  showToast('Farben angewendet – bitte speichern!', 'success');
+}
+
+function loadAutoColorSetting() {
+  const auto = localStorage.getItem('chilbi_autoColor') === 'true';
+  const cb = document.getElementById('settingAutoColor');
+  if (cb) cb.checked = auto;
+  if (auto) toggleAutoColor(true);
 }
 
 function formatDate(d) { try{return new Date(d).toLocaleString('de-CH');}catch(e){return d||'';} }
