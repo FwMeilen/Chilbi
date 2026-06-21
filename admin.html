@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.019</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.020</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -126,6 +126,15 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
 .color-custom-row label{font-size:10px;color:var(--text3);white-space:nowrap;}
 .color-custom-input{width:28px;height:24px;padding:1px;border:1px solid var(--gray-mid);cursor:pointer;}
 
+/* ── ACCORDION ───────────────────────────────────────────── */
+.accordion-card{border-top:3px solid var(--red);background:white;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:1rem;}
+.accordion-header{padding:16px 20px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;}
+.accordion-header:hover{background:var(--bg2);}
+.accordion-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
+.accordion-arrow{font-size:12px;transition:transform .2s;color:var(--text3);}
+.accordion-body{display:none;padding:0 20px 20px;}
+.accordion-body.open{display:block;}
+
 /* ── PRINT ───────────────────────────────────────────────── */
 @media print {
   body{background:white;}
@@ -160,7 +169,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.019</span>
+      <span class="header-version">Cl1.020</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -209,24 +218,34 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   <div class="admin-section" id="sec-einstellungen">
 
     <!-- 1. TAGE -->
-    <div class="card">
-      <div class="card-title">Tage &amp; Typen <small>Definiere für jedes Datum den Typ (Vorbereitung/Chilbi/Aufräumen)</small></div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Datum</th><th>Typ</th></tr></thead>
-          <tbody id="tageBody"></tbody>
-        </table>
+    <div class="accordion-card">
+      <div class="accordion-header" onclick="toggleAccordion('acc-tage')">
+        <span class="accordion-title">Tage &amp; Typen</span>
+        <span class="accordion-arrow" id="arr-acc-tage">▼</span>
       </div>
-      <div class="btn-row">
-        <button class="btn btn-sm" onclick="saveTage()">💾 Tage speichern</button>
+      <div class="accordion-body" id="acc-tage">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Datum</th><th>Typ</th></tr></thead>
+            <tbody id="tageBody"></tbody>
+          </table>
+        </div>
+        <div class="btn-row" style="margin-top:12px">
+          <button class="btn btn-sm" onclick="saveTage()">💾 Tage speichern</button>
+        </div>
+        <div class="help-text">Daten werden automatisch aus den Schichten gelesen.</div>
       </div>
-      <div class="help-text">Daten werden automatisch aus den Schichten gelesen. Hier kannst du den Typ pro Tag festlegen.</div>
     </div>
 
     <!-- 2. SCHICHTEN EINRICHTEN -->
-    <div class="card">
+    <div class="accordion-card">
+      <div class="accordion-header" onclick="toggleAccordion('acc-schichten')">
+        <span class="accordion-title">Schichten einrichten</span>
+        <span class="accordion-arrow" id="arr-acc-schichten">▼</span>
+      </div>
+      <div class="accordion-body" id="acc-schichten">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-        <div class="card-title" style="margin-bottom:0">Schichten &amp; Aufgaben <small>Definiere alle Schichten mit Zeit, Personenzahl und Treffpunkt-Info</small></div>
+        <div class="card-title" style="margin-bottom:0">Schichten &amp; Aufgaben <small>Zeit, Personenzahl und Treffpunkt-Info</small></div>
         <button class="btn btn-green" onclick="saveConfig()" style="flex-shrink:0">💾 Speichern</button>
       </div>
       <div class="table-wrap">
@@ -242,18 +261,23 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
       </div>
       <div class="btn-row">
         <button class="btn" onclick="addRow()">+ Zeile</button>
-        <button class="btn" onclick="addSampleRows()">+ Vorlage laden</button>
+        <label class="btn" style="cursor:pointer">📂 CSV Import<input type="file" accept=".csv" onchange="importCSV(this)" style="display:none"></label>
         <button class="btn btn-green" onclick="saveConfig()">💾 Speichern</button>
       </div>
       <div class="help-text">
         <strong>Typ:</strong> Vorbereitung / Chilbi / Aufräumen – ID wird automatisch vergeben. Ein Tab pro gleichem Datum.<br>
-        <strong>Informationen:</strong> Wird im Anmelde-Popup als Treffpunkt angezeigt (z.B. "Treffpunkt: Gemeindehaus Herrliberg, Eingang West")
+        <strong>Informationen:</strong> Wird im Anmelde-Popup als Treffpunkt angezeigt.
+      </div>
       </div>
     </div>
 
     <!-- 3. FARBEN -->
-    <div class="card">
-      <div class="card-title">Farb-Einstellungen</div>
+    <div class="accordion-card">
+      <div class="accordion-header" onclick="toggleAccordion('acc-farben')">
+        <span class="accordion-title">Farb-Einstellungen</span>
+        <span class="accordion-arrow" id="arr-acc-farben">▼</span>
+      </div>
+      <div class="accordion-body" id="acc-farben">
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <tr style="border-bottom:1px solid var(--gray-mid);">
           <td style="padding:14px 0;font-weight:600;">Farb-Modus</td>
@@ -278,6 +302,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
           <button class="btn btn-red btn-sm" onclick="applyAutoColors()">Farben auf alle Schichten anwenden</button>
         </div>
         <div style="margin-top:8px;font-size:12px;color:var(--text3);">⚠ Achtung: Bestehende Farben werden beim Anwenden überschrieben.</div>
+      </div>
       </div>
     </div>
 
@@ -330,7 +355,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.019</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.020</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -421,6 +446,41 @@ function initRowId(i, existingTag) {
 function renderConfig() {
   document.getElementById('configBody').innerHTML = '';
   CONFIG.forEach(r => addRow(r));
+}
+
+function importCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.split('\n').filter(l=>l.trim());
+    if (!lines.length) return;
+    const headers = lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+    let imported = 0;
+    lines.slice(1).forEach(line => {
+      const vals = line.split(',').map(v=>v.trim().replace(/"/g,''));
+      if (!vals[0]) return;
+      const row = {};
+      headers.forEach((h,i) => row[h] = vals[i]||'');
+      // Map headers: ID→Tag, Datum→Datum etc.
+      const mapped = {
+        Tag: row.ID||row.Tag||'',
+        Datum: row.Datum||row.TagLabel||'',
+        Von: row.Von||'',
+        Bis: row.Bis||'',
+        Schicht: row.Schicht||'',
+        Aufgabe: row.Aufgabe||'',
+        MaxPersonen: row['Max Personen']||row.MaxPersonen||'2',
+        Farbe: row.Farbe||'#CC0000',
+        Informationen: row.Informationen||'',
+        Geschlossen: row.Geschlossen||'0'
+      };
+      if (mapped.Aufgabe) { addRow(mapped); imported++; }
+    });
+    showToast(`✓ ${imported} Zeilen importiert`, 'success');
+  };
+  reader.readAsText(file);
+  input.value = '';
 }
 
 function addRow(data={}) {
@@ -643,9 +703,15 @@ function renderOverview() {
   // Druckbuttons pro Tag
   const printBtns = document.getElementById('printBtns');
   if (printBtns) {
-    printBtns.innerHTML = labelOrder.map((lbl,i)=>`
-      <button class="print-btn" onclick="printDay('day-${i}')" title="Tag drucken (A3)">🖨 ${esc(dayHeaderText(lbl).split(',')[0])}</button>
-    `).join('');
+    // Sortiere nach Datum
+  const sortedLabels = [...labelOrder].sort((a,b)=>{
+    const parseD = s => { const m=s.match(/(\d{1,2})\.(\d{1,2})\.(\d{2,4})?/); if(!m) return 0; const yr=m[3]?(m[3].length===2?2000+parseInt(m[3]):parseInt(m[3])):2026; return new Date(yr,parseInt(m[2])-1,parseInt(m[1])).getTime(); };
+    return parseD(a)-parseD(b);
+  });
+  printBtns.innerHTML = sortedLabels.map(lbl=>{
+    const i = labelOrder.indexOf(lbl);
+    return `<button class="print-btn" onclick="printDay('day-${i}')" title="Tag drucken (A3)">🖨 ${esc(dayHeaderText(lbl).split(',')[0])}</button>`;
+  }).join('');
   }
 
   let html = '';
@@ -763,7 +829,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.019</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.020</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
@@ -921,14 +987,18 @@ function buildAufgabenColorList() {
   const list = document.getElementById('aufgabenColorList');
   if (!list) return;
   list.innerHTML = aufgaben.map(a => {
-    // Farbe aus erstem CONFIG-Eintrag mit dieser Aufgabe
     const firstEntry = CONFIG.find(r => r.Aufgabe === a && r.Farbe && r.Farbe !== 'none');
     const defaultColor = firstEntry?.Farbe || '#CC0000';
-    const color = saved[a] || defaultColor;
+    const color = saved[a] !== undefined ? saved[a] : defaultColor;
+    const isNone = color === 'none';
     return `<div style="display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid var(--gray-mid);">
       <span style="flex:1;font-size:13px;font-weight:600">${esc(a)}</span>
-      <input type="color" value="${color}" onchange="saveAufgabeColor('${esc(a)}',this.value)"
-        style="width:36px;height:26px;padding:1px;border:1px solid var(--gray-mid);cursor:pointer;">
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;">
+        <input type="checkbox" ${isNone?'checked':''} onchange="saveAufgabeColor('${esc(a)}',this.checked?'none':document.getElementById('afc-${esc(a)}').value)">
+        Ohne
+      </label>
+      <input type="color" id="afc-${esc(a)}" value="${isNone?'#CC0000':color}" onchange="saveAufgabeColor('${esc(a)}',this.value)"
+        style="width:36px;height:26px;padding:1px;border:1px solid var(--gray-mid);cursor:pointer;${isNone?'opacity:.3':''}">
     </div>`;
   }).join('');
 }
@@ -985,26 +1055,6 @@ function renderTage() {
       </td>
     </tr>`;
   }).join('');
-  // Möglichkeit neue Tage hinzuzufügen
-  tbody.innerHTML += `<tr id="tageAddRow">
-    <td style="padding:8px">
-      <input type="text" id="newTageDatum" placeholder="z.B. 14.08.2026"
-        style="padding:4px 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:12px;width:120px;">
-    </td>
-    <td style="padding:8px;display:flex;gap:8px;align-items:center;">
-      <input type="text" id="newTageTyp" placeholder="Chilbi"
-        style="padding:4px 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:12px;width:160px;">
-      <button class="btn btn-sm" onclick="addTageRow()">+</button>
-    </td>
-  </tr>`;
-}
-
-function addTageRow() {
-  const datum = document.getElementById('newTageDatum').value.trim();
-  const typ   = document.getElementById('newTageTyp').value.trim() || 'Chilbi';
-  if (!datum) return;
-  TAGE_TYPEN[datum] = typ;
-  renderTage();
 }
 
 function autoDetectTyp(datum, config) {
@@ -1021,6 +1071,15 @@ async function saveTage() {
   await fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
     body: JSON.stringify({action:'saveTage', password:ADMIN_PW, rows})});
   showToast('✓ Tage gespeichert', 'success');
+}
+
+function toggleAccordion(id) {
+  const body = document.getElementById(id);
+  const arr  = document.getElementById('arr-' + id);
+  if (!body) return;
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  if (arr) arr.style.transform = isOpen ? '' : 'rotate(180deg)';
 }
 
 function loadAutoColorSetting() {
