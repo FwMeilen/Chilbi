@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan Cl1.042</title>
+<title>Chilbi Herrliberg – Schichtplan Cl1.043</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -162,6 +162,21 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 .center-msg.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
 .site-footer{background:var(--black);color:#666;font-size:11px;text-align:center;padding:1rem;}
 
+/* ── HILFE ───────────────────────────────────────────────── */
+.help-btn{background:none;border:1.5px solid rgba(255,255,255,.5);color:white;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-left:8px;line-height:1;}
+.help-btn:hover{background:rgba(255,255,255,.15);}
+.help-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:800;align-items:center;justify-content:center;padding:20px;}
+.help-overlay.open{display:flex;}
+.help-box{background:white;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3);}
+.help-header{background:var(--black);color:white;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;}
+.help-header h3{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
+.help-close{background:none;border:none;color:white;font-size:18px;cursor:pointer;padding:0 4px;}
+.help-body{padding:20px;}
+.help-section{margin-bottom:18px;}
+.help-section h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--red);margin-bottom:6px;border-bottom:1px solid var(--gray-mid);padding-bottom:4px;}
+.help-section p,.help-section li{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:4px;}
+.help-section ul{padding-left:16px;}
+
 /* ── SPLASH ──────────────────────────────────────────────── */
 .splash{position:fixed;inset:0;background:var(--black);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;}
 .splash-box{background:var(--bg);max-width:400px;width:100%;border-top:4px solid var(--red);}
@@ -210,6 +225,54 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </head>
 <body>
 
+<!-- HILFE POPUP -->
+<div class="help-overlay" id="helpOverlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="help-box">
+    <div class="help-header">
+      <h3>Bedienungsanleitung – Schichtplan</h3>
+      <button class="help-close" onclick="document.getElementById('helpOverlay').classList.remove('open')">✕</button>
+    </div>
+    <div class="help-body">
+      <div class="help-section">
+        <h4>Anmelden</h4>
+        <ul>
+          <li>Beim ersten Aufruf erscheint ein Anmeldebildschirm.</li>
+          <li><strong>Feuerwehr Meilen:</strong> 3-Buchstaben-Kürzel eingeben (z.B. MUS).</li>
+          <li><strong>Gast:</strong> Vor- und Nachname eingeben.</li>
+          <li>Mit <em>(ändern)</em> kannst du das Kürzel/Namen jederzeit wechseln.</li>
+        </ul>
+      </div>
+      <div class="help-section">
+        <h4>Schicht eintragen</h4>
+        <ul>
+          <li>Wähle oben den gewünschten Tag (Tab).</li>
+          <li>Klicke auf einen freien Block um dich einzutragen.</li>
+          <li>Im Popup siehst du Details und kannst mit <strong>„In diese Schicht eintragen"</strong> bestätigen.</li>
+          <li>Bereits eingetragene Schichten erscheinen schwarz.</li>
+          <li>Volle Schichten (grau) können nicht mehr gewählt werden.</li>
+          <li>Gesperrte Schichten (grau, 🔒) sind für neue Einträge geschlossen.</li>
+        </ul>
+      </div>
+      <div class="help-section">
+        <h4>Meine Schichten</h4>
+        <ul>
+          <li>Klicke auf <strong>„Meine Schichten"</strong> um alle deine Einträge zu sehen.</li>
+          <li>Mit <strong>📅 Kalender</strong> kannst du alle Schichten als .ics-Datei herunterladen.</li>
+          <li>Der Kalender-Start ist 10 Minuten vor Schichtbeginn (Treffpunkt).</li>
+        </ul>
+      </div>
+      <div class="help-section">
+        <h4>Ansicht anpassen</h4>
+        <ul>
+          <li><strong>Kürzel / Namen:</strong> Schaltet zwischen Kürzel und vollem Namen um.</li>
+          <li><strong>Im Block / Links:</strong> Aufgabenname im Block oder als Beschriftung links.</li>
+          <li><strong>Aktualisieren:</strong> Lädt die aktuellen Daten neu (automatisch alle 20 Min).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── SPLASH ─────────────────────────────────────────────── -->
 <div class="splash" id="splash">
   <div class="splash-box">
@@ -242,7 +305,8 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">Cl1.042</div>
+    <div class="header-version">Cl1.043</div>
+    <button class="help-btn" onclick="document.getElementById('helpOverlay').classList.add('open')" title="Bedienungsanleitung">?</button>
   </div>
 </div>
 <div class="red-stripe"></div>
@@ -340,7 +404,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.042</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.043</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
