@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.035</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.036</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -162,7 +162,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <button class="btn btn-red" style="width:100%" onclick="doLogin()">Einloggen</button>
   </div>
   <div style="margin-top:24px;text-align:center;font-size:11px;color:rgba(255,255,255,.4);">
-    © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.035
+    © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.036
   </div>
 </div>
 
@@ -172,7 +172,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.035</span>
+      <span class="header-version">Cl1.036</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -221,7 +221,13 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   <!-- SCHICHTEN BEARBEITEN -->
   <div class="admin-section" id="sec-schichtplan">
     <div class="card">
-      <div class="card-title">Schichten bearbeiten</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <div class="card-title" style="margin-bottom:0">Schichten bearbeiten</div>
+        <div style="display:flex;gap:8px;">
+          <label class="btn btn-sm" style="cursor:pointer">📂 CSV Import<input type="file" accept=".csv" onchange="importCSV(this)" style="display:none"></label>
+          <button class="btn btn-green btn-sm" onclick="openNewSchicht()">+ Neue Schicht</button>
+        </div>
+      </div>
       <div id="schichtplanContent"></div>
     </div>
   </div>
@@ -246,40 +252,6 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
           <button class="btn btn-sm" onclick="saveTage()">💾 Tage speichern</button>
         </div>
         <div class="help-text">Daten werden automatisch aus den Schichten gelesen.</div>
-      </div>
-    </div>
-
-    <!-- 2. SCHICHTEN EINRICHTEN -->
-    <div class="accordion-card">
-      <div class="accordion-header" onclick="toggleAccordion('acc-schichten')">
-        <span class="accordion-title">Schichten einrichten</span>
-        <span class="accordion-arrow" id="arr-acc-schichten">▼</span>
-      </div>
-      <div class="accordion-body" id="acc-schichten">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-        <div class="card-title" style="margin-bottom:0">Schichten &amp; Aufgaben <small>Zeit, Personenzahl und Treffpunkt-Info</small></div>
-        <button class="btn btn-green" onclick="saveConfig()" style="flex-shrink:0">💾 Speichern</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Typ</th><th>Datum</th><th>Schicht</th><th>Aufgabe</th>
-              <th>Von</th><th>Bis</th><th>Max.</th><th>Farbe</th><th>Informationen / Treffpunkt</th><th title="Schicht schliessen">🔒</th><th></th>
-            </tr>
-          </thead>
-          <tbody id="configBody"></tbody>
-        </table>
-      </div>
-      <div class="btn-row">
-        <button class="btn" onclick="addRow()">+ Zeile</button>
-        <label class="btn" style="cursor:pointer">📂 CSV Import<input type="file" accept=".csv" onchange="importCSV(this)" style="display:none"></label>
-        <button class="btn btn-green" onclick="saveConfig()">💾 Speichern</button>
-      </div>
-      <div class="help-text">
-        <strong>Typ:</strong> Vorbereitung / Chilbi / Aufräumen – ID wird automatisch vergeben. Ein Tab pro gleichem Datum.<br>
-        <strong>Informationen:</strong> Wird im Anmelde-Popup als Treffpunkt angezeigt.
-      </div>
       </div>
     </div>
 
@@ -408,7 +380,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.035</div>
+<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.036</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -922,7 +894,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.035</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.036</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
@@ -1268,6 +1240,20 @@ function buildSchichtplan() {
   content.innerHTML = html;
 }
 
+function openNewSchicht() {
+  // Leeres Popup für neue Schicht
+  document.getElementById('esTag').value = '__new__';
+  document.getElementById('esDatum').value = '';
+  document.getElementById('esSchicht').value = '';
+  document.getElementById('esAufgabe').value = '';
+  document.getElementById('esVon').value = '';
+  document.getElementById('esBis').value = '';
+  document.getElementById('esMax').value = '2';
+  document.getElementById('esInfo').value = '';
+  document.getElementById('esGeschlossen').checked = false;
+  document.getElementById('editSchichtOverlay').style.display = 'flex';
+}
+
 function openEditSchicht(tagId) {
   const r = CONFIG.find(row => String(row.Tag) === String(tagId) || String(row.ID) === String(tagId));
   if (!r) return;
@@ -1289,20 +1275,28 @@ function closeEditSchicht() {
 
 async function saveEditSchicht() {
   const tag = document.getElementById('esTag').value;
-  const updated = CONFIG.map(r => {
-    if (String(r.Tag||r.ID) !== String(tag)) return r;
-    return {
-      ...r,
-      Datum: document.getElementById('esDatum').value.trim(),
-      Schicht: document.getElementById('esSchicht').value.trim(),
-      Aufgabe: document.getElementById('esAufgabe').value.trim(),
-      Von: document.getElementById('esVon').value.trim(),
-      Bis: document.getElementById('esBis').value.trim(),
-      MaxPersonen: document.getElementById('esMax').value.trim(),
-      Informationen: document.getElementById('esInfo').value.trim(),
-      Geschlossen: document.getElementById('esGeschlossen').checked ? '1' : '0'
-    };
-  });
+  const newData = {
+    Datum: document.getElementById('esDatum').value.trim(),
+    Schicht: document.getElementById('esSchicht').value.trim(),
+    Aufgabe: document.getElementById('esAufgabe').value.trim(),
+    Von: document.getElementById('esVon').value.trim(),
+    Bis: document.getElementById('esBis').value.trim(),
+    MaxPersonen: document.getElementById('esMax').value.trim(),
+    Informationen: document.getElementById('esInfo').value.trim(),
+    Geschlossen: document.getElementById('esGeschlossen').checked ? '1' : '0'
+  };
+  let updated;
+  if (tag === '__new__') {
+    // Neue ID generieren
+    const maxId = CONFIG.reduce((m,r)=>Math.max(m,parseInt(r.Tag||r.ID||0)),0);
+    const newId = String(maxId + 1);
+    updated = [...CONFIG, {...newData, Tag: newId, ID: newId, Farbe: '#CC0000'}];
+  } else {
+    updated = CONFIG.map(r => {
+      if (String(r.Tag||r.ID) !== String(tag)) return r;
+      return {...r, ...newData};
+    });
+  }
   await fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
     body: JSON.stringify({action:'saveConfig', password:ADMIN_PW, rows: updated.map(r => ({
       Tag: r.Tag||r.ID, Datum: r.Datum||r.TagLabel, Von: r.Von, Bis: r.Bis,
@@ -1313,7 +1307,7 @@ async function saveEditSchicht() {
     }))})});
   closeEditSchicht();
   showToast('✓ Schicht gespeichert', 'success');
-  setTimeout(() => loadData(), 2000);
+  setTimeout(async () => { await loadData(); buildSchichtplan(); }, 1500);
 }
 
 function formatDate(d) { try{return new Date(d).toLocaleString('de-CH');}catch(e){return d||'';} }
