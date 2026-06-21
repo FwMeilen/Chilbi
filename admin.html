@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.028</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.029</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -169,7 +169,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.028</span>
+      <span class="header-version">Cl1.029</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -316,6 +316,12 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     </div>
     <div class="card">
       <div class="card-title">Belegungsübersicht</div>
+      <div class="filter-bar" style="margin-bottom:12px;">
+        <select id="ovFilterTag" onchange="renderOverview()"><option value="">Alle Tage</option></select>
+        <select id="ovFilterSchicht" onchange="renderOverview()"><option value="">Alle Schichten</option></select>
+        <select id="ovFilterAufgabe" onchange="renderOverview()"><option value="">Alle Aufgaben</option></select>
+        <button class="btn btn-sm" onclick="clearOvFilters()">✕ Filter zurücksetzen</button>
+      </div>
       <div id="overviewContent"></div>
     </div>
   </div>
@@ -355,7 +361,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.028</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.029</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -691,12 +697,49 @@ function dayHeaderText(label) {
   return label;
 }
 
+function clearOvFilters() {
+  ['ovFilterTag','ovFilterSchicht','ovFilterAufgabe'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  renderOverview();
+}
+
 function renderOverview() {
-  // Gruppiere nach TagLabel
+  const curTag    = document.getElementById('ovFilterTag')?.value    || '';
+  const curSchicht= document.getElementById('ovFilterSchicht')?.value|| '';
+  const curAufgabe= document.getElementById('ovFilterAufgabe')?.value|| '';
+
+  // Dropdowns befüllen
+  const tagSel = document.getElementById('ovFilterTag');
+  const schSel = document.getElementById('ovFilterSchicht');
+  const aufSel = document.getElementById('ovFilterAufgabe');
+
+  if (tagSel) {
+    const datums = [...new Set(CONFIG.map(r=>r.Datum||r.TagLabel||'').filter(d=>d&&d.match(/\d/)))].sort();
+    tagSel.innerHTML = '<option value="">Alle Tage</option>' + datums.map(d=>`<option value="${esc(d)}"${d===curTag?' selected':''}>${esc(dayHeaderText(d))}</option>`).join('');
+  }
+  const filteredConfig = CONFIG.filter(r => {
+    const datum = r.Datum||r.TagLabel||'';
+    if (curTag && datum !== curTag) return false;
+    if (curSchicht && r.Schicht !== curSchicht) return false;
+    if (curAufgabe && r.Aufgabe !== curAufgabe) return false;
+    return true;
+  });
+  if (schSel) {
+    const schs = [...new Set(CONFIG.map(r=>r.Schicht).filter(Boolean))].sort();
+    schSel.innerHTML = '<option value="">Alle Schichten</option>' + schs.map(s=>`<option value="${esc(s)}"${s===curSchicht?' selected':''}>${esc(s)}</option>`).join('');
+  }
+  if (aufSel) {
+    const aufs = [...new Set(CONFIG.map(r=>r.Aufgabe).filter(Boolean))].sort();
+    aufSel.innerHTML = '<option value="">Alle Aufgaben</option>' + aufs.map(a=>`<option value="${esc(a)}"${a===curAufgabe?' selected':''}>${esc(a)}</option>`).join('');
+  }
+
+  // Originale renderOverview Logik mit gefilterten Daten
   const labelMap={}, labelOrder=[];
-  CONFIG.forEach(r=>{
+  filteredConfig.forEach(r=>{
     const lbl=r.Datum||r.TagLabel||'';
-    if(!lbl||!lbl.match(/\d/)) return; // Zeilen ohne Datum ignorieren
+    if(!lbl||!lbl.match(/\d/)) return;
     if(!labelMap[lbl]){labelMap[lbl]=[];labelOrder.push(lbl);}
     labelMap[lbl].push(r);
   });
@@ -831,7 +874,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.028</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.029</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
