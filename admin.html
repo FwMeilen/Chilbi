@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.027</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.028</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -169,7 +169,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.027</span>
+      <span class="header-version">Cl1.028</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -355,7 +355,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.027</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.028</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -831,7 +831,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.027</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.028</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
@@ -1015,16 +1015,8 @@ async function applyAutoColors() {
   if (!confirm('Achtung: Alle bestehenden Farben in den Schichten werden mit den Aufgaben-Farben überschrieben. Fortfahren?')) return;
   const saved = JSON.parse(localStorage.getItem('chilbi_aufgabenColors') || '{}');
 
-  // Schichten-Accordion öffnen damit configBody zugänglich ist
-  const accBody = document.getElementById('acc-schichten');
-  if (accBody && !accBody.classList.contains('open')) toggleAccordion('acc-schichten');
-
-  // Warten bis DOM aktualisiert
-  await new Promise(r => setTimeout(r, 100));
-
-  // CONFIG direkt updaten und speichern (nicht via DOM)
-  const rows = readConfigRows();
-  const updated = rows.map(r => {
+  // Direkt CONFIG-Array updaten (kein DOM nötig)
+  const updated = CONFIG.map(r => {
     const color = saved[r.Aufgabe];
     if (color !== undefined) r.Farbe = color;
     return r;
@@ -1032,10 +1024,14 @@ async function applyAutoColors() {
 
   // Direkt ins Sheet speichern
   await fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
-    body: JSON.stringify({action:'saveConfig', password:ADMIN_PW, rows:updated})});
+    body: JSON.stringify({action:'saveConfig', password:ADMIN_PW, rows: updated.map(r => ({
+      Tag: r.Tag, Datum: r.Datum||r.TagLabel, Von: r.Von, Bis: r.Bis,
+      Schicht: r.Schicht, Aufgabe: r.Aufgabe, MaxPersonen: r['Max Personen']||r.MaxPersonen,
+      Farbe: r.Farbe, Informationen: r.Informationen||'', Geschlossen: r.Geschlossen||'0'
+    }))})});
 
   showToast('✓ Farben gespeichert!', 'success');
-  await loadData();
+  setTimeout(() => loadData(), 2000);
 }
 
 // ── TAGE ──────────────────────────────────────────────────────
