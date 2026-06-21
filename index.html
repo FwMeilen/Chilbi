@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan Cl1.022</title>
+<title>Chilbi Herrliberg – Schichtplan Cl1.023</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -242,7 +242,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">Cl1.022</div>
+    <div class="header-version">Cl1.023</div>
   </div>
 </div>
 <div class="red-stripe"></div>
@@ -340,7 +340,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.022</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.023</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -348,6 +348,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4h
 let CONFIG  = [];
 let SIGNUPS = [];
 let KUERZEL = {};
+let TAGE = {}; // {datum: 'Chilbi'|'Vorbereitung'|'Aufräumen'}
 function showColors() { return localStorage.getItem('chilbi_showColors') !== 'false'; }
 function showLabels() { return localStorage.getItem('chilbi_showLabels') !== 'false'; } // {kuerzel: 'Vorname Nachname'}
 let showNames = false; // false=Kürzel, true=Namen
@@ -485,8 +486,8 @@ async function silentRefresh() {
   const savedDay = activeDay;
   const savedScroll = document.querySelector('.day-panel.active .timeline-wrap')?.scrollLeft || 0;
   try {
-    const [configRows, signupRows, kuerzelRows] = await Promise.all([
-      fetchSheet('Konfiguration'), fetchSheet('Anmeldungen'), fetchKuerzelSheet()
+    const [configRows, signupRows, kuerzelRows, tageRows] = await Promise.all([
+      fetchSheet('Konfiguration'), fetchSheet('Anmeldungen'), fetchKuerzelSheet(), fetchSheet('Tage')
     ]);
     CONFIG = configRows.filter(r => r.ID || r['ID']).map(r => {
       r.Tag = r.ID || r.Tag || '';
@@ -505,6 +506,12 @@ async function silentRefresh() {
       const nachname = (r['Name']||r.Name||r['Nachname']||r.Nachname||'').trim();
       const name = [vorname, nachname].filter(Boolean).join(' ');
       if (k && name) KUERZEL[k] = name;
+    });
+    TAGE = {};
+    (tageRows||[]).forEach(r => {
+      const datum = (r['Datum']||r.Datum||'').trim();
+      const typ   = (r['Typ']||r.Typ||'Chilbi').trim();
+      if (datum) TAGE[datum] = typ;
     });
     buildUI();
     activeDay = Math.min(savedDay, DAYS.length - 1);
@@ -710,10 +717,11 @@ async function fetchKuerzelSheet() {
 async function loadData() {
   const el = document.getElementById('loadingState');
   try {
-    const [configRows, signupRows, kuerzelRows] = await Promise.all([
+    const [configRows, signupRows, kuerzelRows, tageRows] = await Promise.all([
       fetchSheet('Konfiguration'),
       fetchSheet('Anmeldungen'),
-      fetchKuerzelSheet()
+      fetchKuerzelSheet(),
+      fetchSheet('Tage')
     ]);
     CONFIG  = configRows.filter(r => r.ID || r['ID']).map(r => {
       r.Tag         = r.ID || r.Tag || '';
@@ -732,6 +740,12 @@ async function loadData() {
       const nachname = (r['Name']||r.Name||r['Nachname']||r.Nachname||'').trim();
       const name = [vorname, nachname].filter(Boolean).join(' ');
       if (k && name) KUERZEL[k] = name;
+    });
+    TAGE = {};
+    (tageRows||[]).forEach(r => {
+      const datum = (r['Datum']||r.Datum||'').trim();
+      const typ   = (r['Typ']||r.Typ||'Chilbi').trim();
+      if (datum) TAGE[datum] = typ;
     });
     buildUI();
   } catch(e) {
@@ -752,7 +766,7 @@ function buildUI() {
     const lbl = row.Datum || row.TagLabel || '';
     if (!lbl || !lbl.match(/\d/)) return; // Zeilen ohne Datum ignorieren
     if (!labelMap[lbl]) {
-      labelMap[lbl] = { id: lbl, label: lbl, type: dayType(row.Tag), rows: [] };
+      labelMap[lbl] = { id: lbl, label: lbl, type: dayType(row.Tag, lbl), rows: [] };
       labelOrder.push(lbl);
     }
     labelMap[lbl].rows.push(row);
@@ -778,7 +792,17 @@ function buildUI() {
   `).join('');
 }
 
-function dayType(id) { return id.startsWith('V')?'vorbereitung':id.startsWith('N')?'nachbereitung':'anlass'; }
+function dayType(id, datum) {
+  // Typ aus TAGE-Sheet wenn vorhanden
+  if (datum && TAGE[datum]) {
+    const t = TAGE[datum].toLowerCase();
+    if (t.includes('vorbereitung')) return 'vorbereitung';
+    if (t.includes('aufr')) return 'nachbereitung';
+    return 'anlass';
+  }
+  // Fallback: aus ID ableiten
+  return id.startsWith('V')?'vorbereitung':id.startsWith('N')?'nachbereitung':'anlass';
+}
 function typeName(t) { return t==='vorbereitung'?'Vorbereitung':t==='nachbereitung'?'Aufräumen':'Chilbi'; }
 
 // Tabs: nur Wochentag anzeigen (kein Datum)
