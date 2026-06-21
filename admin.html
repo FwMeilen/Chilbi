@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.034</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.035</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -162,7 +162,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <button class="btn btn-red" style="width:100%" onclick="doLogin()">Einloggen</button>
   </div>
   <div style="margin-top:24px;text-align:center;font-size:11px;color:rgba(255,255,255,.4);">
-    © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.034
+    © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.035
   </div>
 </div>
 
@@ -172,7 +172,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.034</span>
+      <span class="header-version">Cl1.035</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -374,21 +374,32 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
 </div>
 
 <!-- EDIT SCHICHT POPUP -->
-<div id="editSchichtOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:white;max-width:500px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.25);">
+<div id="editSchichtOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
+  <div style="background:white;max-width:520px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.25);box-sizing:border-box;margin:auto;">
     <div style="background:var(--black);color:white;padding:16px 20px;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Schicht bearbeiten</div>
-    <div style="padding:20px;">
+    <div style="padding:20px;box-sizing:border-box;">
       <input type="hidden" id="esTag">
-      <table style="width:100%;font-size:13px;border-collapse:collapse;">
-        <tr><td style="padding:6px 0;font-weight:600;width:120px">Datum</td><td><input id="esDatum" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;"></td></tr>
-        <tr><td style="padding:6px 0;font-weight:600">Schicht</td><td><input id="esSchicht" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;"></td></tr>
-        <tr><td style="padding:6px 0;font-weight:600">Aufgabe</td><td><input id="esAufgabe" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;"></td></tr>
-        <tr><td style="padding:6px 0;font-weight:600">Von</td><td><input id="esVon" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;" placeholder="08:00"></td></tr>
-        <tr><td style="padding:6px 0;font-weight:600">Bis</td><td><input id="esBis" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;" placeholder="12:00"></td></tr>
-        <tr><td style="padding:6px 0;font-weight:600">Max Personen</td><td><input id="esMax" type="number" min="1" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;"></td></tr>
-        <tr><td style="padding:6px 0;font-weight:600">Informationen</td><td><input id="esInfo" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;" placeholder="Treffpunkt…"></td></tr>
-        <tr><td style="padding:6px 0;font-weight:600">Gesperrt</td><td><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;margin-top:4px;"><input type="checkbox" id="esGeschlossen" style="width:16px;height:16px;accent-color:var(--red);"> Schicht für neue Einträge sperren</label></td></tr>
-      </table>
+      <div style="display:grid;grid-template-columns:130px 1fr;gap:8px;font-size:13px;align-items:center;">
+        <label style="font-weight:600">Datum</label>
+        <input id="esDatum" style="box-sizing:border-box;width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;">
+        <label style="font-weight:600">Schicht</label>
+        <input id="esSchicht" style="box-sizing:border-box;width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;">
+        <label style="font-weight:600">Aufgabe</label>
+        <input id="esAufgabe" style="box-sizing:border-box;width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;">
+        <label style="font-weight:600">Von</label>
+        <input id="esVon" placeholder="08:00" style="box-sizing:border-box;width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;">
+        <label style="font-weight:600">Bis</label>
+        <input id="esBis" placeholder="12:00" style="box-sizing:border-box;width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;">
+        <label style="font-weight:600">Max Personen</label>
+        <input id="esMax" type="number" min="1" style="box-sizing:border-box;width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;">
+        <label style="font-weight:600">Informationen</label>
+        <input id="esInfo" placeholder="Treffpunkt…" style="box-sizing:border-box;width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;">
+        <label style="font-weight:600">Gesperrt</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;">
+          <input type="checkbox" id="esGeschlossen" style="width:16px;height:16px;accent-color:var(--red);">
+          Schicht für neue Einträge sperren
+        </label>
+      </div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;">
         <button class="btn btn-sm" onclick="closeEditSchicht()">Abbrechen</button>
         <button class="btn btn-green btn-sm" onclick="saveEditSchicht()">💾 Speichern</button>
@@ -397,7 +408,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.034</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.035</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -911,7 +922,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.034</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.035</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
