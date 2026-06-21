@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl0.022</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.001</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -160,7 +160,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl0.022</span>
+      <span class="header-version">Cl1.001</span>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
     </div>
@@ -279,7 +279,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl0.022</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.001</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -593,53 +593,66 @@ function renderOverview() {
 }
 
 function printDay(dayId) {
-  // Finde den Tag-Index aus der dayId (z.B. "day-2")
-  const idx = parseInt(dayId.split('-')[1]);
+  const dayIdx = parseInt(dayId.split('-')[1]);
   const labelMap={}, labelOrder=[];
   CONFIG.forEach(r=>{
     const lbl=r.Datum||r.TagLabel||r.Tag;
     if(!labelMap[lbl]){labelMap[lbl]=[];labelOrder.push(lbl);}
     labelMap[lbl].push(r);
   });
-  const lbl = labelOrder[idx];
+  const lbl = labelOrder[dayIdx];
   if (!lbl) return;
   const rows = labelMap[lbl];
 
-  // Zeitbereich berechnen
-  function parseT(t,von){const[h,m]=String(t).split(':').map(Number);let mins=h*60+(m||0);if(von!==undefined&&mins<=von&&mins<720)mins+=24*60;return mins;}
+  function parseT(t,von){
+    const[h,m]=String(t).split(':').map(Number);
+    let mins=h*60+(m||0);
+    if(von!==undefined&&mins<=von&&mins<720)mins+=24*60;
+    return mins;
+  }
+
+  // A3 landscape: ~380mm druckbar = ca 1440px bei 96dpi
+  // Zeitbereich → skaliere auf verfügbare Breite
   const allT = rows.flatMap(r=>{const v=parseT(r.Von);return[v,parseT(r.Bis,v)];});
   const minT=Math.min(...allT), maxT=Math.max(...allT);
-  const PX=3; // 3px pro Minute
-  const totalPx=(maxT-minT)*PX;
+  const spanMin = maxT - minT;
+  const LABEL_W = 110; // px für Aufgaben-Label
+  const PAGE_W = 1050; // verfügbare Breite in px (A3 quer - Ränder)
+  const TRACK_W = PAGE_W - LABEL_W;
+  const PX = TRACK_W / spanMin; // px pro Minute, passt exakt auf Seite
 
   // Schichten gruppieren
   const schMap={}, schOrder=[];
-  rows.forEach(r=>{if(!schMap[r.Schicht]){schMap[r.Schicht]=[];schOrder.push(r.Schicht);}schMap[r.Schicht].push(r);});
+  rows.forEach(r=>{
+    if(!schMap[r.Schicht]){schMap[r.Schicht]=[];schOrder.push(r.Schicht);}
+    schMap[r.Schicht].push(r);
+  });
 
   // Ruler
   let rulerHtml='';
   for(let h=Math.floor(minT/60);h<=Math.ceil(maxT/60);h++){
     const px=(h*60-minT)*PX;
-    rulerHtml+=`<div style="position:absolute;left:${px}px;font-size:9px;color:#666;border-left:1px solid #ddd;padding-left:2px;top:2px;white-space:nowrap">${h%24}:00</div>`;
+    rulerHtml+=`<div style="position:absolute;left:${px.toFixed(1)}px;font-size:8px;color:#555;border-left:1px solid #bbb;padding-left:2px;top:0;white-space:nowrap;height:18px;line-height:18px">${h%24}:00</div>`;
   }
 
   // Schichten HTML
   let schHtml='';
   schOrder.forEach(sch=>{
-    schHtml+=`<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#666;margin:12px 0 4px;border-bottom:1px solid #ccc;padding-bottom:2px">${sch}</div>`;
+    schHtml+=`<div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;margin:8px 0 3px ${LABEL_W}px;border-bottom:1px solid #ccc;padding-bottom:2px">${sch}</div>`;
     schMap[sch].forEach(r=>{
       const vonM=parseT(r.Von), bisM=parseT(r.Bis,vonM);
-      const leftPx=(vonM-minT)*PX, widePx=(bisM-vonM)*PX;
+      const leftPx=((vonM-minT)*PX).toFixed(1);
+      const widePx=((bisM-vonM)*PX).toFixed(1);
       const taken=SIGNUPS.filter(s=>String(s.Tag)===String(r.Tag));
       const max=parseInt(r.MaxPersonen)||1;
-      const color=r.Farbe||'#CC0000';
-      // Namen
-      const namedLines = taken.map(s=>`<div class="name-line" style="font-weight:600">${s.Name}</div>`).join('');
-      const emptyLines = Array.from({length:Math.max(0,max-taken.length)},()=>`<div class="name-line">&nbsp;</div>`).join('');
-      schHtml+=`<div style="display:flex;align-items:center;margin-bottom:4px;">
-        <div style="width:120px;min-width:120px;font-size:10px;font-weight:600;padding-right:8px">${r.Aufgabe}</div>
-        <div style="position:relative;width:${totalPx}px;height:auto;min-height:20px;">
-          <div class="block" style="position:absolute;left:${leftPx}px;width:${widePx}px;min-height:${Math.max(20,(max)*16)}px;padding:2px 0;">
+      const lineH=14; // px pro Zeile
+      const blockH=Math.max(lineH, max*lineH);
+      const namedLines=taken.map(s=>`<div style="border-bottom:1px solid #bbb;padding:1px 3px;font-size:8px;font-weight:700;height:${lineH}px;line-height:${lineH}px;overflow:hidden">${s.Name}</div>`).join('');
+      const emptyLines=Array.from({length:Math.max(0,max-taken.length)},()=>`<div style="border-bottom:1px solid #bbb;height:${lineH}px;"></div>`).join('');
+      schHtml+=`<div style="display:flex;align-items:flex-start;margin-bottom:2px;height:${blockH}px;">
+        <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;font-size:8px;font-weight:700;padding-right:6px;padding-top:2px;line-height:1.2">${r.Aufgabe}<br><span style="font-weight:400;color:#888">${r.Von}–${r.Bis}</span></div>
+        <div style="position:relative;width:${TRACK_W}px;height:${blockH}px;background:#f8f8f8;border:1px solid #ddd;">
+          <div style="position:absolute;left:${leftPx}px;width:${widePx}px;height:${blockH}px;border:1.5px solid #333;background:white;overflow:hidden;">
             ${namedLines}${emptyLines}
           </div>
         </div>
@@ -648,30 +661,33 @@ function printDay(dayId) {
   });
 
   const titleText = dayHeaderText(lbl);
-  const win=window.open('','_blank','width=1400,height=900');
+  const win=window.open('','_blank');
   win.document.write(`<!DOCTYPE html><html><head>
-    <meta charset="UTF-8"><title>Schichtplan ${titleText}</title>
+    <meta charset="UTF-8">
+    <title>Schichtplan ${titleText}</title>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
       *{box-sizing:border-box;margin:0;padding:0;}
-      body{font-family:'Open Sans',Arial,sans-serif;font-size:11px;padding:12mm;}
-      @page{size:A3 landscape;margin:12mm;}
-      .block{background:white!important;border:1.5px solid black!important;color:black!important;}
-      .name-line{border-bottom:1px solid #999;padding:2px 4px;font-size:10px;min-height:16px;}
+      body{font-family:'Open Sans',Arial,sans-serif;width:${PAGE_W+LABEL_W}px;padding:0;}
+      @page{size:A3 landscape;margin:10mm;}
+      @media print{body{width:100%;}}
     </style>
   </head><body>
-    <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:12px;padding-bottom:8px;border-bottom:3px solid black;">
-      <div style="font-size:18px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:11px;color:#666">Stützpunktfeuerwehr Meilen · Chilbi Herrliberg</div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
+      <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.001</div>
     </div>
-    <div style="position:relative;height:22px;margin-left:120px;margin-bottom:8px;border-bottom:1px solid #ddd;">
-      <div style="position:relative;width:${totalPx}px;">${rulerHtml}</div>
+    <div style="display:flex;margin-bottom:4px;">
+      <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
+      <div style="position:relative;width:${TRACK_W}px;height:20px;border-bottom:1px solid #bbb;">
+        ${rulerHtml}
+      </div>
     </div>
     ${schHtml}
   </body></html>`);
   win.document.close();
   win.focus();
-  setTimeout(()=>win.print(), 1000);
+  setTimeout(()=>win.print(), 1200);
 }
 
 function exportCSV() {
