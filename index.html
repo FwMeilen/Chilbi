@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan Cl1.011</title>
+<title>Chilbi Herrliberg – Schichtplan Cl1.012</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -106,14 +106,17 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 
 /* Slot dots: free = outlined, taken = solid white, contrast on dark */
 .slot-dot{
-  width:8px;height:8px;border-radius:50%;
+  width:16px;height:16px;border-radius:50%;
   border:2px solid rgba(255,255,255,.8);
   background:transparent;
   flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;line-height:1;
 }
 .slot-dot.taken{
   background:rgba(255,255,255,.95);
   border-color:rgba(255,255,255,.95);
+  color:#333;
 }
 /* On dark/mine blocks keep same */
 .task-block.mine .slot-dot{border-color:rgba(255,255,255,.5);}
@@ -239,7 +242,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">Cl1.011</div>
+    <div class="header-version">Cl1.012</div>
   </div>
 </div>
 <div class="red-stripe"></div>
@@ -329,7 +332,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.011</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.012</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -865,12 +868,14 @@ function buildTimeline(day) {
 
       const fgColor = (cls==='mine'||cls==='voll') ? '#ffffff' : (useColor ? textColor(blockColor) : '#1a1a1a');
       const dots = Array.from({length: max}, (_,i) =>
-        `<div class="slot-dot${i < taken.length?' taken':''}"></div>`
+        `<div class="slot-dot${i < taken.length?' taken':''}">${i < taken.length ? '✓' : ''}</div>`
       ).join('');
 
       // Namen inline rechts vom Block
-      const nameStr = isClosed
-        ? '<span style="font-size:11px;font-weight:600;color:white;background:#888;padding:1px 8px;">Gesperrt</span>'
+      const nameStr = (isClosed && taken.length > 0)
+        ? taken.map(s => `<span style="font-size:11px;font-weight:600;color:var(--text2);background:var(--bg2);border:1px solid var(--gray-mid);padding:1px 6px;${s.Name===myName()?'background:var(--black);color:white;border-color:var(--black);':''}">${esc(displayName(s.Name))}</span>`).join('') + '<span style="font-size:11px;font-weight:700;color:white;background:#888;padding:1px 8px;margin-left:4px;">🔒 Gesperrt</span>'
+        : isClosed
+        ? '<span style="font-size:11px;font-weight:700;color:white;background:#888;padding:1px 8px;">🔒 Gesperrt</span>'
         : taken.map(s =>
         `<span style="font-size:11px;font-weight:600;color:var(--text2);background:var(--bg2);border:1px solid var(--gray-mid);padding:1px 6px;${s.Name===myName()?'background:var(--black);color:white;border-color:var(--black);':''}">${esc(displayName(s.Name))}</span>`
       ).join('');
