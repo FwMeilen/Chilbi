@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan Cl1.029</title>
+<title>Chilbi Herrliberg – Schichtplan Cl1.030</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -242,7 +242,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">Cl1.029</div>
+    <div class="header-version">Cl1.030</div>
   </div>
 </div>
 <div class="red-stripe"></div>
@@ -340,7 +340,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.029</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.030</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -927,7 +927,7 @@ function buildTimeline(day) {
       const nameStr = (isClosed && taken.length > 0)
         ? taken.map(s => `<span style="font-size:11px;font-weight:600;color:var(--text2);background:var(--bg2);border:1px solid var(--gray-mid);padding:1px 6px;${s.Name===myName()?'background:var(--black);color:white;border-color:var(--black);':''}">${esc(displayName(s.Name))}</span>`).join('') + '<span style="font-size:11px;font-weight:700;color:white;background:#888;padding:1px 8px;margin-left:4px;">🔒 Gesperrt</span>'
         : isClosed
-        ? '' // Gesperrt ohne Personen: kein Badge
+        ? '<span style="font-size:11px;font-weight:700;color:white;background:#888;padding:1px 8px;">🔒 Gesperrt</span>'
         : taken.map(s =>
         `<span style="font-size:11px;font-weight:600;color:var(--text2);background:var(--bg2);border:1px solid var(--gray-mid);padding:1px 6px;${s.Name===myName()?'background:var(--black);color:white;border-color:var(--black);':''}">${esc(displayName(s.Name))}</span>`
       ).join('');
