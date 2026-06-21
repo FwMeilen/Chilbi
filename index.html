@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan Cl0.024</title>
+<title>Chilbi Herrliberg – Schichtplan Cl0.025</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -239,7 +239,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">Cl0.024</div>
+    <div class="header-version">Cl0.025</div>
   </div>
 </div>
 <div class="red-stripe"></div>
@@ -329,7 +329,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl0.024</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl0.025</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -467,7 +467,7 @@ async function silentRefresh() {
   const savedScroll = document.querySelector('.day-panel.active .timeline-wrap')?.scrollLeft || 0;
   try {
     const [configRows, signupRows, kuerzelRows] = await Promise.all([
-      fetchSheet('Konfiguration'), fetchSheet('Anmeldungen'), fetchSheet('Kürzel')
+      fetchSheet('Konfiguration'), fetchSheet('Anmeldungen'), fetchKuerzel()
     ]);
     CONFIG = configRows.filter(r => r.ID || r['ID']).map(r => {
       r.Tag = r.ID || r.Tag || '';
@@ -482,7 +482,7 @@ async function silentRefresh() {
     (kuerzelRows||[]).forEach(r => {
       const k = (r['Kürzel']||r['Kuerzel']||r.Kürzel||r.Kuerzel||'').trim();
       const vorname = (r['Vorname']||r.Vorname||'').trim();
-      const nachname = (r['Nachname']||r['Name']||r.Nachname||r.Name||'').trim();
+      const nachname = (r['Name']||r.Name||r['Nachname']||r.Nachname||'').trim();
       const name = [vorname, nachname].filter(Boolean).join(' ');
       if (k && name) KUERZEL[k] = name;
     });
@@ -490,7 +490,7 @@ async function silentRefresh() {
     (kuerzelRows||[]).forEach(r => {
       const k = (r['Kürzel']||r['Kuerzel']||r.Kürzel||r.Kuerzel||'').trim();
       const vorname = (r['Vorname']||r.Vorname||'').trim();
-      const nachname = (r['Nachname']||r['Name']||r.Nachname||r.Name||'').trim();
+      const nachname = (r['Name']||r.Name||r['Nachname']||r.Nachname||'').trim();
       const name = [vorname, nachname].filter(Boolean).join(' ');
       if (k && name) KUERZEL[k] = name;
     });
@@ -612,6 +612,31 @@ function buildDayHeaderText(label) {
 const SHEET_ID = '1XqTNfgONmHX9GvmfOVvb94BUo_oQ04Uy7R97FVfdWyo';
 const GVIZ = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
+async function fetchKuerzel() {
+  const url = `https://docs.google.com/spreadsheets/d/1bK6IuVpAdLyYc9_NPbJxFMkvCZ0fNvadJABBUM-Rc0M/gviz/tq?tqx=out:json&_=${Date.now()}`;
+  try {
+    const res = await fetch(url);
+    const text = await res.text();
+    const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+    if (!match) return [];
+    const json = JSON.parse(match[1]);
+    const rows = json.table.rows || [];
+    const gvizLabels = json.table.cols.map(c => c.label ? c.label.trim() : '');
+    const hasLabels = gvizLabels.some(l => l !== '');
+    let headers, dataRows;
+    if (hasLabels) { headers = gvizLabels; dataRows = rows; }
+    else { headers = rows[0]?.c.map(c => c ? String(c.v||'').trim() : '') || []; dataRows = rows.slice(1); }
+    return dataRows.filter(row => row && row.c && row.c.some(c => c && c.v != null)).map(row => {
+      const obj = {};
+      headers.forEach((col, i) => {
+        const cell = row.c ? row.c[i] : null;
+        obj[col] = cell ? (cell.f != null ? String(cell.f).trim() : (cell.v != null ? String(cell.v).trim() : '')) : '';
+      });
+      return obj;
+    });
+  } catch(e) { console.warn('Kürzel-Sheet nicht ladbar:', e); return []; }
+}
+
 async function fetchSheet(sheetName) {
   const url = `${GVIZ}&sheet=${encodeURIComponent(sheetName)}&_=${Date.now()}`;
   const res = await fetch(url);
@@ -650,7 +675,7 @@ async function loadData() {
     const [configRows, signupRows, kuerzelRows] = await Promise.all([
       fetchSheet('Konfiguration'),
       fetchSheet('Anmeldungen'),
-      fetchSheet('Kürzel')
+      fetchKuerzel()
     ]);
     CONFIG  = configRows.filter(r => r.ID || r['ID']).map(r => {
       r.Tag         = r.ID || r.Tag || '';
@@ -665,7 +690,7 @@ async function loadData() {
     (kuerzelRows||[]).forEach(r => {
       const k = (r['Kürzel']||r['Kuerzel']||r.Kürzel||r.Kuerzel||'').trim();
       const vorname = (r['Vorname']||r.Vorname||'').trim();
-      const nachname = (r['Nachname']||r['Name']||r.Nachname||r.Name||'').trim();
+      const nachname = (r['Name']||r.Name||r['Nachname']||r.Nachname||'').trim();
       const name = [vorname, nachname].filter(Boolean).join(' ');
       if (k && name) KUERZEL[k] = name;
     });
