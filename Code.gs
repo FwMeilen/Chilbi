@@ -1,10 +1,10 @@
 // ============================================================
 // Chilbi Herrliberg – Schichtplanung Backend
-// Google Apps Script  |  Cl1.046
+// Google Apps Script  |  Cl1.047
 // Schema Konfiguration: ID|Datum|Von|Bis|Schicht|Aufgabe|Max Personen|Farbe|Informationen|Geschlossen
 // Schema Anmeldungen:   ID|Name|Schicht|Aufgabe|Timestamp
 // Schema Tage:          Datum|Typ
-// Schema Gast:          Kürzel|Vorname|Name|Email
+// Schema Gast:          Kürzel|Vorname|Name|Email|Tel
 // ============================================================
 
 const SHEET_ID       = '1XqTNfgONmHX9GvmfOVvb94BUo_oQ04Uy7R97FVfdWyo';
@@ -28,6 +28,7 @@ function doPost(e) {
     if (p.action === 'unsignup')       return jsonResponse(removeSignup(p));
     if (p.action === 'editSignup')     return jsonResponse(editSignup(p));
     if (p.action === 'registerGuest')  return jsonResponse(registerGuest(p));
+    if (p.action === 'updateGuestContact') return jsonResponse(updateGuestContact(p));
     if (p.action === 'saveConfig') {
       if (p.password !== ADMIN_PW) return jsonResponse({ ok: false, error: 'Falsches Passwort' });
       return jsonResponse(saveConfig(p.rows));
@@ -127,6 +128,20 @@ function registerGuest(p) {
   // Neuen Gast eintragen
   shGast.appendRow([p.kuerzel, p.vorname, p.nachname, '']);
   return { ok: true, kuerzel: p.kuerzel };
+}
+
+function updateGuestContact(p) {
+  const shGast = SS_KUERZEL.getSheetByName(SH_GAST);
+  if (!shGast) return { ok: false };
+  const rows = shGast.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === String(p.kuerzel)) {
+      if (p.email) shGast.getRange(i+1, 4).setValue(p.email);
+      if (p.tel)   shGast.getRange(i+1, 5).setValue(p.tel);
+      return { ok: true };
+    }
+  }
+  return { ok: false, error: 'Kürzel nicht gefunden' };
 }
 
 function saveConfig(rows) {
