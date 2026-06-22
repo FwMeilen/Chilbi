@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan Cl1.045</title>
+<title>Chilbi Herrliberg – Schichtplan Cl1.046</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -225,6 +225,24 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </head>
 <body>
 
+<!-- WILLKOMMEN GAST POPUP -->
+<div id="welcomeOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:white;max-width:420px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="background:var(--black);padding:16px 20px;">
+      <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Logo" style="height:32px;">
+    </div>
+    <div style="padding:24px;text-align:center;">
+      <div style="font-size:15px;font-weight:700;margin-bottom:12px;color:var(--black)">Herzlich willkommen bei der Stützpunktfeuerwehr Meilen.</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px;">Besten Dank für Deine Bereitschaft, uns an der Chilbi Herrliberg zu unterstützen!</div>
+      <div style="background:var(--bg2);border:1px solid var(--gray-mid);padding:14px;margin-bottom:16px;font-size:13px;line-height:1.6;color:var(--text2);">
+        Du kannst Dich ab sofort mit dem Kürzel <strong id="welcomeKuerzel" style="font-size:18px;color:var(--red);display:block;margin:8px 0;letter-spacing:.1em"></strong> wieder einloggen um Deine Daten anzusehen.
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:20px;font-style:italic;">Das Herrliberger Chilbi-OK</div>
+      <button class="btn btn-red" onclick="document.getElementById('welcomeOverlay').style.display='none'" style="width:100%">Weiter zum Schichtplan</button>
+    </div>
+  </div>
+</div>
+
 <!-- HILFE POPUP -->
 <div class="help-overlay" id="helpOverlay" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="help-box">
@@ -295,7 +313,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
           oninput="splashInputChange()" onkeydown="if(event.key==='Enter') splashSubmit()">
         <div class="splash-error" id="splashError"></div>
       </div>
-      <button class="splash-btn" onclick="splashSubmit()">Weiter zum Schichtplan →</button>
+      <button class="splash-btn" id="splashSubmitBtn" onclick="splashSubmit()">Weiter zum Schichtplan →</button>
     </div>
   </div>
 </div>
@@ -304,7 +322,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">Cl1.045</div>
+    <div class="header-version">Cl1.046</div>
     <button class="help-btn" onclick="document.getElementById('helpOverlay').classList.add('open')" title="Bedienungsanleitung">?</button>
   </div>
 </div>
@@ -403,7 +421,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.045</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.046</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -457,15 +475,83 @@ function splashInputChange() {
   document.getElementById('splashError').textContent = '';
 }
 
-function splashSubmit() {
+async function splashSubmit() {
   const val = document.getElementById('splashInput').value.trim();
   const err = document.getElementById('splashError');
   if (splashMode === 'ff' && !/^[A-Z]{3}$/.test(val)) { err.textContent = 'Bitte genau 3 Grossbuchstaben eingeben.'; return; }
   if (splashMode === 'guest' && val.length < 2) { err.textContent = 'Bitte Namen eingeben.'; return; }
+
+  if (splashMode === 'guest') {
+    // Vorname/Nachname aus Eingabe
+    const parts = val.trim().split(/\s+/);
+    const vorname = parts[0] || '';
+    const nachname = parts.slice(1).join(' ') || '';
+    const btn = document.getElementById('splashSubmitBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Wird registriert…'; }
+    try {
+      const result = await registerGuest(vorname, nachname);
+      const kuerzel = result.kuerzel;
+      const displayName = 'G: ' + val;
+      localStorage.setItem('chilbi_name', kuerzel);
+      localStorage.setItem('chilbi_mode', 'ff');
+      localStorage.setItem('chilbi_display', displayName);
+      document.getElementById('nameDisplay').textContent = kuerzel;
+      document.getElementById('splash').style.display = 'none';
+      // Willkommens-Popup
+      document.getElementById('welcomeKuerzel').textContent = kuerzel;
+      document.getElementById('welcomeOverlay').style.display = 'flex';
+    } catch(e) {
+      err.textContent = 'Fehler bei der Registrierung: ' + e.message;
+      if (btn) { btn.disabled = false; btn.textContent = 'Weiter zum Schichtplan →'; }
+    }
+    return;
+  }
+
   localStorage.setItem('chilbi_name', val);
   localStorage.setItem('chilbi_mode', splashMode);
   document.getElementById('nameDisplay').textContent = val;
   document.getElementById('splash').style.display = 'none';
+}
+
+async function registerGuest(vorname, nachname) {
+  // Kürzel generieren: G + 1.Buchstabe Vorname + 1.Buchstabe Nachname
+  const v = vorname.toUpperCase().replace(/[^A-Z]/g,'');
+  const n = nachname.toUpperCase().replace(/[^A-Z]/g,'');
+  const candidates = [
+    'G' + (v[0]||'X') + (n[0]||'X'),
+    'G' + (v[1]||'X') + (n[0]||'X'),
+    'G' + (v[0]||'X') + (n[1]||'X'),
+    'GXX'
+  ];
+
+  // Bestehende Kürzel laden (Tabellenblatt1 + Gast)
+  const [sheet1, sheetGast] = await Promise.all([
+    fetchKuerzelSheet(),
+    fetchKuerzelSheetGast()
+  ]);
+  const allKuerzel = new Set([...sheet1, ...sheetGast].map(r => (r.Kürzel||r['Kürzel']||'').trim().toUpperCase()));
+
+  // Prüfe ob Gast schon registriert (gleicher Vor- und Nachname)
+  const existing = sheetGast.find(r => {
+    const rv = (r.Vorname||'').trim().toLowerCase();
+    const rn = (r.Name||r.Nachname||'').trim().toLowerCase();
+    return rv === vorname.toLowerCase() && rn === nachname.toLowerCase();
+  });
+  if (existing) {
+    return { kuerzel: (existing.Kürzel||existing['Kürzel']||'').trim() };
+  }
+
+  // Freies Kürzel wählen
+  const kuerzel = candidates.find(k => !allKuerzel.has(k)) || 'GXX';
+
+  // Ins Sheet schreiben via Apps Script
+  await fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify({action:'registerGuest', vorname, nachname, kuerzel})});
+
+  // Lokal auch in KUERZEL speichern
+  KUERZEL[kuerzel] = 'G: ' + vorname + ' ' + nachname;
+
+  return { kuerzel };
 }
 
 function splashShow() {
@@ -784,6 +870,31 @@ async function fetchKuerzelSheet() {
       return obj;
     });
   } catch(e) { console.warn('Kürzel-Sheet Ladefehler:', e); return []; }
+}
+
+async function fetchKuerzelSheetGast() {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${KUERZEL_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Gast')}&_=${Date.now()}`;
+    const res = await fetch(url);
+    const text = await res.text();
+    const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+    if (!match) return [];
+    const json = JSON.parse(match[1]);
+    const rows = json.table.rows || [];
+    const gvizLabels = json.table.cols.map(c => c.label ? c.label.trim() : '');
+    const hasLabels = gvizLabels.some(l => l !== '');
+    let headers, dataRows;
+    if (hasLabels) { headers = gvizLabels; dataRows = rows; }
+    else { headers = rows[0]?.c.map(c => c ? String(c.v||'').trim() : '') || []; dataRows = rows.slice(1); }
+    return dataRows.filter(row => row && row.c && row.c[0] && row.c[0].v != null).map(row => {
+      const obj = {};
+      headers.forEach((col, i) => {
+        const cell = row.c ? row.c[i] : null;
+        obj[col] = cell ? (cell.v != null ? String(cell.v).trim() : '') : '';
+      });
+      return obj;
+    });
+  } catch(e) { return []; }
 }
 
 async function loadData() {
