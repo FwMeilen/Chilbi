@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan Cl1.046</title>
+<title>Chilbi Herrliberg – Schichtplan Cl1.047</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -237,8 +237,16 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
       <div style="background:var(--bg2);border:1px solid var(--gray-mid);padding:14px;margin-bottom:16px;font-size:13px;line-height:1.6;color:var(--text2);">
         Du kannst Dich ab sofort mit dem Kürzel <strong id="welcomeKuerzel" style="font-size:18px;color:var(--red);display:block;margin:8px 0;letter-spacing:.1em"></strong> wieder einloggen um Deine Daten anzusehen.
       </div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:20px;font-style:italic;">Das Herrliberger Chilbi-OK</div>
-      <button class="btn btn-red" onclick="document.getElementById('welcomeOverlay').style.display='none'" style="width:100%">Weiter zum Schichtplan</button>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">Willst du uns deine Kontaktdaten geben, damit wir dich bei Änderungen informieren können?</div>
+      <div style="display:grid;gap:8px;margin-bottom:16px;">
+        <input id="guestEmail" type="email" placeholder="E-Mail (optional)" style="box-sizing:border-box;width:100%;height:36px;padding:0 12px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;">
+        <input id="guestTel" type="tel" placeholder="Mobile (optional)" style="box-sizing:border-box;width:100%;height:36px;padding:0 12px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;">
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:16px;font-style:italic;">Das Herrliberger Chilbi-OK</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" onclick="closeWelcome(false)" style="flex:1">Überspringen</button>
+        <button class="btn btn-red" onclick="closeWelcome(true)" style="flex:1">Speichern & weiter</button>
+      </div>
     </div>
   </div>
 </div>
@@ -322,7 +330,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">Cl1.046</div>
+    <div class="header-version">Cl1.047</div>
     <button class="help-btn" onclick="document.getElementById('helpOverlay').classList.add('open')" title="Bedienungsanleitung">?</button>
   </div>
 </div>
@@ -421,7 +429,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.046</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.047</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -499,7 +507,12 @@ async function splashSubmit() {
       document.getElementById('splash').style.display = 'none';
       // Willkommens-Popup
       document.getElementById('welcomeKuerzel').textContent = kuerzel;
+      document.getElementById('guestEmail').value = '';
+      document.getElementById('guestTel').value = '';
       document.getElementById('welcomeOverlay').style.display = 'flex';
+      window._guestKuerzel = kuerzel;
+      window._guestVorname = vorname;
+      window._guestNachname = nachname;
     } catch(e) {
       err.textContent = 'Fehler bei der Registrierung: ' + e.message;
       if (btn) { btn.disabled = false; btn.textContent = 'Weiter zum Schichtplan →'; }
@@ -513,14 +526,28 @@ async function splashSubmit() {
   document.getElementById('splash').style.display = 'none';
 }
 
+function closeWelcome(save) {
+  document.getElementById('welcomeOverlay').style.display = 'none';
+  if (save) {
+    const email = document.getElementById('guestEmail').value.trim();
+    const tel   = document.getElementById('guestTel').value.trim();
+    if (email || tel) {
+      fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
+        body: JSON.stringify({action:'updateGuestContact', kuerzel: window._guestKuerzel, email, tel})});
+    }
+  }
+}
+
 async function registerGuest(vorname, nachname) {
   // Kürzel generieren: G + 1.Buchstabe Vorname + 1.Buchstabe Nachname
   const v = vorname.toUpperCase().replace(/[^A-Z]/g,'');
   const n = nachname.toUpperCase().replace(/[^A-Z]/g,'');
+  // Primär: 1.+2. Buchstabe Nachname + 1. Buchstabe Vorname (wie FF-Kürzel)
   const candidates = [
-    'G' + (v[0]||'X') + (n[0]||'X'),
-    'G' + (v[1]||'X') + (n[0]||'X'),
-    'G' + (v[0]||'X') + (n[1]||'X'),
+    (n[0]||'X') + (n[1]||'X') + (v[0]||'X'),   // z.B. LOL (Loepfe Lars)
+    'G' + (v[0]||'X') + (n[0]||'X'),             // Fallback 1: G+V1+N1
+    'G' + (n[1]||'X') + (v[0]||'X'),             // Fallback 2: G+N2+V1
+    'G' + (n[0]||'X') + (v[1]||'X'),             // Fallback 3: G+N1+V2
     'GXX'
   ];
 
@@ -656,6 +683,16 @@ async function silentRefresh() {
       const name = [vorname, nachname].filter(Boolean).join(' ');
       if (k && name) KUERZEL[k] = name;
     });
+    try {
+      const gastRows2 = await fetchKuerzelSheetGast();
+      (gastRows2||[]).forEach(r => {
+        const k = (r['Kürzel']||r['Kuerzel']||r.Kürzel||r.Kuerzel||'').trim();
+        const vorname = (r['Vorname']||r.Vorname||'').trim();
+        const nachname = (r['Name']||r.Name||r['Nachname']||r.Nachname||'').trim();
+        const name = [vorname, nachname].filter(Boolean).join(' ');
+        if (k && name) KUERZEL[k] = 'G: ' + name;
+      });
+    } catch(e) {}
     TAGE = {};
     (tageRows||[]).forEach(r => {
       let datum = (r['Datum']||r.Datum||'').trim();
@@ -924,6 +961,16 @@ async function loadData() {
       const name = [vorname, nachname].filter(Boolean).join(' ');
       if (k && name) KUERZEL[k] = name;
     });
+    try {
+      const gastRows2 = await fetchKuerzelSheetGast();
+      (gastRows2||[]).forEach(r => {
+        const k = (r['Kürzel']||r['Kuerzel']||r.Kürzel||r.Kuerzel||'').trim();
+        const vorname = (r['Vorname']||r.Vorname||'').trim();
+        const nachname = (r['Name']||r.Name||r['Nachname']||r.Nachname||'').trim();
+        const name = [vorname, nachname].filter(Boolean).join(' ');
+        if (k && name) KUERZEL[k] = 'G: ' + name;
+      });
+    } catch(e) {}
     TAGE = {};
     (tageRows||[]).forEach(r => {
       let datum = (r['Datum']||r.Datum||'').trim();
