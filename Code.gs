@@ -1,17 +1,21 @@
 // ============================================================
 // Chilbi Herrliberg – Schichtplanung Backend
-// Google Apps Script  |  Cl1.017
+// Google Apps Script  |  Cl1.046
 // Schema Konfiguration: ID|Datum|Von|Bis|Schicht|Aufgabe|Max Personen|Farbe|Informationen|Geschlossen
-// Schema Anmeldungen:   Tag|Name|Schicht|Aufgabe|Timestamp
+// Schema Anmeldungen:   ID|Name|Schicht|Aufgabe|Timestamp
 // Schema Tage:          Datum|Typ
+// Schema Gast:          Kürzel|Vorname|Name|Email
 // ============================================================
 
-const SHEET_ID  = '1XqTNfgONmHX9GvmfOVvb94BUo_oQ04Uy7R97FVfdWyo';
-const ADMIN_PW  = 'chilbi2025';
-const SS        = SpreadsheetApp.openById(SHEET_ID);
-const SH_CONFIG = 'Konfiguration';
-const SH_SIGNUP = 'Anmeldungen';
-const SH_TAGE   = 'Tage';
+const SHEET_ID       = '1XqTNfgONmHX9GvmfOVvb94BUo_oQ04Uy7R97FVfdWyo';
+const KUERZEL_SHEET_ID = '1bK6IuVpAdLyYc9_NPbJxFMkvCZ0fNvadJABBUM-Rc0M';
+const ADMIN_PW       = 'chilbi2025';
+const SS             = SpreadsheetApp.openById(SHEET_ID);
+const SS_KUERZEL     = SpreadsheetApp.openById(KUERZEL_SHEET_ID);
+const SH_CONFIG      = 'Konfiguration';
+const SH_SIGNUP      = 'Anmeldungen';
+const SH_TAGE        = 'Tage';
+const SH_GAST        = 'Gast';
 
 function doGet(e) {
   return jsonResponse({ config: getConfig(), signups: getSignups(), tage: getTage() });
@@ -20,9 +24,10 @@ function doGet(e) {
 function doPost(e) {
   try {
     const p = JSON.parse(e.postData.contents);
-    if (p.action === 'signup')     return jsonResponse(saveSignup(p));
-    if (p.action === 'unsignup')   return jsonResponse(removeSignup(p));
-    if (p.action === 'editSignup') return jsonResponse(editSignup(p));
+    if (p.action === 'signup')         return jsonResponse(saveSignup(p));
+    if (p.action === 'unsignup')       return jsonResponse(removeSignup(p));
+    if (p.action === 'editSignup')     return jsonResponse(editSignup(p));
+    if (p.action === 'registerGuest')  return jsonResponse(registerGuest(p));
     if (p.action === 'saveConfig') {
       if (p.password !== ADMIN_PW) return jsonResponse({ ok: false, error: 'Falsches Passwort' });
       return jsonResponse(saveConfig(p.rows));
@@ -104,6 +109,24 @@ function editSignup(p) {
     }
   }
   return { ok: false, error: 'Eintrag nicht gefunden' };
+}
+
+function registerGuest(p) {
+  const shGast = SS_KUERZEL.getSheetByName(SH_GAST);
+  if (!shGast) return { ok: false, error: 'Gast-Tab nicht gefunden' };
+
+  // Prüfe ob bereits registriert
+  const rows = shGast.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][1]).toLowerCase() === String(p.vorname).toLowerCase() &&
+        String(rows[i][2]).toLowerCase() === String(p.nachname).toLowerCase()) {
+      return { ok: true, kuerzel: rows[i][0] };
+    }
+  }
+
+  // Neuen Gast eintragen
+  shGast.appendRow([p.kuerzel, p.vorname, p.nachname, '']);
+  return { ok: true, kuerzel: p.kuerzel };
 }
 
 function saveConfig(rows) {
