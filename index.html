@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan Cl1.043</title>
+<title>Chilbi Herrliberg – Schichtplan Cl1.045</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -245,7 +245,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
       <div class="help-section">
         <h4>Schicht eintragen</h4>
         <ul>
-          <li>Wähle oben den gewünschten Tag (Tab).</li>
+          <li>Wähle oben in der Auswahl den gewünschten Tag.</li>
           <li>Klicke auf einen freien Block um dich einzutragen.</li>
           <li>Im Popup siehst du Details und kannst mit <strong>„In diese Schicht eintragen"</strong> bestätigen.</li>
           <li>Bereits eingetragene Schichten erscheinen schwarz.</li>
@@ -257,8 +257,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
         <h4>Meine Schichten</h4>
         <ul>
           <li>Klicke auf <strong>„Meine Schichten"</strong> um alle deine Einträge zu sehen.</li>
-          <li>Mit <strong>📅 Kalender</strong> kannst du alle Schichten als .ics-Datei herunterladen.</li>
-          <li>Der Kalender-Start ist 10 Minuten vor Schichtbeginn (Treffpunkt).</li>
+          <li>Mit <strong>📅 In meinen Kalender eintragen</strong> kannst du alle Schichten als .ics-Datei herunterladen.</li>
         </ul>
       </div>
       <div class="help-section">
@@ -305,7 +304,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">Cl1.043</div>
+    <div class="header-version">Cl1.045</div>
     <button class="help-btn" onclick="document.getElementById('helpOverlay').classList.add('open')" title="Bedienungsanleitung">?</button>
   </div>
 </div>
@@ -334,7 +333,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   </div>
   <div class="btn-group">
     <button class="btn-myshifts" id="btnMyShifts" onclick="toggleMyShifts()">Meine Schichten</button>
-    <button class="btn-myshifts" id="btnICS" onclick="downloadICS()" style="display:none" title="Als Kalender (.ics) herunterladen">📅 Kalender</button>
+    <button class="btn-myshifts" id="btnICS" onclick="downloadICS()" style="display:none" title="Als Kalender (.ics) herunterladen">📅 In meinen Kalender eintragen</button>
     <button class="btn-refresh" id="btnRefresh" onclick="manualRefresh()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
       Aktualisieren
@@ -404,7 +403,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.043</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.045</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
