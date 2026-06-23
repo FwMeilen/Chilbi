@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.049</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.050</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -161,7 +161,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <div class="login-error" id="loginError"></div>
     <button class="btn btn-red" style="width:100%" onclick="doLogin()">Einloggen</button>
     <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--gray-mid);text-align:center;font-size:11px;color:var(--text3);">
-      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.049</strong>
+      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.050</strong>
     </div>
   </div>
 </div>
@@ -172,7 +172,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.049</span>
+      <span class="header-version">Cl1.050</span>
       <button class="help-btn" onclick="document.getElementById('helpOverlay').style.display='flex'" title="Bedienungsanleitung" style="background:none;border:1.5px solid rgba(255,255,255,.5);color:white;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;">?</button>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
@@ -423,7 +423,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.049</div>
+<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.050</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -946,7 +946,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.049</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.050</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
@@ -1325,7 +1325,8 @@ function openEditSchicht(tagId) {
 function renderEditSchichtSignups(tagId) {
   const container = document.getElementById('editSchichtSignups');
   if (!container) return;
-  const taken = SIGNUPS.filter(s => String(s.Tag||s.ID) === String(tagId));
+  if (!tagId) { container.innerHTML = ''; return; }
+  const taken = SIGNUPS.filter(s => s.Tag && String(s.Tag) === String(tagId));
   if (!taken.length) {
     container.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:6px 0">Noch niemand eingetragen.</div>';
     return;
@@ -1358,7 +1359,7 @@ async function removeSignupFromSchicht(tag, name) {
   if (!confirm(`${name} aus dieser Schicht entfernen?`)) return;
   await fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
     body: JSON.stringify({action:'unsignup', tag, name})});
-  const idx = SIGNUPS.findIndex(s => String(s.Tag||s.ID)===String(tag) && s.Name===name);
+  const idx = SIGNUPS.findIndex(s => String(s.Tag)===String(tag) && s.Name===name);
   if (idx > -1) SIGNUPS.splice(idx, 1);
   renderEditSchichtSignups(tag);
   showToast('✓ ' + name + ' entfernt', 'success');
