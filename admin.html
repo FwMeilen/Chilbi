@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.050</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.051</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -161,7 +161,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <div class="login-error" id="loginError"></div>
     <button class="btn btn-red" style="width:100%" onclick="doLogin()">Einloggen</button>
     <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--gray-mid);text-align:center;font-size:11px;color:var(--text3);">
-      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.050</strong>
+      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.051</strong>
     </div>
   </div>
 </div>
@@ -172,7 +172,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.050</span>
+      <span class="header-version">Cl1.051</span>
       <button class="help-btn" onclick="document.getElementById('helpOverlay').style.display='flex'" title="Bedienungsanleitung" style="background:none;border:1.5px solid rgba(255,255,255,.5);color:white;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;">?</button>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
@@ -253,6 +253,17 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
           <button class="btn btn-sm" onclick="saveTage()">💾 Tage speichern</button>
         </div>
         <div class="help-text">Daten werden automatisch aus den Schichten gelesen.</div>
+      </div>
+    </div>
+
+    <!-- 2b. GÄSTE VERWALTEN -->
+    <div class="accordion-card">
+      <div class="accordion-header" onclick="toggleAccordion('acc-gaeste')">
+        <span class="accordion-title">Gäste verwalten</span>
+        <span class="accordion-arrow" id="arr-acc-gaeste">▼</span>
+      </div>
+      <div class="accordion-body" id="acc-gaeste">
+        <div id="gaesteliste"></div>
       </div>
     </div>
 
@@ -422,8 +433,35 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     </div>
   </div>
 </div>
+
+<!-- EDIT GAST POPUP -->
+<div id="editGastOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:white;max-width:440px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.25);">
+    <div style="background:var(--black);color:white;padding:16px 20px;font-size:14px;font-weight:700;text-transform:uppercase;">Gast bearbeiten</div>
+    <div style="padding:20px;">
+      <input type="hidden" id="editGastOldKuerzel">
+      <div style="display:grid;grid-template-columns:110px 1fr;gap:8px;font-size:13px;align-items:center;">
+        <label style="font-weight:600">Kürzel</label>
+        <input id="editGastKuerzel" style="box-sizing:border-box;width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;">
+        <label style="font-weight:600">Vorname</label>
+        <input id="editGastVorname" style="box-sizing:border-box;width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;">
+        <label style="font-weight:600">Name</label>
+        <input id="editGastName" style="box-sizing:border-box;width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;">
+        <label style="font-weight:600">Email</label>
+        <input id="editGastEmail" type="email" style="box-sizing:border-box;width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;">
+        <label style="font-weight:600">Tel</label>
+        <input id="editGastTel" style="box-sizing:border-box;width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;">
+      </div>
+      <div style="display:flex;gap:8px;justify-content:space-between;margin-top:20px;">
+        <button class="btn btn-red btn-sm" onclick="deleteGast()" style="margin-right:auto">🗑 Löschen</button>
+        <button class="btn btn-sm" onclick="closeEditGast()">Abbrechen</button>
+        <button class="btn btn-green btn-sm" onclick="saveEditGast()">💾 Speichern</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
-<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.050</div>
+<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.051</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -946,7 +984,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.050</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.051</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
@@ -1205,6 +1243,7 @@ function toggleAccordion(id) {
   const isOpen = body.classList.contains('open');
   body.classList.toggle('open', !isOpen);
   if (arr) arr.style.transform = isOpen ? '' : 'rotate(180deg)';
+  if (id === 'acc-gaeste' && !isOpen) loadGaeste();
 }
 
 function loadAutoColorSetting() {
@@ -1407,6 +1446,104 @@ async function saveEditSchicht() {
   closeEditSchicht();
   showToast('✓ Schicht gespeichert', 'success');
   setTimeout(async () => { await loadData(); buildSchichtplan(); }, 1500);
+}
+
+let GAESTE = [];
+
+async function loadGaeste() {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/1bK6IuVpAdLyYc9_NPbJxFMkvCZ0fNvadJABBUM-Rc0M/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Gast')}&_=${Date.now()}`;
+    const res = await fetch(url);
+    const text = await res.text();
+    const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+    if (!match) { GAESTE = []; return; }
+    const json = JSON.parse(match[1]);
+    const rows = json.table.rows || [];
+    const gvizLabels = json.table.cols.map(c => c.label ? c.label.trim() : '');
+    const hasLabels = gvizLabels.some(l => l !== '');
+    let headers, dataRows;
+    if (hasLabels) { headers = gvizLabels; dataRows = rows; }
+    else { headers = rows[0]?.c.map(c => c ? String(c.v||'').trim() : '') || []; dataRows = rows.slice(1); }
+    GAESTE = dataRows.filter(row => row && row.c && row.c[0] && row.c[0].v != null).map(row => {
+      const obj = {};
+      headers.forEach((col, i) => {
+        const cell = row.c ? row.c[i] : null;
+        obj[col] = cell ? (cell.v != null ? String(cell.v).trim() : '') : '';
+      });
+      return obj;
+    });
+  } catch(e) { GAESTE = []; }
+  renderGaeste();
+}
+
+function renderGaeste() {
+  const el = document.getElementById('gaesteliste');
+  if (!el) return;
+  if (!GAESTE.length) { el.innerHTML = '<div style="padding:12px;color:var(--text3);font-size:13px">Noch keine Gäste registriert.</div>'; return; }
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead><tr style="background:var(--black);color:white;">
+      <th style="padding:8px;text-align:left">Kürzel</th>
+      <th style="padding:8px;text-align:left">Vorname</th>
+      <th style="padding:8px;text-align:left">Name</th>
+      <th style="padding:8px;text-align:left">Email</th>
+      <th style="padding:8px;text-align:left">Tel</th>
+      <th style="padding:8px"></th>
+    </tr></thead>
+    <tbody>
+      ${GAESTE.map((g,i) => `<tr style="border-bottom:1px solid var(--gray-mid);${i%2?'background:var(--bg2)':''}">
+        <td style="padding:8px;font-weight:700">${esc(g.Kürzel||g['Kürzel']||'')}</td>
+        <td style="padding:8px">${esc(g.Vorname||'')}</td>
+        <td style="padding:8px">${esc(g.Name||'')}</td>
+        <td style="padding:8px;color:var(--text3)">${esc(g.Email||'')}</td>
+        <td style="padding:8px;color:var(--text3)">${esc(g.Tel||'')}</td>
+        <td style="padding:8px;text-align:right">
+          <button onclick="openEditGast(${i})" style="border:none;background:none;cursor:pointer;font-size:14px;opacity:.6;padding:2px 6px;" title="Bearbeiten">✏️</button>
+        </td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function openEditGast(idx) {
+  const g = GAESTE[idx];
+  document.getElementById('editGastOldKuerzel').value = g.Kürzel||g['Kürzel']||'';
+  document.getElementById('editGastKuerzel').value  = g.Kürzel||g['Kürzel']||'';
+  document.getElementById('editGastVorname').value  = g.Vorname||'';
+  document.getElementById('editGastName').value     = g.Name||'';
+  document.getElementById('editGastEmail').value    = g.Email||'';
+  document.getElementById('editGastTel').value      = g.Tel||'';
+  document.getElementById('editGastOverlay').style.display = 'flex';
+}
+
+function closeEditGast() {
+  document.getElementById('editGastOverlay').style.display = 'none';
+}
+
+async function saveEditGast() {
+  const oldK = document.getElementById('editGastOldKuerzel').value;
+  const data = {
+    action: 'updateGuest',
+    oldKuerzel: oldK,
+    kuerzel:  document.getElementById('editGastKuerzel').value.trim(),
+    vorname:  document.getElementById('editGastVorname').value.trim(),
+    nachname: document.getElementById('editGastName').value.trim(),
+    email:    document.getElementById('editGastEmail').value.trim(),
+    tel:      document.getElementById('editGastTel').value.trim()
+  };
+  await fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(data)});
+  closeEditGast();
+  showToast('✓ Gast gespeichert', 'success');
+  setTimeout(loadGaeste, 1500);
+}
+
+async function deleteGast() {
+  const k = document.getElementById('editGastOldKuerzel').value;
+  if (!confirm(`Gast ${k} wirklich löschen?`)) return;
+  await fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify({action:'deleteGuest', kuerzel: k})});
+  closeEditGast();
+  showToast('✓ Gast gelöscht', 'success');
+  setTimeout(loadGaeste, 1500);
 }
 
 function formatDate(d) { try{return new Date(d).toLocaleString('de-CH');}catch(e){return d||'';} }
