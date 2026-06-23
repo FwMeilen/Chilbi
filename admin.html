@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.045</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.049</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -161,7 +161,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <div class="login-error" id="loginError"></div>
     <button class="btn btn-red" style="width:100%" onclick="doLogin()">Einloggen</button>
     <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--gray-mid);text-align:center;font-size:11px;color:var(--text3);">
-      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.045</strong>
+      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.049</strong>
     </div>
   </div>
 </div>
@@ -172,7 +172,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.045</span>
+      <span class="header-version">Cl1.049</span>
       <button class="help-btn" onclick="document.getElementById('helpOverlay').style.display='flex'" title="Bedienungsanleitung" style="background:none;border:1.5px solid rgba(255,255,255,.5);color:white;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;">?</button>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
@@ -377,6 +377,18 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
         <button class="btn btn-sm" onclick="closeEditSchicht()">Abbrechen</button>
         <button class="btn btn-green btn-sm" onclick="saveEditSchicht()">💾 Speichern</button>
       </div>
+
+      <!-- Anmeldungen -->
+      <div style="margin-top:20px;padding-top:16px;border-top:2px solid var(--black);">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Anmeldungen</div>
+        <div id="editSchichtSignups"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <input id="newSignupName" placeholder="Name / Kürzel hinzufügen…"
+            style="flex:1;height:32px;padding:0 8px;border:1px solid var(--gray-mid);font-family:inherit;font-size:13px;"
+            onkeydown="if(event.key==='Enter')addSignupToSchicht()">
+          <button class="btn btn-green btn-sm" onclick="addSignupToSchicht()">+ Hinzufügen</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -411,7 +423,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.045</div>
+<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.049</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -934,7 +946,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
       <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.045</div>
+      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.049</div>
     </div>
     <div style="display:flex;margin-bottom:4px;">
       <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
@@ -1292,6 +1304,7 @@ function openNewSchicht() {
   document.getElementById('esInfo').value = '';
   document.getElementById('esGeschlossen').checked = false;
   document.getElementById('editSchichtOverlay').style.display = 'flex';
+  renderEditSchichtSignups(r.Tag || r.ID);
 }
 
 function openEditSchicht(tagId) {
@@ -1307,6 +1320,49 @@ function openEditSchicht(tagId) {
   document.getElementById('esInfo').value = r.Informationen || '';
   document.getElementById('esGeschlossen').checked = r.Geschlossen === true || String(r.Geschlossen) === '1';
   document.getElementById('editSchichtOverlay').style.display = 'flex';
+}
+
+function renderEditSchichtSignups(tagId) {
+  const container = document.getElementById('editSchichtSignups');
+  if (!container) return;
+  const taken = SIGNUPS.filter(s => String(s.Tag||s.ID) === String(tagId));
+  if (!taken.length) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:6px 0">Noch niemand eingetragen.</div>';
+    return;
+  }
+  container.innerHTML = taken.map((s, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--gray-mid);">
+      <span style="flex:1;font-size:13px;font-weight:600">${esc(s.Name)}</span>
+      <button onclick="removeSignupFromSchicht('${esc(s.Tag||s.ID)}','${esc(s.Name)}')"
+        style="border:none;background:none;cursor:pointer;color:var(--red);font-size:14px;padding:2px 6px;"
+        title="Löschen">✕</button>
+    </div>`).join('');
+}
+
+async function addSignupToSchicht() {
+  const name = document.getElementById('newSignupName').value.trim();
+  const tag  = document.getElementById('esTag').value;
+  if (!name || !tag) return;
+  const cfg = CONFIG.find(r => String(r.Tag||r.ID) === String(tag));
+  if (!cfg) return;
+  await fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify({action:'signup', name, tag, schicht: cfg.Schicht, aufgabe: cfg.Aufgabe})});
+  SIGNUPS.push({Tag: tag, Name: name, Schicht: cfg.Schicht, Aufgabe: cfg.Aufgabe});
+  document.getElementById('newSignupName').value = '';
+  renderEditSchichtSignups(tag);
+  showToast('✓ ' + name + ' eingetragen', 'success');
+  setTimeout(() => loadData(), 2000);
+}
+
+async function removeSignupFromSchicht(tag, name) {
+  if (!confirm(`${name} aus dieser Schicht entfernen?`)) return;
+  await fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify({action:'unsignup', tag, name})});
+  const idx = SIGNUPS.findIndex(s => String(s.Tag||s.ID)===String(tag) && s.Name===name);
+  if (idx > -1) SIGNUPS.splice(idx, 1);
+  renderEditSchichtSignups(tag);
+  showToast('✓ ' + name + ' entfernt', 'success');
+  setTimeout(() => loadData(), 2000);
 }
 
 function closeEditSchicht() {
