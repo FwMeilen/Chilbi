@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.051</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.052</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -161,7 +161,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <div class="login-error" id="loginError"></div>
     <button class="btn btn-red" style="width:100%" onclick="doLogin()">Einloggen</button>
     <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--gray-mid);text-align:center;font-size:11px;color:var(--text3);">
-      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.051</strong>
+      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.052</strong>
     </div>
   </div>
 </div>
@@ -172,7 +172,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.051</span>
+      <span class="header-version">Cl1.052</span>
       <button class="help-btn" onclick="document.getElementById('helpOverlay').style.display='flex'" title="Bedienungsanleitung" style="background:none;border:1.5px solid rgba(255,255,255,.5);color:white;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;">?</button>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
@@ -461,7 +461,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.051</div>
+<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.052</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -915,15 +915,10 @@ function printDay(dayId) {
     return mins;
   }
 
-  // A3 landscape: ~380mm druckbar = ca 1440px bei 96dpi
-  // Zeitbereich → skaliere auf verfügbare Breite
+  // ===== Auto-Fit Print: A3 quer, volle Breite, 1 Seite pro Tag =====
   const allT = rows.flatMap(r=>{const v=parseT(r.Von);return[v,parseT(r.Bis,v)];});
   const minT=Math.min(...allT), maxT=Math.max(...allT);
-  const spanMin = maxT - minT;
-  const LABEL_W = 110; // px für Aufgaben-Label
-  const PAGE_W = 1050; // verfügbare Breite in px (A3 quer - Ränder)
-  const TRACK_W = PAGE_W - LABEL_W;
-  const PX = TRACK_W / spanMin; // px pro Minute, passt exakt auf Seite
+  const spanMin = (maxT - minT) || 1;
 
   // Schichten gruppieren
   const schMap={}, schOrder=[];
@@ -932,36 +927,49 @@ function printDay(dayId) {
     schMap[r.Schicht].push(r);
   });
 
-  // Ruler
+  // --- Höhe in Einheiten (U) summieren, dann U lösen → füllt 1 A3-Seite ---
+  const HEADER_U=2.6, RULER_U=1.7, SCH_U=1.9, GAP_U=0.18;
+  const rowU = r => Math.max(parseInt(r.MaxPersonen)||1, 2.1); // Block- vs. Label-Höhe
+  let units = HEADER_U + RULER_U;
+  schOrder.forEach(sch=>{
+    units += SCH_U;
+    schMap[sch].forEach(r=>{ units += rowU(r) + GAP_U; });
+  });
+  const AVAIL_H = 1010;                                   // ~277mm druckbar (A3 quer, 10mm Rand)
+  const U = Math.max(8, Math.min(20, AVAIL_H/units));     // Skalierung gedeckelt (8–20px)
+  const px = n => +(n*U).toFixed(1);
+  const labelW = Math.round(Math.max(100, Math.min(160, 8*U)));
+
+  // Ruler (Prozent → volle Breite)
   let rulerHtml='';
   for(let h=Math.floor(minT/60);h<=Math.ceil(maxT/60);h++){
-    const px=(h*60-minT)*PX;
-    rulerHtml+=`<div style="position:absolute;left:${px.toFixed(1)}px;font-size:8px;color:#555;border-left:1px solid #bbb;padding-left:2px;top:0;white-space:nowrap;height:18px;line-height:18px">${h%24}:00</div>`;
+    const pct=((h*60-minT)/spanMin)*100;
+    if(pct<0||pct>100.5) continue;
+    rulerHtml+=`<div style="position:absolute;left:${pct.toFixed(2)}%;font-size:${px(0.6)}px;color:#555;border-left:1px solid #bbb;padding-left:2px;top:0;white-space:nowrap;height:${px(1.4)}px;line-height:${px(1.4)}px">${h%24}:00</div>`;
   }
 
-  // Schichten HTML
+  // Schichten + Aufgaben
   let schHtml='';
   schOrder.forEach(sch=>{
-    schHtml+=`<div style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;margin:8px 0 3px ${LABEL_W}px;border-bottom:1px solid #ccc;padding-bottom:2px">${sch}</div>`;
+    schHtml+=`<div style="font-size:${px(0.62)}px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;margin:${px(0.5)}px 0 ${px(0.25)}px ${labelW}px;border-bottom:1px solid #ccc;padding-bottom:2px">${sch}</div>`;
     schMap[sch].forEach(r=>{
       const vonM=parseT(r.Von), bisM=parseT(r.Bis,vonM);
-      const leftPx=((vonM-minT)*PX).toFixed(1);
-      const widePx=((bisM-vonM)*PX).toFixed(1);
+      const leftPct=(((vonM-minT)/spanMin)*100).toFixed(2);
+      const widePct=(((bisM-vonM)/spanMin)*100).toFixed(2);
       const taken=SIGNUPS.filter(s=>String(s.Tag)===String(r.Tag));
       const max=parseInt(r.MaxPersonen)||1;
       const isClosed=String(r.Geschlossen)==='1'||r.Geschlossen===true;
-      const lineH=14;
-      const blockH=Math.max(lineH, max*lineH);
-      const namedLines=taken.map(s=>`<div style="border-bottom:1px solid #bbb;padding:1px 3px;font-size:8px;font-weight:700;height:${lineH}px;line-height:${lineH}px;overflow:hidden">${s.Name}</div>`).join('');
-      const emptyLines=Array.from({length:Math.max(0,max-taken.length)},()=>`<div style="border-bottom:1px solid #bbb;height:${lineH}px;"></div>`).join('');
-      schHtml+=`<div style="display:flex;align-items:flex-start;margin-bottom:2px;height:${blockH}px;">
-        <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;font-size:8px;font-weight:700;padding-right:6px;padding-top:2px;line-height:1.2">
-          ${r.Aufgabe}${isClosed?' 🔒':''}<br>
-          <span style="font-weight:400;color:#888">${r.Von}–${r.Bis}</span><br>
-          <span style="font-weight:700;color:${taken.length>=max?'#c00':'#555'}">${taken.length}/${max}</span>
+      const blockH=px(max);          // Höhe der Personen-Linien
+      const rowH=px(rowU(r));         // Zeilenhöhe = max(Block, Label) → kein Überlauf
+      const namedLines=taken.map(s=>`<div style="border-bottom:1px solid #bbb;padding:0 3px;font-size:${px(0.62)}px;font-weight:700;height:${px(1)}px;line-height:${px(1)}px;overflow:hidden">${s.Name}</div>`).join('');
+      const emptyLines=Array.from({length:Math.max(0,max-taken.length)},()=>`<div style="border-bottom:1px solid #bbb;height:${px(1)}px;"></div>`).join('');
+      schHtml+=`<div style="display:flex;align-items:flex-start;margin-bottom:${px(GAP_U)}px;height:${rowH}px;">
+        <div style="width:${labelW}px;min-width:${labelW}px;padding-right:6px;padding-top:1px;overflow:hidden">
+          <div style="font-size:${px(0.66)}px;font-weight:700;line-height:${px(0.95)}px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.Aufgabe}${isClosed?' 🔒':''}</div>
+          <div style="font-size:${px(0.6)}px;line-height:${px(0.95)}px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span>${r.Von}–${r.Bis}</span> · <span style="font-weight:700;color:${taken.length>=max?'#c00':'#555'}">${taken.length}/${max}</span></div>
         </div>
-        <div style="position:relative;width:${TRACK_W}px;height:${blockH}px;background:#f8f8f8;border:1px solid #ddd;">
-          <div style="position:absolute;left:${leftPx}px;width:${widePx}px;height:${blockH}px;border:1.5px solid #333;background:${isClosed?'#f0f0f0':'white'};overflow:hidden;">
+        <div style="position:relative;flex:1;height:${rowH}px;background:#f8f8f8;border:1px solid #ddd;">
+          <div style="position:absolute;left:${leftPct}%;width:${widePct}%;height:${blockH}px;border:1.5px solid #333;background:${isClosed?'#f0f0f0':'white'};overflow:hidden;">
             ${namedLines}${emptyLines}
           </div>
         </div>
@@ -977,18 +985,18 @@ function printDay(dayId) {
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
       *{box-sizing:border-box;margin:0;padding:0;}
-      body{font-family:'Open Sans',Arial,sans-serif;width:${PAGE_W+LABEL_W}px;padding:0;}
+      body{font-family:'Open Sans',Arial,sans-serif;width:1500px;padding:0;}
       @page{size:A3 landscape;margin:10mm;}
       @media print{body{width:100%;}}
     </style>
   </head><body>
-    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid black;">
-      <div style="font-size:16px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:9px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.051</div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:${px(0.5)}px;padding-bottom:${px(0.3)}px;border-bottom:2px solid black;">
+      <div style="font-size:${px(1.3)}px;font-weight:700;text-transform:uppercase">${titleText}</div>
+      <div style="font-size:${px(0.62)}px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.052</div>
     </div>
-    <div style="display:flex;margin-bottom:4px;">
-      <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;"></div>
-      <div style="position:relative;width:${TRACK_W}px;height:20px;border-bottom:1px solid #bbb;">
+    <div style="display:flex;margin-bottom:${px(0.2)}px;">
+      <div style="width:${labelW}px;min-width:${labelW}px;"></div>
+      <div style="position:relative;flex:1;height:${px(1.5)}px;border-bottom:1px solid #bbb;">
         ${rulerHtml}
       </div>
     </div>
