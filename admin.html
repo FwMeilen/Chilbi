@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.055</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.056</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -161,7 +161,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <div class="login-error" id="loginError"></div>
     <button class="btn btn-red" style="width:100%" onclick="doLogin()">Einloggen</button>
     <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--gray-mid);text-align:center;font-size:11px;color:var(--text3);">
-      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.055</strong>
+      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.056</strong>
     </div>
   </div>
 </div>
@@ -172,7 +172,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.055</span>
+      <span class="header-version">Cl1.056</span>
       <button class="help-btn" onclick="document.getElementById('helpOverlay').style.display='flex'" title="Bedienungsanleitung" style="background:none;border:1.5px solid rgba(255,255,255,.5);color:white;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;">?</button>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
@@ -375,6 +375,20 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 
+<!-- DOPPELTE ID WARNUNG -->
+<div id="dupIdOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:700;align-items:center;justify-content:center;padding:20px;" onclick="if(event.target===this)closeDupId()">
+  <div style="background:white;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="background:var(--red);color:white;padding:16px 20px;font-size:14px;font-weight:700;text-transform:uppercase;">⚠ Doppelte ID(s) gefunden</div>
+    <div style="padding:20px;">
+      <p style="font-size:13px;margin-bottom:14px;line-height:1.5;color:var(--text2)">Folgende ID(s) kommen mehrfach vor. Bitte im Sheet oder per CSV-Export/Import korrigieren – im Schicht-Editor lassen sich gleiche IDs nicht eindeutig bearbeiten.</p>
+      <div id="dupIdList"></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+        <button class="btn btn-sm" onclick="closeDupId()">Schliessen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- EDIT SCHICHT POPUP -->
 <div id="editSchichtOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
   <div style="background:white;max-width:520px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.25);box-sizing:border-box;margin:auto;">
@@ -480,7 +494,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.055</div>
+<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.056</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -525,6 +539,7 @@ async function loadData() {
     loadSettings();
     loadTage();
     buildSchichtplan();
+    checkDuplicateIds();
     if(localStorage.getItem('chilbi_autoColor')!=='false') buildAufgabenColorList();
   } catch(e) { showToast('Ladefehler: ' + e.message, 'error'); }
 }
@@ -573,6 +588,36 @@ function initRowId(i, existingTag) {
 function renderConfig() {
   const cb = document.getElementById('configBody'); if (!cb) return; cb.innerHTML = '';
   CONFIG.forEach(r => addRow(r));
+}
+
+// ── ID-Check: doppelte Schicht-IDs bei jedem Reload prüfen ──
+function checkDuplicateIds() {
+  const groups = {};
+  CONFIG.forEach(r => {
+    const id = String(r.Tag || r.ID || '').trim();
+    if (!id) return;
+    (groups[id] = groups[id] || []).push(r);
+  });
+  const dups = Object.keys(groups).filter(id => groups[id].length > 1);
+  const listEl = document.getElementById('dupIdList');
+  const overlay = document.getElementById('dupIdOverlay');
+  if (!listEl || !overlay) return;
+  if (!dups.length) { overlay.style.display = 'none'; return; }
+  listEl.innerHTML = dups.map(id => {
+    const rows = groups[id].map(r => `
+      <div style="font-size:12px;padding:5px 8px;border-bottom:1px solid var(--gray-mid);">
+        <strong>${esc(r.Datum||r.TagLabel||'—')}</strong> · ${esc(r.Schicht||'—')} · ${esc(r.Aufgabe||'—')} · ${esc(r.Von||'?')}–${esc(r.Bis||'?')}
+      </div>`).join('');
+    return `<div style="margin-bottom:14px;border:1px solid var(--gray-mid);">
+      <div style="background:var(--bg2);padding:6px 8px;font-weight:700;font-size:13px;">ID <span style="color:var(--red)">${esc(id)}</span> &nbsp;–&nbsp; ${groups[id].length}× vergeben</div>
+      ${rows}
+    </div>`;
+  }).join('');
+  overlay.style.display = 'flex';
+}
+
+function closeDupId() {
+  document.getElementById('dupIdOverlay').style.display = 'none';
 }
 
 function importCSV(input) {
@@ -1012,7 +1057,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:${px(0.5)}px;padding-bottom:${px(0.3)}px;border-bottom:2px solid black;">
       <div style="font-size:${px(1.3)}px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:${px(0.62)}px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.055</div>
+      <div style="font-size:${px(0.62)}px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.056</div>
     </div>
     <div style="display:flex;margin-bottom:${px(0.2)}px;">
       <div style="width:${labelW}px;min-width:${labelW}px;"></div>
