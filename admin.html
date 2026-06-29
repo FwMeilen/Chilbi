@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.053</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.054</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -161,7 +161,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <div class="login-error" id="loginError"></div>
     <button class="btn btn-red" style="width:100%" onclick="doLogin()">Einloggen</button>
     <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--gray-mid);text-align:center;font-size:11px;color:var(--text3);">
-      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.053</strong>
+      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.054</strong>
     </div>
   </div>
 </div>
@@ -172,7 +172,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.053</span>
+      <span class="header-version">Cl1.054</span>
       <button class="help-btn" onclick="document.getElementById('helpOverlay').style.display='flex'" title="Bedienungsanleitung" style="background:none;border:1.5px solid rgba(255,255,255,.5);color:white;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;">?</button>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
@@ -361,6 +361,20 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 
+<!-- CONFIRM DELETE SCHICHT POPUP -->
+<div id="confirmDeleteSchichtOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:650;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:white;max-width:430px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="background:var(--red);color:white;padding:16px 20px;font-size:14px;font-weight:700;text-transform:uppercase;">⚠ Schicht wirklich löschen?</div>
+    <div style="padding:20px;">
+      <p id="deleteSchichtMsg" style="font-size:13px;margin-bottom:16px;line-height:1.5;color:var(--text2)"></p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-sm" onclick="closeDeleteSchicht()">Abbrechen</button>
+        <button class="btn btn-red btn-sm" onclick="doDeleteSchicht()">Definitiv löschen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- EDIT SCHICHT POPUP -->
 <div id="editSchichtOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;padding:20px;overflow-y:auto;">
   <div style="background:white;max-width:520px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.25);box-sizing:border-box;margin:auto;">
@@ -389,6 +403,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
         </label>
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;">
+        <button class="btn btn-red btn-sm" id="esDeleteBtn" onclick="askDeleteSchicht()" style="margin-right:auto">🗑 Löschen</button>
         <button class="btn btn-sm" onclick="closeEditSchicht()">Abbrechen</button>
         <button class="btn btn-green btn-sm" onclick="saveEditSchicht()">💾 Speichern</button>
       </div>
@@ -465,7 +480,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.053</div>
+<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.054</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -996,7 +1011,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:${px(0.5)}px;padding-bottom:${px(0.3)}px;border-bottom:2px solid black;">
       <div style="font-size:${px(1.3)}px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:${px(0.62)}px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.053</div>
+      <div style="font-size:${px(0.62)}px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.054</div>
     </div>
     <div style="display:flex;margin-bottom:${px(0.2)}px;">
       <div style="width:${labelW}px;min-width:${labelW}px;"></div>
@@ -1365,14 +1380,17 @@ function buildSchichtplan() {
 
   function parseT(t,von){const[h,m]=String(t).split(':').map(Number);let mins=h*60+(m||0);if(von!==undefined&&mins<=von&&mins<720)mins+=24*60;return mins;}
 
+  // Globales Zeitraster über ALLE Tage → gleiche Achse, 17:00 etc. überall untereinander
+  const globalT = [];
+  labelOrder.forEach(lbl => labelMap[lbl].forEach(r => { const v=parseT(r.Von); globalT.push(v, parseT(r.Bis,v)); }));
+  const minT = Math.min(...globalT), maxT = Math.max(...globalT);
+  const spanMin = (maxT - minT) || 1;
+  const PX = 2;
+  const totalPx = spanMin * PX;
+
   let html = '';
   labelOrder.forEach(lbl => {
     const rows = labelMap[lbl];
-    const allT = rows.flatMap(r=>{const v=parseT(r.Von);return[v,parseT(r.Bis,v)];});
-    const minT=Math.min(...allT), maxT=Math.max(...allT);
-    const spanMin=maxT-minT;
-    const PX=2;
-    const totalPx=spanMin*PX;
 
     // Schichten gruppieren
     const schMap={}, schOrder=[];
@@ -1435,8 +1453,9 @@ function openNewSchicht() {
   document.getElementById('esMax').value = '2';
   document.getElementById('esInfo').value = '';
   document.getElementById('esGeschlossen').checked = false;
+  document.getElementById('esDeleteBtn').style.display = 'none';
   document.getElementById('editSchichtOverlay').style.display = 'flex';
-  renderEditSchichtSignups(r.Tag || r.ID);
+  renderEditSchichtSignups('');
 }
 
 function openEditSchicht(tagId) {
@@ -1451,6 +1470,7 @@ function openEditSchicht(tagId) {
   document.getElementById('esMax').value = r.MaxPersonen || r['Max Personen'] || '1';
   document.getElementById('esInfo').value = r.Informationen || '';
   document.getElementById('esGeschlossen').checked = r.Geschlossen === true || String(r.Geschlossen) === '1';
+  document.getElementById('esDeleteBtn').style.display = '';
   document.getElementById('editSchichtOverlay').style.display = 'flex';
 }
 
@@ -1539,6 +1559,55 @@ async function saveEditSchicht() {
   closeEditSchicht();
   showToast('✓ Schicht gespeichert', 'success');
   setTimeout(async () => { await loadData(); buildSchichtplan(); }, 1500);
+}
+
+let deleteSchichtTag = null;
+
+function askDeleteSchicht() {
+  const tag = document.getElementById('esTag').value;
+  if (!tag || tag === '__new__') return;
+  deleteSchichtTag = tag;
+  const r = CONFIG.find(x => String(x.Tag||x.ID) === String(tag));
+  const taken = SIGNUPS.filter(s => String(s.Tag||s.ID) === String(tag));
+  const label = r ? `${esc(r.Aufgabe)} (${esc(r.Von)}–${esc(r.Bis)}, ${esc(r.Datum||r.TagLabel||'')})` : esc(tag);
+  let msg = `Schicht <strong>${label}</strong> wird gelöscht.`;
+  if (taken.length) msg += `<br><br><strong style="color:var(--red)">${taken.length} eingetragene Person(en) werden ebenfalls gelöscht.</strong>`;
+  msg += `<br><br>Das kann nicht rückgängig gemacht werden.`;
+  document.getElementById('deleteSchichtMsg').innerHTML = msg;
+  document.getElementById('confirmDeleteSchichtOverlay').style.display = 'flex';
+}
+
+function closeDeleteSchicht() {
+  document.getElementById('confirmDeleteSchichtOverlay').style.display = 'none';
+  deleteSchichtTag = null;
+}
+
+async function doDeleteSchicht() {
+  const tag = deleteSchichtTag;
+  if (!tag) return;
+  // 1) Schicht aus CONFIG entfernen + saveConfig (replace-all)
+  const newConfig = CONFIG.filter(r => String(r.Tag||r.ID) !== String(tag));
+  await fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify({action:'saveConfig', password:ADMIN_PW, rows: newConfig.map(r => ({
+      Tag: r.Tag||r.ID, Datum: r.Datum||r.TagLabel, Von: r.Von, Bis: r.Bis,
+      Schicht: r.Schicht, Aufgabe: r.Aufgabe,
+      MaxPersonen: r.MaxPersonen||r['Max Personen'],
+      Farbe: r.Farbe||'#CC0000', Informationen: r.Informationen||'',
+      Geschlossen: r.Geschlossen||'0'
+    }))})});
+  // 2) Anmeldungen dieser Schicht kaskadiert entfernen via importSignups (replace-all mit Rest)
+  const taken = SIGNUPS.filter(s => String(s.Tag||s.ID) === String(tag));
+  if (taken.length) {
+    const remaining = SIGNUPS.filter(s => String(s.Tag||s.ID) !== String(tag)).map(s => ({
+      tag: s.Tag||s.ID, name: s.Name, schicht: s.Schicht, aufgabe: s.Aufgabe, timestamp: s.Timestamp||''
+    }));
+    await fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'importSignups', password:ADMIN_PW, rows: remaining})});
+  }
+  closeDeleteSchicht();
+  closeEditSchicht();
+  showToast('✓ Schicht gelöscht', 'success');
+  setTimeout(async () => { await loadData(); buildSchichtplan(); }, 1800);
 }
 
 let GAESTE = [];
