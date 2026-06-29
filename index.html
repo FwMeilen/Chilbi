@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Herrliberg – Schichtplan Cl1.048</title>
+<title>Chilbi Herrliberg – Schichtplan Cl1.053</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -78,6 +78,13 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 .tl-names{position:absolute;top:50%;transform:translateY(-50%);display:flex;gap:4px;align-items:center;white-space:nowrap;}
 .signup-pill{font-size:11px;padding:1px 7px;background:rgba(0,0,0,.12);color:inherit;border-radius:2px;font-weight:600;}
 .signup-pill.me{background:rgba(0,0,0,.35);color:white;}
+
+/* Einheitliche Chips: Namensschild + Gesperrt immer exakt gleich gross */
+.tl-chip{display:inline-flex;align-items:center;height:20px;box-sizing:border-box;padding:0 7px;font-size:11px;font-weight:600;line-height:1;white-space:nowrap;border:1px solid transparent;}
+.tl-chip--name{color:var(--text2);background:var(--bg2);border-color:var(--gray-mid);}
+.tl-chip--name.is-mine{background:var(--black);color:white;border-color:var(--black);}
+.tl-chip--locked{color:white;background:#888;font-weight:700;}
+.tl-chip .lock-ico{font-size:11px;line-height:1;margin-right:3px;}
 
 /* ── BLOCK STATES ────────────────────────────────────────── */
 .task-block{
@@ -330,7 +337,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
   <div class="site-header-inner">
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Schichtplanung &amp; Anmeldung</span></div>
-    <div class="header-version">Cl1.048</div>
+    <div class="header-version">Cl1.053</div>
     <button class="help-btn" onclick="document.getElementById('helpOverlay').classList.add('open')" title="Bedienungsanleitung">?</button>
   </div>
 </div>
@@ -429,7 +436,7 @@ body{font-family:'Open Sans',Arial,sans-serif;background:var(--bg3);color:var(--
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.048</div>
+<div class="site-footer">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Cl1.053</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -625,7 +632,7 @@ function toggleLabelDisplay(checked) {
 window.addEventListener('DOMContentLoaded', async () => {
   const saved = localStorage.getItem('chilbi_name');
   const savedLabel = localStorage.getItem('chilbi_showLabels');
-  if (savedLabel !== null) { const lt = document.getElementById('labelToggle'); if(lt) lt.checked = savedLabel !== 'false'; }
+  { const lt = document.getElementById('labelToggle'); if(lt) lt.checked = (savedLabel === null) ? true : (savedLabel !== 'false'); }
   const mode  = localStorage.getItem('chilbi_mode') || 'ff';
   if (saved) {
     document.getElementById('nameDisplay').textContent = saved;
@@ -1137,14 +1144,14 @@ function buildTimeline(day) {
         `<div class="slot-dot${i < taken.length?' taken':''}">${i < taken.length ? '✓' : ''}</div>`
       ).join('');
 
-      // Namen inline rechts vom Block
+      // Namen inline rechts vom Block – einheitliche Chip-Grösse
+      const nameChip = s => `<span class="tl-chip tl-chip--name ${s.Name===myName()?'is-mine':''}">${esc(displayName(s.Name))}</span>`;
+      const lockChip = '<span class="tl-chip tl-chip--locked"><span class="lock-ico">🔒</span>Gesperrt</span>';
       const nameStr = (isClosed && taken.length > 0)
-        ? taken.map(s => `<span style="font-size:11px;font-weight:600;color:var(--text2);background:var(--bg2);border:1px solid var(--gray-mid);padding:1px 6px;${s.Name===myName()?'background:var(--black);color:white;border-color:var(--black);':''}">${esc(displayName(s.Name))}</span>`).join('') + '<span style="font-size:11px;font-weight:700;color:white;background:#888;padding:1px 8px;margin-left:4px;">🔒 Gesperrt</span>'
+        ? taken.map(nameChip).join('') + lockChip
         : isClosed
-        ? '<span style="font-size:11px;font-weight:700;color:white;background:#888;padding:1px 8px;">🔒 Gesperrt</span>'
-        : taken.map(s =>
-        `<span style="font-size:11px;font-weight:600;color:var(--text2);background:var(--bg2);border:1px solid var(--gray-mid);padding:1px 6px;${s.Name===myName()?'background:var(--black);color:white;border-color:var(--black);':''}">${esc(displayName(s.Name))}</span>`
-      ).join('');
+        ? lockChip
+        : taken.map(nameChip).join('');
 
       html += `<div class="tl-row">
         <div class="tl-label">${showLabels()?esc(r.Aufgabe):''}</div>

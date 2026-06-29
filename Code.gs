@@ -1,6 +1,6 @@
 // ============================================================
 // Chilbi Herrliberg – Schichtplanung Backend
-// Google Apps Script  |  Cl1.051
+// Google Apps Script  |  Cl1.053
 // Schema Konfiguration: ID|Datum|Von|Bis|Schicht|Aufgabe|Max Personen|Farbe|Informationen|Geschlossen
 // Schema Anmeldungen:   ID|Name|Schicht|Aufgabe|Timestamp
 // Schema Tage:          Datum|Typ
@@ -38,6 +38,10 @@ function doPost(e) {
     if (p.action === 'saveTage') {
       if (p.password !== ADMIN_PW) return jsonResponse({ ok: false, error: 'Falsches Passwort' });
       return jsonResponse(saveTage(p.rows));
+    }
+    if (p.action === 'importSignups') {
+      if (p.password !== ADMIN_PW) return jsonResponse({ ok: false, error: 'Falsches Passwort' });
+      return jsonResponse(importSignups(p.rows));
     }
     return jsonResponse({ ok: false, error: 'Unbekannte Aktion' });
   } catch(err) {
@@ -199,6 +203,31 @@ function saveTage(rows) {
     sh.getRange(2, 1, data.length, 2).setValues(data);
   }
   return { ok: true };
+}
+
+// ============================================================
+// importSignups: ersetzt ALLE Anmeldungen (replace-all, analog saveConfig)
+// Erwartet p.rows = [{tag,name,schicht,aufgabe,timestamp}]
+// Timestamp aus CSV wird uebernommen, sonst jetzt.
+// ============================================================
+function importSignups(rows) {
+  const sh = SS.getSheetByName(SH_SIGNUP);
+  const lastRow = sh.getLastRow();
+  if (lastRow > 1) sh.getRange(2, 1, lastRow - 1, 5).clearContent();
+  if (rows && rows.length > 0) {
+    const data = rows.map(r => {
+      let ts = r.timestamp;
+      if (!ts) {
+        ts = new Date();
+      } else {
+        const d = new Date(ts);
+        ts = isNaN(d.getTime()) ? ts : d;   // gueltiges Datum als Date, sonst Rohwert
+      }
+      return [r.tag, r.name, r.schicht, r.aufgabe, ts];
+    });
+    sh.getRange(2, 1, data.length, 5).setValues(data);
+  }
+  return { ok: true, count: rows ? rows.length : 0 };
 }
 
 function jsonResponse(obj) {

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.052</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.053</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -161,7 +161,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <div class="login-error" id="loginError"></div>
     <button class="btn btn-red" style="width:100%" onclick="doLogin()">Einloggen</button>
     <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--gray-mid);text-align:center;font-size:11px;color:var(--text3);">
-      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.052</strong>
+      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.053</strong>
     </div>
   </div>
 </div>
@@ -172,7 +172,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.052</span>
+      <span class="header-version">Cl1.053</span>
       <button class="help-btn" onclick="document.getElementById('helpOverlay').style.display='flex'" title="Bedienungsanleitung" style="background:none;border:1.5px solid rgba(255,255,255,.5);color:white;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;">?</button>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
@@ -194,6 +194,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <div class="stats" id="statsBar"></div>
     <div class="card">
       <div class="card-title">Alle Anmeldungen</div>
+      <div style="font-size:12px;color:var(--text3);margin:-4px 0 12px;">CSV-Import/-Export der Anmeldungen – eingetragene Personen je Schicht. <strong>Import ersetzt alle bestehenden Anmeldungen.</strong></div>
       <div class="filter-bar">
         <input type="text" id="filterName" placeholder="ID suchen…" oninput="renderSignups()">
         <select id="filterTag" onchange="renderSignups()"><option value="">Alle Tage</option></select>
@@ -206,7 +207,8 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
           <option value="Aufgabe">Sortierung: Aufgabe</option>
           <option value="Name">Sortierung: Name</option>
         </select>
-        <button class="btn btn-sm" onclick="exportCSV()">⬇ CSV</button>
+        <label class="btn btn-sm" style="cursor:pointer">📂 CSV Import<input type="file" accept=".csv" onchange="importSignupsCSV(this)" style="display:none"></label>
+        <button class="btn btn-sm" onclick="exportCSV()">⬇ CSV Export</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -222,13 +224,15 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   <!-- SCHICHTEN BEARBEITEN -->
   <div class="admin-section" id="sec-schichtplan">
     <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
         <div class="card-title" style="margin-bottom:0">Schichten bearbeiten</div>
         <div style="display:flex;gap:8px;">
           <label class="btn btn-sm" style="cursor:pointer">📂 CSV Import<input type="file" accept=".csv" onchange="importCSV(this)" style="display:none"></label>
+          <button class="btn btn-sm" onclick="exportConfigCSV()">⬇ CSV Export</button>
           <button class="btn btn-green btn-sm" onclick="openNewSchicht()">+ Neue Schicht</button>
         </div>
       </div>
+      <div style="font-size:12px;color:var(--text3);margin:0 0 1rem;">CSV-Import/-Export betrifft nur die Schichtdefinitionen (Zeiten, Aufgaben, Max-Personen) – ohne eingetragene Personen.</div>
       <div id="schichtplanContent"></div>
     </div>
   </div>
@@ -461,7 +465,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.052</div>
+<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.053</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -992,7 +996,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:${px(0.5)}px;padding-bottom:${px(0.3)}px;border-bottom:2px solid black;">
       <div style="font-size:${px(1.3)}px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:${px(0.62)}px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.052</div>
+      <div style="font-size:${px(0.62)}px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.053</div>
     </div>
     <div style="display:flex;margin-bottom:${px(0.2)}px;">
       <div style="width:${labelW}px;min-width:${labelW}px;"></div>
@@ -1013,6 +1017,87 @@ function exportCSV() {
   const csv = [headers.join(','),...rows].join('\n');
   const a = Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'})),download:'chilbi_anmeldungen.csv'});
   a.click();
+}
+
+// ── Schichten (Konfiguration) als CSV exportieren – round-trip-fähig mit importCSV ──
+function exportConfigCSV() {
+  const rows = readConfigRows();
+  if (!rows.length) { showToast('Keine Schichten zum Exportieren', 'error'); return; }
+  const headers = ['ID','Datum','Von','Bis','Schicht','Aufgabe','Max Personen','Farbe','Informationen','Geschlossen'];
+  const q = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const lines = rows.map(r => [r.Tag, r.Datum||r.TagLabel, r.Von, r.Bis, r.Schicht, r.Aufgabe, r.MaxPersonen, r.Farbe, r.Informationen, r.Geschlossen].map(q).join(','));
+  const csv = [headers.join(','), ...lines].join('\n');
+  const a = Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'})),download:'chilbi_schichten.csv'});
+  a.click();
+}
+
+// ── CSV-Parser (mit Anführungszeichen, "" Escapes, \r\n) ──
+function parseCSVrows(text) {
+  const rows=[]; let row=[], cur='', inQ=false;
+  text = String(text).replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  for (let i=0;i<text.length;i++){
+    const c=text[i];
+    if (inQ){
+      if (c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else inQ=false; }
+      else cur+=c;
+    } else {
+      if (c==='"') inQ=true;
+      else if (c===',') { row.push(cur); cur=''; }
+      else if (c==='\n') { row.push(cur); rows.push(row); row=[]; cur=''; }
+      else cur+=c;
+    }
+  }
+  if (cur!=='' || row.length) { row.push(cur); rows.push(row); }
+  return rows.filter(r => r.length && r.some(c => String(c).trim()!==''));
+}
+
+// ── Anmeldungen importieren: replace-all, validiert gegen CONFIG, mit Bestätigung ──
+function importSignupsCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    input.value = '';
+    const rows = parseCSVrows(e.target.result);
+    if (rows.length < 2) { showToast('CSV leer oder ohne Datenzeilen', 'error'); return; }
+    const headers = rows[0].map(h => String(h).trim().replace(/^\ufeff/,''));
+    const idx = n => headers.findIndex(h => h.toLowerCase() === n.toLowerCase());
+    const iTs = idx('Timestamp');
+    const iName = idx('Name');
+    const iTag = idx('Tag') >= 0 ? idx('Tag') : idx('ID');
+    const iSch = idx('Schicht');
+    const iAuf = idx('Aufgabe');
+    if (iName < 0 || iTag < 0 || iSch < 0 || iAuf < 0) {
+      showToast('CSV-Header unvollständig (erwartet: Timestamp, Name, Tag, Schicht, Aufgabe)', 'error');
+      return;
+    }
+    const data = [], invalid = [];
+    rows.slice(1).forEach((r, n) => {
+      const tag = (r[iTag]||'').trim(), name = (r[iName]||'').trim();
+      const schicht = (r[iSch]||'').trim(), aufgabe = (r[iAuf]||'').trim();
+      const timestamp = iTs >= 0 ? (r[iTs]||'').trim() : '';
+      if (!tag && !name && !schicht && !aufgabe) return; // Leerzeile
+      // Validierung: Kombination Tag + Schicht + Aufgabe muss in der Konfiguration existieren
+      const ok = CONFIG.some(c => String(c.Tag)===tag && String(c.Schicht)===schicht && String(c.Aufgabe)===aufgabe);
+      if (!ok) { invalid.push(`Zeile ${n+2}: ${tag||'—'} / ${schicht||'—'} / ${aufgabe||'—'}${name?' ('+name+')':''}`); return; }
+      data.push({ tag, name, schicht, aufgabe, timestamp });
+    });
+    if (invalid.length) {
+      alert('Import abgebrochen – diese Zeilen passen zu keiner konfigurierten Schicht (Tag / Schicht / Aufgabe):\n\n'
+        + invalid.slice(0,15).join('\n')
+        + (invalid.length>15 ? `\n… und ${invalid.length-15} weitere` : '')
+        + '\n\nBitte CSV korrigieren und erneut importieren.');
+      return;
+    }
+    if (!data.length) { showToast('Keine gültigen Zeilen gefunden', 'error'); return; }
+    if (!confirm(`${data.length} Anmeldung(en) werden importiert und ersetzen ALLE ${SIGNUPS.length} bestehenden Anmeldungen.\n\nFortfahren?`)) return;
+    try {
+      await fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({ action:'importSignups', password:ADMIN_PW, rows:data }) });
+      showToast(`✓ ${data.length} Anmeldungen importiert – lade neu…`, 'success');
+      setTimeout(loadData, 1500);
+    } catch(err) { showToast('Fehler: ' + err.message, 'error'); }
+  };
+  reader.readAsText(file);
 }
 
 
