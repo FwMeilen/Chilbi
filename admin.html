@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.054</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.055</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -161,7 +161,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <div class="login-error" id="loginError"></div>
     <button class="btn btn-red" style="width:100%" onclick="doLogin()">Einloggen</button>
     <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--gray-mid);text-align:center;font-size:11px;color:var(--text3);">
-      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.054</strong>
+      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.055</strong>
     </div>
   </div>
 </div>
@@ -172,7 +172,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.054</span>
+      <span class="header-version">Cl1.055</span>
       <button class="help-btn" onclick="document.getElementById('helpOverlay').style.display='flex'" title="Bedienungsanleitung" style="background:none;border:1.5px solid rgba(255,255,255,.5);color:white;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;">?</button>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
@@ -480,7 +480,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.054</div>
+<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.055</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -524,6 +524,7 @@ async function loadData() {
     renderOverview();
     loadSettings();
     loadTage();
+    buildSchichtplan();
     if(localStorage.getItem('chilbi_autoColor')!=='false') buildAufgabenColorList();
   } catch(e) { showToast('Ladefehler: ' + e.message, 'error'); }
 }
@@ -1011,7 +1012,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:${px(0.5)}px;padding-bottom:${px(0.3)}px;border-bottom:2px solid black;">
       <div style="font-size:${px(1.3)}px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:${px(0.62)}px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.054</div>
+      <div style="font-size:${px(0.62)}px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.055</div>
     </div>
     <div style="display:flex;margin-bottom:${px(0.2)}px;">
       <div style="width:${labelW}px;min-width:${labelW}px;"></div>
@@ -1378,12 +1379,25 @@ function buildSchichtplan() {
   if (!CONFIG || !CONFIG.length) { content.innerHTML='<div class="empty" style="padding:2rem;text-align:center;color:var(--text3)">Daten werden geladen…</div>'; setTimeout(buildSchichtplan, 500); return; }
   if (!labelOrder.length) { content.innerHTML='<div class="empty">Noch keine Schichten erfasst.</div>'; return; }
 
-  function parseT(t,von){const[h,m]=String(t).split(':').map(Number);let mins=h*60+(m||0);if(von!==undefined&&mins<=von&&mins<720)mins+=24*60;return mins;}
+  function parseT(t,von){
+    const parts=String(t==null?'':t).split(':');
+    const h=Number(parts[0]), m=Number(parts[1]);
+    if(!isFinite(h)) return NaN;
+    let mins=h*60+(isFinite(m)?m:0);
+    if(von!==undefined && isFinite(von) && mins<=von && mins<720) mins+=24*60;
+    return mins;
+  }
 
-  // Globales Zeitraster über ALLE Tage → gleiche Achse, 17:00 etc. überall untereinander
+  // Globales Zeitraster über ALLE Tage → gleiche Achse; ungültige Zeiten ignorieren (kein NaN)
   const globalT = [];
-  labelOrder.forEach(lbl => labelMap[lbl].forEach(r => { const v=parseT(r.Von); globalT.push(v, parseT(r.Bis,v)); }));
-  const minT = Math.min(...globalT), maxT = Math.max(...globalT);
+  labelOrder.forEach(lbl => labelMap[lbl].forEach(r => {
+    const v=parseT(r.Von), b=parseT(r.Bis,v);
+    if(isFinite(v)) globalT.push(v);
+    if(isFinite(b)) globalT.push(b);
+  }));
+  let minT = globalT.length ? Math.min(...globalT) : 8*60;
+  let maxT = globalT.length ? Math.max(...globalT) : 24*60;
+  if(!isFinite(minT) || !isFinite(maxT) || maxT<=minT){ minT=8*60; maxT=24*60; }
   const spanMin = (maxT - minT) || 1;
   const PX = 2;
   const totalPx = spanMin * PX;
@@ -1416,8 +1430,9 @@ function buildSchichtplan() {
       html += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;margin:8px 0 3px 130px;border-bottom:1px solid #eee;padding-bottom:2px">${esc(sch)}</div>`;
       schMap[sch].forEach(r => {
         const vonM=parseT(r.Von), bisM=parseT(r.Bis,vonM);
-        const leftPx=((vonM-minT)*PX).toFixed(1);
-        const widePx=((bisM-vonM)*PX).toFixed(1);
+        const validT = isFinite(vonM) && isFinite(bisM) && bisM>vonM;
+        const leftPx=(validT?((vonM-minT)*PX):0).toFixed(1);
+        const widePx=(validT?((bisM-vonM)*PX):0).toFixed(1);
         const color = r.Farbe==='none'?'#e0e0e0':normalizeColor(r.Farbe||'#CC0000');
         const isClosed = String(r.Geschlossen)==='1'||r.Geschlossen===true;
         const taken = SIGNUPS.filter(s=>String(s.Tag)===String(r.Tag)||String(s.ID)===String(r.Tag));
