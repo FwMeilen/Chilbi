@@ -1,6 +1,6 @@
 // ============================================================
 // Chilbi Herrliberg – Schichtplanung Backend
-// Google Apps Script  |  Cl1.053
+// Google Apps Script  |  Cl1.059
 // Schema Konfiguration: ID|Datum|Von|Bis|Schicht|Aufgabe|Max Personen|Farbe|Informationen|Geschlossen
 // Schema Anmeldungen:   ID|Name|Schicht|Aufgabe|Timestamp
 // Schema Tage:          Datum|Typ
@@ -16,6 +16,7 @@ const SH_CONFIG      = 'Konfiguration';
 const SH_SIGNUP      = 'Anmeldungen';
 const SH_TAGE        = 'Tage';
 const SH_GAST        = 'Gast';
+const SH_EHEMALIGE   = 'Ehemalige';
 
 function doGet(e) {
   return jsonResponse({ config: getConfig(), signups: getSignups(), tage: getTage() });
@@ -31,6 +32,7 @@ function doPost(e) {
     if (p.action === 'updateGuestContact') return jsonResponse(updateGuestContact(p));
     if (p.action === 'updateGuest')        return jsonResponse(updateGuest(p));
     if (p.action === 'deleteGuest')        return jsonResponse(deleteGuest(p));
+    if (p.action === 'ehemaligeSignup')    return jsonResponse(ehemaligeSignup(p));
     if (p.action === 'saveConfig') {
       if (p.password !== ADMIN_PW) return jsonResponse({ ok: false, error: 'Falsches Passwort' });
       return jsonResponse(saveConfig(p.rows));
@@ -228,6 +230,21 @@ function importSignups(rows) {
     sh.getRange(2, 1, data.length, 5).setValues(data);
   }
   return { ok: true, count: rows ? rows.length : 0 };
+}
+
+// ============================================================
+// ehemaligeSignup: Zu-/Absage Ehemaligen-Treffen -> Reiter "Ehemalige"
+// Kopf: Timestamp | Anmeldung | Name | Vorname | Mail | Tel
+// Legt den Reiter inkl. Kopfzeile an, falls er noch nicht existiert.
+// ============================================================
+function ehemaligeSignup(p) {
+  let sh = SS.getSheetByName(SH_EHEMALIGE);
+  if (!sh) {
+    sh = SS.insertSheet(SH_EHEMALIGE);
+    sh.appendRow(['Timestamp', 'Anmeldung', 'Name', 'Vorname', 'Mail', 'Tel']);
+  }
+  sh.appendRow([new Date(), p.anmeldung || '', p.name || '', p.vorname || '', p.mail || '', p.tel || '']);
+  return { ok: true };
 }
 
 function jsonResponse(obj) {
