@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.056</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.057</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -161,7 +161,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <div class="login-error" id="loginError"></div>
     <button class="btn btn-red" style="width:100%" onclick="doLogin()">Einloggen</button>
     <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--gray-mid);text-align:center;font-size:11px;color:var(--text3);">
-      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.056</strong>
+      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.057</strong>
     </div>
   </div>
 </div>
@@ -172,7 +172,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.056</span>
+      <span class="header-version">Cl1.057</span>
       <button class="help-btn" onclick="document.getElementById('helpOverlay').style.display='flex'" title="Bedienungsanleitung" style="background:none;border:1.5px solid rgba(255,255,255,.5);color:white;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;">?</button>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
@@ -494,7 +494,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.056</div>
+<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.057</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -624,35 +624,55 @@ function importCSV(input) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
-    const lines = e.target.result.split('\n').filter(l=>l.trim());
-    if (!lines.length) return;
-    const headers = lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
-    let imported = 0;
-    lines.slice(1).forEach(line => {
-      const vals = line.split(',').map(v=>v.trim().replace(/"/g,''));
-      if (!vals[0]) return;
-      const row = {};
-      headers.forEach((h,i) => row[h] = vals[i]||'');
-      // Map headers: ID→Tag, Datum→Datum etc.
-      const mapped = {
-        Tag: row.ID||row.Tag||'',
-        Datum: row.Datum||row.TagLabel||'',
-        Von: row.Von||'',
-        Bis: row.Bis||'',
-        Schicht: row.Schicht||'',
-        Aufgabe: row.Aufgabe||'',
-        MaxPersonen: row['Max Personen']||row.MaxPersonen||'2',
-        Farbe: row.Farbe||'#CC0000',
-        Informationen: row.Informationen||'',
-        Geschlossen: row.Geschlossen||'0'
-      };
-      if (mapped.Aufgabe) { addRow(mapped); imported++; }
+  reader.onload = async e => {
+    input.value = '';
+    const rows = parseCSVrows(e.target.result);
+    if (rows.length < 2) { showToast('CSV leer oder ohne Datenzeilen', 'error'); return; }
+    const headers = rows[0].map(h => String(h).trim().replace(/^\ufeff/,''));
+    const idx = n => headers.findIndex(h => h.toLowerCase() === n.toLowerCase());
+    const iId = idx('ID') >= 0 ? idx('ID') : idx('Tag');
+    const iDat = idx('Datum'), iVon = idx('Von'), iBis = idx('Bis');
+    const iSch = idx('Schicht'), iAuf = idx('Aufgabe');
+    const iMax = idx('Max Personen') >= 0 ? idx('Max Personen') : idx('MaxPersonen');
+    const iFarbe = idx('Farbe'), iInfo = idx('Informationen'), iGes = idx('Geschlossen');
+    if (iId < 0 || iAuf < 0 || iVon < 0 || iBis < 0) {
+      showToast('CSV-Header unvollständig (erwartet: ID, Datum, Von, Bis, Schicht, Aufgabe, Max Personen, …)', 'error');
+      return;
+    }
+    const get = (r, i, def='') => (i >= 0 && r[i] != null ? String(r[i]).trim() : def);
+    const mapped = [];
+    rows.slice(1).forEach(r => {
+      const tag = get(r, iId);
+      const aufgabe = get(r, iAuf);
+      if (!tag || !aufgabe) return; // unvollständige Zeile überspringen
+      mapped.push({
+        Tag: tag,
+        Datum: get(r, iDat),
+        Von: get(r, iVon),
+        Bis: get(r, iBis),
+        Schicht: get(r, iSch),
+        Aufgabe: aufgabe,
+        MaxPersonen: get(r, iMax, '2') || '2',
+        Farbe: get(r, iFarbe, '#CC0000') || '#CC0000',
+        Informationen: get(r, iInfo),
+        Geschlossen: get(r, iGes, '0') || '0'
+      });
     });
-    showToast(`✓ ${imported} Zeilen importiert`, 'success');
+    if (!mapped.length) { showToast('Keine gültigen Zeilen gefunden', 'error'); return; }
+    // ID-Dublettencheck im Import-File
+    const seen = {}, dups = [];
+    mapped.forEach(m => { if (seen[m.Tag]) dups.push(m.Tag); else seen[m.Tag] = true; });
+    if (dups.length) {
+      if (!confirm(`Achtung: die Import-Datei enthält doppelte ID(s): ${[...new Set(dups)].join(', ')}.\n\nTrotzdem importieren?`)) return;
+    }
+    if (!confirm(`${mapped.length} Schicht(en) werden importiert und ersetzen ALLE ${(CONFIG||[]).length} bestehenden Schichten.\n\nAnmeldungen bleiben bestehen, können dadurch aber verwaisen.\n\nFortfahren?`)) return;
+    try {
+      await fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({ action:'saveConfig', password:ADMIN_PW, rows: mapped }) });
+      showToast(`✓ ${mapped.length} Schichten importiert – lade neu…`, 'success');
+      setTimeout(async () => { await loadData(); buildSchichtplan(); }, 1500);
+    } catch(err) { showToast('Fehler: ' + err.message, 'error'); }
   };
   reader.readAsText(file);
-  input.value = '';
 }
 
 function addRow(data={}) {
@@ -1057,7 +1077,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:${px(0.5)}px;padding-bottom:${px(0.3)}px;border-bottom:2px solid black;">
       <div style="font-size:${px(1.3)}px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:${px(0.62)}px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.056</div>
+      <div style="font-size:${px(0.62)}px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.057</div>
     </div>
     <div style="display:flex;margin-bottom:${px(0.2)}px;">
       <div style="width:${labelW}px;min-width:${labelW}px;"></div>
@@ -1073,8 +1093,10 @@ function printDay(dayId) {
 }
 
 function exportCSV() {
-  const headers = ['Timestamp','Name','Tag','Schicht','Aufgabe'];
-  const rows = SIGNUPS.map(s => headers.map(h=>`"${String(s[h]||'').replace(/"/g,'""')}"`).join(','));
+  // Reihenfolge wie im Sheet: ID | Name | Schicht | Aufgabe | Timestamp
+  const headers = ['ID','Name','Schicht','Aufgabe','Timestamp'];
+  const q = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const rows = SIGNUPS.map(s => [s.Tag||s.ID||'', s.Name, s.Schicht, s.Aufgabe, s.Timestamp].map(q).join(','));
   const csv = [headers.join(','),...rows].join('\n');
   const a = Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'})),download:'chilbi_anmeldungen.csv'});
   a.click();
@@ -1082,11 +1104,14 @@ function exportCSV() {
 
 // ── Schichten (Konfiguration) als CSV exportieren – round-trip-fähig mit importCSV ──
 function exportConfigCSV() {
-  const rows = readConfigRows();
+  const rows = CONFIG || [];
   if (!rows.length) { showToast('Keine Schichten zum Exportieren', 'error'); return; }
   const headers = ['ID','Datum','Von','Bis','Schicht','Aufgabe','Max Personen','Farbe','Informationen','Geschlossen'];
   const q = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
-  const lines = rows.map(r => [r.Tag, r.Datum||r.TagLabel, r.Von, r.Bis, r.Schicht, r.Aufgabe, r.MaxPersonen, r.Farbe, r.Informationen, r.Geschlossen].map(q).join(','));
+  const lines = rows.map(r => [
+    r.Tag||r.ID, r.Datum||r.TagLabel, r.Von, r.Bis, r.Schicht, r.Aufgabe,
+    r.MaxPersonen||r['Max Personen'], r.Farbe, r.Informationen, r.Geschlossen
+  ].map(q).join(','));
   const csv = [headers.join(','), ...lines].join('\n');
   const a = Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'})),download:'chilbi_schichten.csv'});
   a.click();
