@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.057</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.058</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -161,7 +161,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <div class="login-error" id="loginError"></div>
     <button class="btn btn-red" style="width:100%" onclick="doLogin()">Einloggen</button>
     <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--gray-mid);text-align:center;font-size:11px;color:var(--text3);">
-      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.057</strong>
+      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.058</strong>
     </div>
   </div>
 </div>
@@ -172,7 +172,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.057</span>
+      <span class="header-version">Cl1.058</span>
       <button class="help-btn" onclick="document.getElementById('helpOverlay').style.display='flex'" title="Bedienungsanleitung" style="background:none;border:1.5px solid rgba(255,255,255,.5);color:white;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;">?</button>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
@@ -447,21 +447,25 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <div style="padding:20px;font-size:12px;color:var(--text2);line-height:1.6;">
       <div style="margin-bottom:16px;">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--red);margin-bottom:6px;border-bottom:1px solid var(--gray-mid);padding-bottom:4px;">Anmeldungen</div>
-        <ul style="padding-left:16px;"><li>Übersicht aller eingetragenen Personen.</li><li>Filtern nach Tag, Schicht, Aufgabe oder ID-Suche.</li><li>Stift-Icon zum Bearbeiten oder Löschen eines Eintrags.</li><li>CSV-Export mit ⬇ CSV.</li></ul>
+        <ul style="padding-left:16px;"><li>Übersicht aller eingetragenen Personen, mit Statistik oben.</li><li>Filtern nach Tag, Schicht, Aufgabe oder ID-/Namens-Suche.</li><li>Stift-Icon zum Bearbeiten oder Löschen eines Eintrags.</li><li><strong>📂 CSV Import / ⬇ CSV Export</strong> der Anmeldungen. Reihenfolge wie im Sheet: <code>ID,Name,Schicht,Aufgabe,Timestamp</code>. Der <strong>Import ersetzt alle</strong> bestehenden Anmeldungen (mit Sicherheitsabfrage) und prüft jede Zeile gegen die vorhandenen Schichten.</li></ul>
       </div>
       <div style="margin-bottom:16px;">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--red);margin-bottom:6px;border-bottom:1px solid var(--gray-mid);padding-bottom:4px;">Übersicht</div>
-        <ul style="padding-left:16px;"><li>Belegungsübersicht pro Tag und Schicht.</li><li>Filtere nach Tag, Schicht oder Aufgabe.</li><li>Druckbuttons für A3-Ausdruck pro Tag.</li></ul>
+        <ul style="padding-left:16px;"><li>Belegungsübersicht pro Tag und Schicht, filterbar.</li><li>Druckbuttons pro Tag: A3 quer, füllt die Seite automatisch (1 Tag = 1 Seite).</li></ul>
       </div>
       <div style="margin-bottom:16px;">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--red);margin-bottom:6px;border-bottom:1px solid var(--gray-mid);padding-bottom:4px;">Schichten bearbeiten</div>
-        <ul style="padding-left:16px;"><li>Timeline-Ansicht aller Schichten.</li><li>Klick auf Block → Schicht bearbeiten (Zeit, Aufgabe, Max, Gesperrt etc.).</li><li>+ Neue Schicht oder CSV-Import für neue Einträge.</li>
+        <ul style="padding-left:16px;"><li>Timeline aller Schichten mit <strong>gemeinsamem Zeitraster über alle Tage</strong> – gleiche Uhrzeiten stehen untereinander.</li><li>Klick auf einen Block → Schicht bearbeiten (Zeit, Aufgabe, Max-Personen, Farbe, Gesperrt …).</li><li><strong>+ Neue Schicht</strong> zum Anlegen. Im Editor entfernt <strong>🗑 Löschen</strong> die Schicht (mit Bestätigung; eingetragene Personen werden mitgelöscht).</li><li><strong>📂 CSV Import / ⬇ CSV Export</strong> der Schichten. Der <strong>Import ersetzt alle</strong> bestehenden Schichten (mit Sicherheitsabfrage).</li>
           <li>CSV-Format: <code>ID,Datum,Von,Bis,Schicht,Aufgabe,Max Personen,Farbe,Informationen,Geschlossen</code><br>
           Beispiel: <code>1,14.08.2026,10:00,14:00,GVH-Lunch,Service,2,#004cff,Treffpunkt Haupteingang,0</code></li></ul>
       </div>
       <div style="margin-bottom:16px;">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--red);margin-bottom:6px;border-bottom:1px solid var(--gray-mid);padding-bottom:4px;">Einstellungen</div>
         <ul style="padding-left:16px;"><li><strong>Tage &amp; Typen:</strong> Datum aus Konfiguration, Typ frei definierbar (z.B. Chilbi, Vorbereitung).</li><li><strong>Farb-Einstellungen:</strong> Manuell (Farbe pro Schicht) oder Nach Aufgaben (automatisch).</li></ul>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--red);margin-bottom:6px;border-bottom:1px solid var(--gray-mid);padding-bottom:4px;">Gut zu wissen</div>
+        <ul style="padding-left:16px;"><li><strong>↺ Aktualisieren</strong> (oben rechts) lädt alle Daten neu, inklusive der Schichten-Timeline.</li><li><strong>ID-Prüfung:</strong> Bei jedem Laden werden doppelte Schicht-IDs erkannt; ein Warnfenster listet die betroffenen Schichten. Doppelte IDs im Sheet bzw. per CSV korrigieren, da der Editor sie sonst nicht eindeutig zuordnen kann.</li></ul>
       </div>
     </div>
   </div>
@@ -494,7 +498,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.057</div>
+<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.058</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -1077,7 +1081,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:${px(0.5)}px;padding-bottom:${px(0.3)}px;border-bottom:2px solid black;">
       <div style="font-size:${px(1.3)}px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:${px(0.62)}px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.057</div>
+      <div style="font-size:${px(0.62)}px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.058</div>
     </div>
     <div style="display:flex;margin-bottom:${px(0.2)}px;">
       <div style="width:${labelW}px;min-width:${labelW}px;"></div>
