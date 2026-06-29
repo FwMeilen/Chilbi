@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chilbi Admin – Schichtverwaltung Cl1.058</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.060</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -66,6 +66,7 @@ table{width:100%;border-collapse:collapse;font-size:12px;min-width:800px;}
 thead th{text-align:left;padding:8px 10px;background:var(--black);color:white;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
 tbody tr{border-bottom:1px solid var(--gray-mid);}
 tbody tr:hover{background:var(--bg2);}
+#ehFilterBtns .btn.active{background:var(--black);color:#fff;border-color:var(--black);}
 td{padding:6px 8px;vertical-align:middle;}
 td input,td select{width:100%;padding:4px 6px;border:1px solid transparent;font-family:inherit;font-size:12px;background:transparent;color:var(--text);transition:border-color .15s;border-radius:0;}
 td input:hover,td select:hover{border-color:var(--gray-mid);background:white;}
@@ -161,7 +162,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <div class="login-error" id="loginError"></div>
     <button class="btn btn-red" style="width:100%" onclick="doLogin()">Einloggen</button>
     <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--gray-mid);text-align:center;font-size:11px;color:var(--text3);">
-      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.058</strong>
+      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.060</strong>
     </div>
   </div>
 </div>
@@ -172,7 +173,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.058</span>
+      <span class="header-version">Cl1.060</span>
       <button class="help-btn" onclick="document.getElementById('helpOverlay').style.display='flex'" title="Bedienungsanleitung" style="background:none;border:1.5px solid rgba(255,255,255,.5);color:white;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;">?</button>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn btn-sm btn-red" onclick="loadData()">↺ Aktualisieren</button>
@@ -186,6 +187,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <button class="admin-tab active" onclick="switchSection('anmeldungen',this)">Anmeldungen</button>
     <button class="admin-tab" onclick="switchSection('uebersicht',this)">Übersicht</button>
     <button class="admin-tab" onclick="switchSection('schichtplan',this)">Schichten bearbeiten</button>
+    <button class="admin-tab" onclick="switchSection('ehemalige',this)">Ehemaligen Treff</button>
     <button class="admin-tab" onclick="switchSection('einstellungen',this)">Einstellungen</button>
   </div>
 
@@ -234,6 +236,30 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
       </div>
       <div style="font-size:12px;color:var(--text3);margin:0 0 1rem;">CSV-Import/-Export betrifft nur die Schichtdefinitionen (Zeiten, Aufgaben, Max-Personen) – ohne eingetragene Personen.</div>
       <div id="schichtplanContent"></div>
+    </div>
+  </div>
+
+  <!-- EHEMALIGEN TREFF -->
+  <div class="admin-section" id="sec-ehemalige">
+    <div class="stats" id="ehStats"></div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <div class="card-title" style="margin-bottom:0">Ehemaligen-Treff – Rückmeldungen</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <div style="display:flex;gap:4px;" id="ehFilterBtns">
+            <button class="btn btn-sm active" data-f="all" onclick="setEhFilter('all',this)">Alle</button>
+            <button class="btn btn-sm" data-f="Zusage" onclick="setEhFilter('Zusage',this)">Zusagen</button>
+            <button class="btn btn-sm" data-f="Absage" onclick="setEhFilter('Absage',this)">Absagen</button>
+          </div>
+          <button class="btn btn-sm" onclick="exportEhemaligeCSV()">⬇ CSV Export</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Anmeldung</th><th>Name</th><th>Vorname</th><th>Mail</th><th>Tel</th><th>Timestamp</th></tr></thead>
+          <tbody id="ehBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -498,7 +524,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.058</div>
+<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.060</div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
@@ -507,6 +533,8 @@ const PALETTE    = ['#c0392b','#1565c0','#2e7d32','#6a1b9a','#00695c','#e65100',
 
 let CONFIG  = [];
 let SIGNUPS = [];
+let EHEMALIGE = [];
+let ehFilter = 'all';
 let authed  = false;
 
 document.getElementById('loginPw').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
@@ -545,6 +573,8 @@ async function loadData() {
     buildSchichtplan();
     checkDuplicateIds();
     if(localStorage.getItem('chilbi_autoColor')!=='false') buildAufgabenColorList();
+    try { EHEMALIGE = await fetchGvizSheet('Ehemalige'); } catch(e){ EHEMALIGE = []; }
+    renderEhemalige();
   } catch(e) { showToast('Ladefehler: ' + e.message, 'error'); }
 }
 
@@ -875,6 +905,72 @@ function renderStats() {
   `;
 }
 
+// ── Ehemaligen-Treff: Rückmeldungen (read-only) ──
+function renderEhemalige() {
+  const data = EHEMALIGE || [];
+  const norm = v => String(v||'').trim().toLowerCase();
+  const zus = data.filter(r => norm(r.Anmeldung) === 'zusage').length;
+  const abs = data.filter(r => norm(r.Anmeldung) === 'absage').length;
+  const total = data.length;
+  const statsEl = document.getElementById('ehStats');
+  if (statsEl) {
+    const zDeg = total ? (zus/total)*360 : 0;
+    const pie = total
+      ? `background:conic-gradient(var(--green) 0 ${zDeg}deg, var(--red) ${zDeg}deg 360deg);`
+      : `background:var(--gray-mid);`;
+    statsEl.innerHTML = `
+      <div class="stat"><div class="stat-num" style="color:var(--green)">${zus}</div><div class="stat-lbl">Zusagen</div></div>
+      <div class="stat"><div class="stat-num" style="color:var(--red)">${abs}</div><div class="stat-lbl">Absagen</div></div>
+      <div class="stat"><div class="stat-num">${total}</div><div class="stat-lbl">Total</div></div>
+      <div class="stat" style="display:flex;align-items:center;gap:10px;justify-content:center;">
+        <div style="width:56px;height:56px;border-radius:50%;${pie}flex:none;"></div>
+        <div style="font-size:11px;line-height:1.7;text-align:left;">
+          <div><span style="display:inline-block;width:9px;height:9px;background:var(--green);margin-right:5px;"></span>Zusagen</div>
+          <div><span style="display:inline-block;width:9px;height:9px;background:var(--red);margin-right:5px;"></span>Absagen</div>
+        </div>
+      </div>`;
+  }
+  const body = document.getElementById('ehBody');
+  if (!body) return;
+  let rows = data.slice();
+  if (ehFilter !== 'all') rows = rows.filter(r => norm(r.Anmeldung) === norm(ehFilter));
+  rows.sort((a,b) => String(b.Timestamp).localeCompare(String(a.Timestamp)));
+  if (!rows.length) {
+    body.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:18px;">Keine Einträge.</td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.map(r => {
+    const isZ = norm(r.Anmeldung) === 'zusage';
+    const badge = `<span style="font-size:11px;font-weight:700;padding:2px 8px;color:white;background:${isZ?'var(--green)':'var(--red)'};">${esc(r.Anmeldung||'')}</span>`;
+    return `<tr>
+      <td>${badge}</td>
+      <td>${esc(r.Name||'')}</td>
+      <td>${esc(r.Vorname||'')}</td>
+      <td>${r.Mail ? `<a href="mailto:${esc(r.Mail)}">${esc(r.Mail)}</a>` : '<span style="color:var(--text3)">–</span>'}</td>
+      <td>${r.Tel ? esc(r.Tel) : '<span style="color:var(--text3)">–</span>'}</td>
+      <td style="font-size:12px;color:var(--text2)">${esc(formatDate(r.Timestamp))}</td>
+    </tr>`;
+  }).join('');
+}
+
+function setEhFilter(f, btn) {
+  ehFilter = f;
+  document.querySelectorAll('#ehFilterBtns .btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderEhemalige();
+}
+
+function exportEhemaligeCSV() {
+  const data = EHEMALIGE || [];
+  if (!data.length) { showToast('Keine Einträge zum Exportieren', 'error'); return; }
+  const headers = ['Timestamp','Anmeldung','Name','Vorname','Mail','Tel'];
+  const q = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const lines = data.map(r => [r.Timestamp, r.Anmeldung, r.Name, r.Vorname, r.Mail, r.Tel].map(q).join(','));
+  const csv = [headers.join(','), ...lines].join('\n');
+  const a = Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'})),download:'chilbi_ehemalige.csv'});
+  a.click();
+}
+
 const WEEKDAYS = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 function dayHeaderText(label) {
   const m = label.match(/(\d{1,2})\.(\d{1,2})\.(\d{2,4})?/);
@@ -1081,7 +1177,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:${px(0.5)}px;padding-bottom:${px(0.3)}px;border-bottom:2px solid black;">
       <div style="font-size:${px(1.3)}px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:${px(0.62)}px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.058</div>
+      <div style="font-size:${px(0.62)}px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.060</div>
     </div>
     <div style="display:flex;margin-bottom:${px(0.2)}px;">
       <div style="width:${labelW}px;min-width:${labelW}px;"></div>
