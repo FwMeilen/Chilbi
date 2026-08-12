@@ -6,7 +6,7 @@
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>Chilbi Admin – Schichtverwaltung Cl1.109</title>
+<title>Chilbi Admin – Schichtverwaltung Cl1.110</title>
 <meta property="og:title" content="Chilbi Herrliberg – Admin">
 <meta property="og:description" content="Schichtverwaltung Chilbi Herrliberg – Stützpunktfeuerwehr Meilen">
 <meta property="og:image" content="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png">
@@ -169,7 +169,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <div class="login-error" id="loginError"></div>
     <button class="btn btn-red" style="width:100%" onclick="doLogin()">Einloggen</button>
     <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--gray-mid);text-align:center;font-size:11px;color:var(--text3);">
-      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.109</strong>
+      © Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; <strong>Cl1.110</strong>
     </div>
   </div>
 </div>
@@ -180,7 +180,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
     <img src="https://www.feuerwehr-meilen.ch/fileadmin/Public/Website/Templates/Images/Logo-FeuerwehrMeilen.png" alt="Feuerwehr Meilen" style="height:38px;width:auto;object-fit:contain;">
     <div class="logo-text">Chilbi Herrliberg<span>Admin – Schichtverwaltung</span></div>
     <div class="header-right">
-      <span class="header-version">Cl1.109</span>
+      <span class="header-version">Cl1.110</span>
       <button class="help-btn" onclick="document.getElementById('helpOverlay').style.display='flex'" title="Bedienungsanleitung" style="background:none;border:1.5px solid rgba(255,255,255,.5);color:white;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;">?</button>
       <button class="btn btn-sm" onclick="window.open('index.html','_blank')">Zu Schichtplan Signup</button>
       <button class="btn-refresh" id="btnRefresh" onclick="manualRefresh()">
@@ -665,7 +665,7 @@ td input[type=color]{width:36px;height:26px;padding:1px;cursor:pointer;border:1p
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.109</div>
+<div class="site-footer" style="position:relative;z-index:1;">© Stützpunktfeuerwehr Meilen / LOL &nbsp;·&nbsp; Admin &nbsp;·&nbsp; Cl1.110</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
@@ -747,6 +747,7 @@ async function loadData() {
     renderFeuerwehr();
     try { FW_LIST = (await fetchGvizSheet('Feuerwehren')).map(r => r.Feuerwehr).filter(v => v && String(v).trim() !== ''); } catch(e){ FW_LIST = []; }
     renderFwEditor();
+    try { await loadKuerzelNames(); } catch(e){ KNAMES = {}; }
     if (src === 'gviz') showToast('⚠ Apps-Script offline – Daten direkt aus dem Sheet geladen. Speichern erst nach Deploy möglich.', 'error');
   } catch(e) { showToast('Ladefehler: ' + e.message, 'error'); console.error(e); }
 }
@@ -1024,7 +1025,7 @@ function renderSignups() {
   const filtered = SIGNUPS.filter(s => {
     const cfg=CONFIG.find(r=>r.Tag===s.Tag)||{};
     const datum=cfg.Datum||cfg.TagLabel||s.Tag;
-    return (!nameQ || String(s.Tag||'').toLowerCase().includes(nameQ) || String(s.Name||'').toLowerCase().includes(nameQ)) &&
+    return (!nameQ || String(s.Tag||'').toLowerCase().includes(nameQ) || String(s.Name||'').toLowerCase().includes(nameQ) || String(KNAMES[String(s.Name||'').toUpperCase()]||'').toLowerCase().includes(nameQ)) &&
       (!curTag || datum===curTag) && (!curSch || s.Schicht===curSch) &&
       (!aufgQ || s.Aufgabe===aufgQ);
   });
@@ -1680,7 +1681,7 @@ function printDay(dayId) {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:${px(0.5)}px;padding-bottom:${px(0.3)}px;border-bottom:2px solid black;">
       <div style="font-size:${px(1.3)}px;font-weight:700;text-transform:uppercase">${titleText}</div>
-      <div style="font-size:${px(0.62)}px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.109</div>
+      <div style="font-size:${px(0.62)}px;color:#666">Stützpunktfeuerwehr Meilen &nbsp;·&nbsp; Chilbi Herrliberg &nbsp;·&nbsp; Cl1.110</div>
     </div>
     <div style="display:flex;margin-bottom:${px(0.2)}px;">
       <div style="width:${labelW}px;min-width:${labelW}px;"></div>
@@ -2299,11 +2300,40 @@ async function doDeleteSchicht() {
   setTimeout(async () => { await loadData(); buildSchichtplan(); }, 1800);
 }
 
+let KNAMES = {};
+async function _gvizRows(url){
+  const res = await fetch(url); const text = await res.text();
+  const m = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+  if(!m) return [];
+  const json = JSON.parse(m[1]);
+  const rows = json.table.rows || [];
+  const labels = json.table.cols.map(c => c.label ? c.label.trim() : '');
+  const hasLabels = labels.some(l => l !== '');
+  let headers, dataRows;
+  if(hasLabels){ headers = labels; dataRows = rows; }
+  else { headers = (rows[0] && rows[0].c ? rows[0].c.map(c => c ? String(c.v||'').trim() : '') : []); dataRows = rows.slice(1); }
+  return dataRows.filter(r => r && r.c && r.c[0] && r.c[0].v != null).map(r => {
+    const o = {}; headers.forEach((col,i)=>{ const c = r.c ? r.c[i] : null; o[col] = c ? (c.v != null ? String(c.v).trim() : '') : ''; }); return o;
+  });
+}
+// Kürzel -> "Vorname Nachname" aus Tabellenblatt1 (offiziell) + Gast, für die Namenssuche
+async function loadKuerzelNames(){
+  KNAMES = {};
+  const KID = '1bK6IuVpAdLyYc9_NPbJxFMkvCZ0fNvadJABBUM-Rc0M';
+  const addK = r => {
+    const k = String(r['Kürzel']||r.Kürzel||'').trim().toUpperCase(); if(!k) return;
+    const nm = [String(r['Vorname']||r.Vorname||'').trim(), String(r['Name']||r.Name||r['Nachname']||r.Nachname||'').trim()].filter(Boolean).join(' ');
+    if(nm) KNAMES[k] = nm;
+  };
+  try { (await _gvizRows(`https://docs.google.com/spreadsheets/d/${KID}/gviz/tq?tqx=out:json&headers=1&_=${Date.now()}`)).forEach(addK); } catch(e){}
+  try { (await _gvizRows(`https://docs.google.com/spreadsheets/d/${KID}/gviz/tq?tqx=out:json&sheet=Gast&headers=1&_=${Date.now()}`)).forEach(addK); } catch(e){}
+}
+
 let GAESTE = [];
 
 async function loadGaeste() {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/1bK6IuVpAdLyYc9_NPbJxFMkvCZ0fNvadJABBUM-Rc0M/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Gast')}&_=${Date.now()}`;
+    const url = `https://docs.google.com/spreadsheets/d/1bK6IuVpAdLyYc9_NPbJxFMkvCZ0fNvadJABBUM-Rc0M/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Gast')}&headers=1&_=${Date.now()}`;
     const res = await fetch(url);
     const text = await res.text();
     const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
