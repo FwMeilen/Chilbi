@@ -439,7 +439,7 @@ function abrSave(p){
   var meta = p.meta || {};
   var mSheet = ss.getSheetByName('Meta') || ss.insertSheet('Meta');
   mSheet.clear();
-  mSheet.getRange(1,1,15,2).setValues([
+  mSheet.getRange(1,1,16,2).setValues([
     ['Schlüssel','Wert'],
     ['Jahr', meta.jahr||''],
     ['Vorjahr', meta.vorjahr||''],
@@ -454,6 +454,7 @@ function abrSave(p){
     ['RgVorPos', meta.rgVorPos||''],
     ['RgIban', meta.rgIban||''],
     ['RgGruss', meta.rgGruss||''],
+    ['RgFooter', meta.rgFooter||''],
     ['RgNext', meta.rgNext||'']
   ]);
   _abrWriteTab(ss,'Einnahmen',['Nr','Kategorie','Beschreibung','Betrag','Vorjahr'],
