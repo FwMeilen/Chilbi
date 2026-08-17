@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.121 -->
+<!-- Cl1.122 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -55,7 +55,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.121</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.122</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -144,7 +144,7 @@ function applyData(data){
   FIN.stock.noten={}; FIN.stock.muenz={}; FIN.kasse.noten={}; FIN.kasse.muenz={};
   (data.stock||[]).forEach(r=>{ const w=N(r.Wert); if(w>=10) FIN.stock.noten[w]=String(r.Einzeln||''); else FIN.stock.muenz[w]={einzeln:String(r.Einzeln||''),rollen:String(r.Rollen||'')}; });
   (data.kasse||[]).forEach(r=>{ const w=N(r.Wert); if(w>=10) FIN.kasse.noten[w]=String(r.Einzeln||''); else FIN.kasse.muenz[w]={einzeln:String(r.Einzeln||''),rollen:String(r.Rollen||'')}; });
-  FIN.rechnungen=(data.rechnungen||[]).map(r=>{ let o={}; try{ o=JSON.parse(r.JSON||'{}'); }catch(e){} return Object.assign({nr:String(r.Nr||''),datum:String(r.Datum||''),email:String(r.Email||''),betreff:String(r.Betreff||''),total:N(r.Total),empfaenger:[],positionen:[],intro:''},o); });
+  FIN.rechnungen=(data.rechnungen||[]).map(r=>{ let o={}; try{ o=JSON.parse(r.JSON||'{}'); }catch(e){} return Object.assign({nr:String(r.Nr||''),datum:String(r.Datum||''),email:String(r.Email||''),betreff:String(r.Betreff||''),total:N(r.Total),vorjahr:'',empfaenger:[],positionen:[],intro:''},o); });
 }
 async function loadAll(){
   try{ const res=await fetch(SCRIPT_URL+'?action=abrLoad&pw='+encodeURIComponent(PW)); const data=await res.json(); if(data&&data.ok){ applyData(data); renderAll(); status('Neu geladen.'); } }
@@ -167,7 +167,7 @@ function nettoBar(){ return istTotal('kasse')-istTotal('stock'); }
 function rechnungenSum(){ return FIN.rechnungen.reduce((a,r)=>a+N(r.total),0); }
 function einManuell(){ return FIN.einnahmen.reduce((a,r)=>a+N(r.betrag),0); }
 function einTotal(){ return nettoBar()+rechnungenSum()+einManuell(); }
-function einTotalVor(){ return N(FIN.vorjahrKasse)+FIN.einnahmen.reduce((a,r)=>a+N(r.vorjahr),0); }
+function einTotalVor(){ return N(FIN.vorjahrKasse)+FIN.rechnungen.reduce((a,r)=>a+N(r.vorjahr),0)+FIN.einnahmen.reduce((a,r)=>a+N(r.vorjahr),0); }
 function ausTotal(){ return FIN.ausgaben.reduce((a,r)=>a+N(r.betrag),0); }
 function ausTotalVor(){ return FIN.ausgaben.reduce((a,r)=>a+N(r.vorjahr),0); }
 
@@ -199,11 +199,11 @@ function renderEinnahmen(){
     <td style="text-align:center"><button class="btn btn-sm" style="height:26px;padding:0 8px" onclick="FIN.einnahmen.splice(${i},1);renderEinnahmen()">✕</button></td></tr>`).join('');
   document.getElementById('sec-einnahmen').innerHTML=`
     <div class="card"><div class="card-title">Einnahmen <span id="einTot" class="muted" style="font-weight:400;font-size:12px;"></span></div>
-    <div class="kv"><span class="muted">Kasse netto (automatisch, Stock/Kasse)</span><span>CHF ${F(nettoBar())}</span></div>
-    ${FIN.rechnungen.map(r=>`<div class="kv"><span class="muted">${esc((r.empfaenger&&r.empfaenger[0])||r.betreff||'Rechnung')} (${esc(r.nr)})</span><span>CHF ${F(N(r.total))}</span></div>`).join('')}
-    <div style="height:10px"></div>
     <table><thead><tr><th style="width:150px">Kategorie</th><th>Beschreibung</th><th class="num" style="width:120px">Betrag ${esc(FIN.jahr)}</th><th class="num" style="width:120px">Vorjahr</th><th style="width:44px"></th></tr></thead>
-    <tbody>${rows||'<tr><td colspan="5" class="muted" style="padding:8px">Nur die automatischen Zeilen (Kasse netto, Rechnungen).</td></tr>'}</tbody></table>
+    <tbody>
+    <tr><td class="muted">—</td><td class="muted">Kasse netto (automatisch)</td><td class="num muted">CHF ${F(nettoBar())}</td><td class="num muted">CHF ${F(N(FIN.vorjahrKasse))}</td><td></td></tr>
+    ${FIN.rechnungen.map((r,i)=>`<tr><td class="muted">Rechnung</td><td class="muted">${esc((r.empfaenger&&r.empfaenger[0])||r.betreff||'Rechnung')} (${esc(r.nr)})</td><td class="num muted">CHF ${F(N(r.total))}</td><td><input class="in num" value="${esc(r.vorjahr||'')}" oninput="FIN.rechnungen[${i}].vorjahr=this.value;renderEinTot()"></td><td></td></tr>`).join('')}
+    ${rows}</tbody></table>
     <button class="btn btn-sm" style="margin-top:10px" onclick="FIN.einnahmen.push({kat:FIN.einKat[0]||'',besch:'',betrag:'',vorjahr:''});renderEinnahmen()">+ Zeile</button></div>`;
   renderEinTot();
 }
