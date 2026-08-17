@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="app-version" content="Cl1.139">
+<meta name="app-version" content="Cl1.140">
 <script>
 (function(){var el=document.querySelector('meta[name="app-version"]');var RUN=el?el.content:'';fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/name="app-version" content="([^"]+)"/);if(m&&RUN&&m[1]!==RUN){var tg='v='+encodeURIComponent(m[1]);if(location.search.indexOf(tg)===-1){location.replace(location.pathname+'?'+tg);}}}).catch(function(){});})();
 </script>
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.139 -->
+<!-- Cl1.140 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -70,7 +70,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.139</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.140</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -157,7 +157,8 @@ function applyData(data){
   if(m.RgNext) FIN.rgNext=parseInt(m.RgNext)||1;
   try{ if(m.MuenzProRolle) FIN.muenzProRolle=Object.assign(FIN.muenzProRolle,JSON.parse(m.MuenzProRolle)); }catch(e){}
   FIN.einnahmen=(data.einnahmen||[]).map(r=>({kat:String(r.Kategorie||''),besch:String(r.Beschreibung||''),betrag:String(r.Betrag||''),vorjahr:String(r.Vorjahr||'')}));
-  FIN.ausgaben=(data.ausgaben||[]).map(r=>({art:String(r.Zahlungsart||''),besch:String(r.Beschreibung||''),betrag:String(r.Betrag||''),vorjahr:String(r.Vorjahr||''),bem:String(r.Bemerkung||'')}));
+  const _b=v=>v===true||v===1||v==='1'||String(v).toLowerCase()==='true';
+  FIN.ausgaben=(data.ausgaben||[]).map(r=>({art:String(r.Zahlungsart||''),besch:String(r.Beschreibung||''),betrag:String(r.Betrag||''),vorjahr:String(r.Vorjahr||''),bem:String(r.Bemerkung||''),vorschuss:_b(r.Vorschuss),rueck:_b(r.Zurueckbezahlt)}));
   FIN.stock.noten={}; FIN.stock.muenz={}; FIN.kasse.noten={}; FIN.kasse.muenz={};
   (data.stock||[]).forEach(r=>{ const w=N(r.Wert); if(w>=10) FIN.stock.noten[w]=String(r.Einzeln||''); else FIN.stock.muenz[w]={einzeln:String(r.Einzeln||''),rollen:String(r.Rollen||'')}; });
   (data.kasse||[]).forEach(r=>{ const w=N(r.Wert); if(w>=10) FIN.kasse.noten[w]=String(r.Einzeln||''); else FIN.kasse.muenz[w]={einzeln:String(r.Einzeln||''),rollen:String(r.Rollen||'')}; });
@@ -264,12 +265,26 @@ function renderAusgaben(){
     <td><input class="in num" value="${esc(r.betrag)}" oninput="FIN.ausgaben[${i}].betrag=this.value;renderAusTot()"></td>
     <td><input class="in num" value="${esc(r.vorjahr)}" oninput="FIN.ausgaben[${i}].vorjahr=this.value;renderAusTot()"></td>
     <td><input class="in" value="${esc(r.bem)}" oninput="FIN.ausgaben[${i}].bem=this.value"></td>
+    <td style="white-space:nowrap;text-align:center;font-size:11px">
+      <label><input type="checkbox" ${r.vorschuss?'checked':''} onchange="FIN.ausgaben[${i}].vorschuss=this.checked;if(!this.checked)FIN.ausgaben[${i}].rueck=false;renderAusgaben()"> Vorsch.</label>
+      ${r.vorschuss?`<label style="margin-left:6px"><input type="checkbox" ${r.rueck?'checked':''} onchange="FIN.ausgaben[${i}].rueck=this.checked;renderAusgaben()"> zurück</label>`:''}
+    </td>
     <td style="text-align:center"><button class="btn btn-sm" style="height:26px;padding:0 8px" onclick="FIN.ausgaben.splice(${i},1);renderAusgaben()">✕</button></td></tr>`).join('');
+  const vorSum=FIN.ausgaben.reduce((a,r)=>a+(r.vorschuss?N(r.betrag):0),0);
+  const rueckSum=FIN.ausgaben.reduce((a,r)=>a+((r.vorschuss&&r.rueck)?N(r.betrag):0),0);
+  const offen=vorSum-rueckSum;
+  const vorCard = vorSum>0 ? `
+    <div class="card"><div class="card-title">Vorschüsse</div>
+      <div class="kv"><span>Vorgeschossen</span><span>CHF ${F(vorSum)}</span></div>
+      <div class="kv"><span>Zurückbezahlt</span><span>CHF ${F(rueckSum)}</span></div>
+      <div class="kv total"><span>Offen (noch zurückzufordern)</span><span class="${offen>0.005?'neg':''}">CHF ${F(offen)}</span></div>
+    </div>` : '';
   document.getElementById('sec-ausgaben').innerHTML=`
     <div class="card"><div class="card-title">Ausgaben <span id="ausTot" class="muted" style="font-weight:400;font-size:12px;"></span></div>
-    <table><thead><tr><th style="width:130px">Zahlungsart</th><th>Beschreibung</th><th class="num" style="width:110px">Betrag ${esc(FIN.jahr)}</th><th class="num" style="width:100px">Vorjahr</th><th style="width:150px">Bemerkung</th><th style="width:44px"></th></tr></thead>
-    <tbody>${rows||'<tr><td colspan="6" class="muted" style="padding:8px">Noch keine Einträge.</td></tr>'}</tbody></table>
-    <button class="btn btn-sm" style="margin-top:10px" onclick="FIN.ausgaben.push({art:FIN.ausKat[0]||'',besch:'',betrag:'',vorjahr:'',bem:''});renderAusgaben()">+ Zeile</button></div>`;
+    <table><thead><tr><th style="width:120px">Zahlungsart</th><th>Beschreibung</th><th class="num" style="width:100px">Betrag ${esc(FIN.jahr)}</th><th class="num" style="width:90px">Vorjahr</th><th style="width:120px">Bemerkung</th><th style="width:130px;text-align:center">Vorschuss</th><th style="width:40px"></th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="7" class="muted" style="padding:8px">Noch keine Einträge.</td></tr>'}</tbody></table>
+    <button class="btn btn-sm" style="margin-top:10px" onclick="FIN.ausgaben.push({art:FIN.ausKat[0]||'',besch:'',betrag:'',vorjahr:'',bem:'',vorschuss:false,rueck:false});renderAusgaben()">+ Zeile</button></div>
+    ${vorCard}`;
   renderAusTot();
 }
 function renderAusTot(){ const e=document.getElementById('ausTot'); if(e) e.textContent='· Total: CHF '+F(ausTotal()); renderAbrechnung(); }
