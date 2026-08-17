@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.120 -->
+<!-- Cl1.121 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -55,7 +55,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.120</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.121</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -200,7 +200,8 @@ function renderEinnahmen(){
   document.getElementById('sec-einnahmen').innerHTML=`
     <div class="card"><div class="card-title">Einnahmen <span id="einTot" class="muted" style="font-weight:400;font-size:12px;"></span></div>
     <div class="kv"><span class="muted">Kasse netto (automatisch, Stock/Kasse)</span><span>CHF ${F(nettoBar())}</span></div>
-    <div class="kv" style="margin-bottom:10px"><span class="muted">Rechnungen (automatisch, ${FIN.rechnungen.length})</span><span>CHF ${F(rechnungenSum())}</span></div>
+    ${FIN.rechnungen.map(r=>`<div class="kv"><span class="muted">${esc((r.empfaenger&&r.empfaenger[0])||r.betreff||'Rechnung')} (${esc(r.nr)})</span><span>CHF ${F(N(r.total))}</span></div>`).join('')}
+    <div style="height:10px"></div>
     <table><thead><tr><th style="width:150px">Kategorie</th><th>Beschreibung</th><th class="num" style="width:120px">Betrag ${esc(FIN.jahr)}</th><th class="num" style="width:120px">Vorjahr</th><th style="width:44px"></th></tr></thead>
     <tbody>${rows||'<tr><td colspan="5" class="muted" style="padding:8px">Nur die automatischen Zeilen (Kasse netto, Rechnungen).</td></tr>'}</tbody></table>
     <button class="btn btn-sm" style="margin-top:10px" onclick="FIN.einnahmen.push({kat:FIN.einKat[0]||'',besch:'',betrag:'',vorjahr:''});renderEinnahmen()">+ Zeile</button></div>`;
