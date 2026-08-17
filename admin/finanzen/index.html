@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.126 -->
+<!-- Cl1.127 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -55,7 +55,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.126</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.127</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -396,6 +396,7 @@ function _rgDoc(r){
     y+=7;
   });
   // Total
+  y+=6;
   doc.setLineWidth(0.3); doc.line(CA-10,y-3,RX,y-3);
   doc.setFont('helvetica','bold'); doc.text('Total',20,y); doc.text('CHF '+F(r.total||rgPosTotal()),RX,y,{align:'right'}); doc.setFont('helvetica','normal');
   doc.setLineWidth(0.2); doc.line(CA-10,y+1.5,RX,y+1.5);
