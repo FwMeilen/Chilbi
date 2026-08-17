@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="app-version" content="Cl1.140">
+<meta name="app-version" content="Cl1.141">
 <script>
 (function(){var el=document.querySelector('meta[name="app-version"]');var RUN=el?el.content:'';fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/name="app-version" content="([^"]+)"/);if(m&&RUN&&m[1]!==RUN){var tg='v='+encodeURIComponent(m[1]);if(location.search.indexOf(tg)===-1){location.replace(location.pathname+'?'+tg);}}}).catch(function(){});})();
 </script>
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.140 -->
+<!-- Cl1.141 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -70,7 +70,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.140</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.141</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -104,7 +104,7 @@ const MUENZ = [5,2,1,0.5,0.2,0.1,0.05];
 let PW = '';
 let FIN = {
   jahr:'2026', vorjahr:'2025', vorjahrKasse:'',
-  einKat:['TWINT','Rechnung'], ausKat:['Bar','Rechnung'],
+  einKat:['TWINT','Rechnung'], ausKat:['Bar','Rechnung','Rückzahlung'],
   einnahmen:[], ausgaben:[],
   stock:{ soll:'', noten:{}, muenz:{} }, kasse:{ soll:'', noten:{}, muenz:{} },
   muenzProRolle:{ '5':'25','2':'50','1':'50','0.5':'50','0.2':'50','0.1':'50','0.05':'50' },
@@ -186,8 +186,8 @@ function rechnungenSum(){ return FIN.rechnungen.reduce((a,r)=>a+N(r.total),0); }
 function einManuell(){ return FIN.einnahmen.reduce((a,r)=>a+N(r.betrag),0); }
 function einTotal(){ return nettoBar()+rechnungenSum()+einManuell(); }
 function einTotalVor(){ return N(FIN.vorjahrKasse)+FIN.rechnungen.reduce((a,r)=>a+N(r.vorjahr),0)+FIN.einnahmen.reduce((a,r)=>a+N(r.vorjahr),0); }
-function ausTotal(){ return FIN.ausgaben.reduce((a,r)=>a+N(r.betrag),0); }
-function ausTotalVor(){ return FIN.ausgaben.reduce((a,r)=>a+N(r.vorjahr),0); }
+function ausTotal(){ return FIN.ausgaben.reduce((a,r)=>a+(r.vorschuss?0:N(r.betrag)),0); }
+function ausTotalVor(){ return FIN.ausgaben.reduce((a,r)=>a+(r.vorschuss?0:N(r.vorjahr)),0); }
 
 function renderAll(){ renderAbrechnung(); renderEinnahmen(); renderAusgaben(); renderRechnungen(); renderDenom('stock'); renderDenom('kasse'); renderEinstellungen(); }
 
@@ -208,7 +208,7 @@ function renderAbrechnung(){
     +detRow('ein','TWINT',_twS,_twV||null,true)
     +FIN.rechnungen.map(r=>detRow('ein',((r.empfaenger&&r.empfaenger[0])||r.betreff||'Rechnung')+' ('+r.nr+')',N(r.total),N(r.vorjahr)||null)).join('')
     +_otR.map(r=>detRow('ein',(r.kat?r.kat+' – ':'')+(r.besch||''),N(r.betrag),N(r.vorjahr)||null)).join('');
-  const ausDet=FIN.ausgaben.length?FIN.ausgaben.map(r=>detRow('aus',(r.art?r.art+' – ':'')+(r.besch||''),N(r.betrag),N(r.vorjahr)||null)).join(''):detRow('aus','keine Ausgaben',0,null);
+  const _ausR=FIN.ausgaben.filter(r=>!r.vorschuss); const ausDet=_ausR.length?_ausR.map(r=>detRow('aus',(r.art?r.art+' – ':'')+(r.besch||''),N(r.betrag),N(r.vorjahr)||null)).join(''):detRow('aus','keine Ausgaben',0,null);
   const gvDet=detRow('gv','Total Einnahmen',eJ,eV)+detRow('gv','− Total Ausgaben',aJ,aV)+detRow('gv','= Gewinn / Verlust',gJ,gV);
   const head=(id,l,cur,prev,bold)=>`<tr style="cursor:pointer;${bold?'font-weight:700;':''}" onclick="abrTog('${id}')"><td><span id="ico-${id}" style="display:inline-block;width:14px;color:#999">▸</span>${l}</td><td class="num">CHF ${F(cur)}</td><td class="num muted">CHF ${F(prev)}</td><td class="num ${cur-prev>=0?'pos':'neg'}">${pct(cur,prev)}</td></tr>${({ein:einDet,aus:ausDet,gv:gvDet})[id]}`;
   const mJ=eJ?gJ/eJ:0, mV=eV?gV/eV:0, kJ=eJ?aJ/eJ:0, kV=eV?aV/eV:0;
@@ -266,24 +266,24 @@ function renderAusgaben(){
     <td><input class="in num" value="${esc(r.vorjahr)}" oninput="FIN.ausgaben[${i}].vorjahr=this.value;renderAusTot()"></td>
     <td><input class="in" value="${esc(r.bem)}" oninput="FIN.ausgaben[${i}].bem=this.value"></td>
     <td style="white-space:nowrap;text-align:center;font-size:11px">
-      <label><input type="checkbox" ${r.vorschuss?'checked':''} onchange="FIN.ausgaben[${i}].vorschuss=this.checked;if(!this.checked)FIN.ausgaben[${i}].rueck=false;renderAusgaben()"> Vorsch.</label>
-      ${r.vorschuss?`<label style="margin-left:6px"><input type="checkbox" ${r.rueck?'checked':''} onchange="FIN.ausgaben[${i}].rueck=this.checked;renderAusgaben()"> zurück</label>`:''}
+      <label><input type="checkbox" ${r.vorschuss?'checked':''} onchange="FIN.ausgaben[${i}].vorschuss=this.checked;renderAusgaben()"> Vorschuss</label>
+      ${r.vorschuss?'<span class="muted" style="font-size:10px"> (nicht gez.)</span>':''}
     </td>
     <td style="text-align:center"><button class="btn btn-sm" style="height:26px;padding:0 8px" onclick="FIN.ausgaben.splice(${i},1);renderAusgaben()">✕</button></td></tr>`).join('');
   const vorSum=FIN.ausgaben.reduce((a,r)=>a+(r.vorschuss?N(r.betrag):0),0);
-  const rueckSum=FIN.ausgaben.reduce((a,r)=>a+((r.vorschuss&&r.rueck)?N(r.betrag):0),0);
+  const rueckSum=FIN.ausgaben.reduce((a,r)=>a+(/r[üu]ckzahlung/i.test(r.art||'')?N(r.betrag):0),0);
   const offen=vorSum-rueckSum;
-  const vorCard = vorSum>0 ? `
+  const vorCard = (vorSum>0||rueckSum>0) ? `
     <div class="card"><div class="card-title">Vorschüsse</div>
-      <div class="kv"><span>Vorgeschossen</span><span>CHF ${F(vorSum)}</span></div>
-      <div class="kv"><span>Zurückbezahlt</span><span>CHF ${F(rueckSum)}</span></div>
+      <div class="kv"><span>Vorgeschossen (nicht gezählt)</span><span>CHF ${F(vorSum)}</span></div>
+      <div class="kv"><span>Zurückbezahlt (Kategorie «Rückzahlung»)</span><span>CHF ${F(rueckSum)}</span></div>
       <div class="kv total"><span>Offen (noch zurückzufordern)</span><span class="${offen>0.005?'neg':''}">CHF ${F(offen)}</span></div>
     </div>` : '';
   document.getElementById('sec-ausgaben').innerHTML=`
     <div class="card"><div class="card-title">Ausgaben <span id="ausTot" class="muted" style="font-weight:400;font-size:12px;"></span></div>
     <table><thead><tr><th style="width:120px">Zahlungsart</th><th>Beschreibung</th><th class="num" style="width:100px">Betrag ${esc(FIN.jahr)}</th><th class="num" style="width:90px">Vorjahr</th><th style="width:120px">Bemerkung</th><th style="width:130px;text-align:center">Vorschuss</th><th style="width:40px"></th></tr></thead>
     <tbody>${rows||'<tr><td colspan="7" class="muted" style="padding:8px">Noch keine Einträge.</td></tr>'}</tbody></table>
-    <button class="btn btn-sm" style="margin-top:10px" onclick="FIN.ausgaben.push({art:FIN.ausKat[0]||'',besch:'',betrag:'',vorjahr:'',bem:'',vorschuss:false,rueck:false});renderAusgaben()">+ Zeile</button></div>
+    <button class="btn btn-sm" style="margin-top:10px" onclick="FIN.ausgaben.push({art:FIN.ausKat[0]||'',besch:'',betrag:'',vorjahr:'',bem:'',vorschuss:false});renderAusgaben()">+ Zeile</button></div>
     ${vorCard}`;
   renderAusTot();
 }
