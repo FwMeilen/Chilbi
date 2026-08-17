@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.118 -->
+<!-- Cl1.119 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
   *{box-sizing:border-box;}
@@ -19,11 +20,11 @@
   .btn-red{background:var(--red);border-color:var(--red);color:#fff;}
   .btn-red:hover{background:#a00;}
   .btn-sm{height:30px;padding:0 12px;font-size:11px;}
-  input,select{font-family:inherit;font-size:14px;}
+  input,select,textarea{font-family:inherit;font-size:14px;}
   .card{background:var(--bg);border:1px solid var(--gray-mid);padding:18px 20px;margin-bottom:16px;}
   .card-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;}
   table{width:100%;border-collapse:collapse;font-size:13px;}
-  th{text-align:left;border-bottom:2px solid var(--black);padding:5px 6px;}
+  th{text-align:left;border-bottom:2px solid var(--black);padding:5px 6px;font-size:12px;}
   td{padding:3px 6px;border-bottom:1px solid var(--gray-mid);}
   .in{width:100%;height:30px;padding:0 6px;border:1px solid var(--gray-mid);}
   .num{text-align:right;}
@@ -32,20 +33,18 @@
   .menu button.active{background:var(--black);color:#fff;border-color:var(--black);}
   .sec{display:none;}.sec.active{display:block;}
   .gate{max-width:360px;margin:60px auto;background:var(--bg);border:1px solid var(--gray-mid);padding:26px;}
-  .gate h2{margin:0 0 6px;font-size:16px;}
-  .gate p{color:var(--t3);font-size:13px;margin:0 0 16px;}
+  .gate h2{margin:0 0 6px;font-size:16px;}.gate p{color:var(--t3);font-size:13px;margin:0 0 16px;}
   .err{color:var(--red);font-size:13px;margin-top:8px;}
   .kv{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--gray-mid);}
+  .kv.sub{font-weight:600;background:var(--bg2);padding:5px 8px;border-bottom:none;}
   .kv.total{font-weight:700;border-top:2px solid var(--black);border-bottom:none;padding-top:8px;}
-  .muted{color:var(--t3);}
-  .pos{color:var(--green);}.neg{color:var(--red);}
+  .muted{color:var(--t3);}.pos{color:var(--green);}.neg{color:var(--red);}
   label.fld{display:block;font-size:12px;color:var(--t2);margin-bottom:10px;}
-  label.fld input{display:block;margin-top:3px;}
+  label.fld input,label.fld textarea{display:block;margin-top:3px;width:100%;}
 </style>
 </head>
 <body>
 
-<!-- PASSWORT-GATE -->
 <div id="gate" class="gate">
   <h2>Chilbi&nbsp;–&nbsp;Finanzen</h2>
   <p>Geschützter Bereich. Bitte Passwort eingeben.</p>
@@ -54,10 +53,9 @@
   <div id="gateErr" class="err" style="display:none;"></div>
 </div>
 
-<!-- APP -->
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.118</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.119</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -69,6 +67,7 @@
       <button data-s="abrechnung" class="active" onclick="go('abrechnung',this)">Abrechnung</button>
       <button data-s="einnahmen" onclick="go('einnahmen',this)">Einnahmen</button>
       <button data-s="ausgaben" onclick="go('ausgaben',this)">Ausgaben</button>
+      <button data-s="rechnungen" onclick="go('rechnungen',this)">Rechnungen</button>
       <button data-s="stock" onclick="go('stock',this)">Stock</button>
       <button data-s="kasse" onclick="go('kasse',this)">Kasse</button>
       <button data-s="einstellungen" onclick="go('einstellungen',this)">Einstellungen</button>
@@ -76,6 +75,7 @@
     <div id="sec-abrechnung" class="sec active"></div>
     <div id="sec-einnahmen" class="sec"></div>
     <div id="sec-ausgaben" class="sec"></div>
+    <div id="sec-rechnungen" class="sec"></div>
     <div id="sec-stock" class="sec"></div>
     <div id="sec-kasse" class="sec"></div>
     <div id="sec-einstellungen" class="sec"></div>
@@ -84,179 +84,314 @@
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4hTICAhgzoDxaPXXZwGW1euX519Y2TilJUllZpb9PwwPnEnMSHg/exec';
-const DENOMS = [1000,200,100,50,20,10,5,2,1,0.5,0.2,0.1,0.05];
+const NOTEN = [1000,200,100,50,20,10];
+const MUENZ = [5,2,1,0.5,0.2,0.1,0.05];
 let PW = '';
-let FIN = { jahr:'2026', vorjahr:'2025', einKat:['TWINT','Rechnung'], ausKat:['Bar','Rechnung'],
-            vorjahrKasse:'', einnahmen:[], ausgaben:[], stock:{}, kasse:{} };
+let FIN = {
+  jahr:'2026', vorjahr:'2025', vorjahrKasse:'',
+  einKat:['TWINT','Rechnung'], ausKat:['Bar','Rechnung'],
+  einnahmen:[], ausgaben:[],
+  stock:{ soll:'', noten:{}, muenz:{} }, kasse:{ soll:'', noten:{}, muenz:{} },
+  muenzProRolle:{ '5':'25','2':'50','1':'50','0.5':'50','0.2':'50','0.1':'50','0.05':'50' },
+  rechnungen:[], rgNext:1,
+  rgAbsender:'Stützpunktfeuerwehr Meilen',
+  rgIntro:'Ich hoffe Sie hatten so viel Freude am Mittagessen bei uns in der Füürwehrbeiz wie wir hatten, dieses zuzubereiten. Wir schätzen diese Tradition sehr - besten Dank für Ihren geschätzten Besuch!',
+  rgIban:'CH57 8148 1000 0068 1362 8',
+  rgGruss:'Danke und besten Gruss vom Feuerwehr-Chilbi-OK\nConny, Christian, Christian, Michi, Freddy und Lars'
+};
+let _rgCur=null;
 
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function N(v){ const n=parseFloat(String(v==null?'':v).replace(',','.')); return isNaN(n)?0:n; }
 function F(n){ return n.toLocaleString('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function pct(cur,prev){ if(!prev) return ''; const p=(cur-prev)/Math.abs(prev); return (p>=0?'+':'')+(p*100).toFixed(1)+'%'; }
+function denLabel(d){ return d>=1 ? d+'.–' : (Math.round(d*100))+' Rp.'; }
 
 async function unlock(){
-  const pw = document.getElementById('pw').value;
-  const b = document.getElementById('unlockBtn'); b.disabled=true; b.textContent='…';
-  const err = document.getElementById('gateErr'); err.style.display='none';
+  const pw=document.getElementById('pw').value;
+  const b=document.getElementById('unlockBtn'); b.disabled=true; b.textContent='…';
+  const err=document.getElementById('gateErr'); err.style.display='none';
   try{
-    const res = await fetch(SCRIPT_URL + '?action=abrLoad&pw=' + encodeURIComponent(pw));
-    const data = await res.json();
-    if(!data || !data.ok){ err.textContent = 'Falsches Passwort.'; err.style.display='block'; b.disabled=false; b.textContent='Entsperren'; return; }
-    PW = pw;
-    applyData(data);
+    const res=await fetch(SCRIPT_URL+'?action=abrLoad&pw='+encodeURIComponent(pw));
+    const data=await res.json();
+    if(!data||!data.ok){ err.textContent='Falsches Passwort.'; err.style.display='block'; b.disabled=false; b.textContent='Entsperren'; return; }
+    PW=pw; applyData(data);
     document.getElementById('gate').style.display='none';
     document.getElementById('app').style.display='block';
     renderAll();
-  }catch(e){
-    err.textContent = 'Verbindungsfehler: ' + e.message; err.style.display='block';
-    b.disabled=false; b.textContent='Entsperren';
-  }
+  }catch(e){ err.textContent='Verbindungsfehler: '+e.message; err.style.display='block'; b.disabled=false; b.textContent='Entsperren'; }
 }
 function applyData(data){
-  const m = data.meta || {};
-  if(m.Jahr) FIN.jahr = String(m.Jahr);
-  if(m.Vorjahr) FIN.vorjahr = String(m.Vorjahr);
-  if(m.EinnahmenKategorien) FIN.einKat = String(m.EinnahmenKategorien).split(',').map(x=>x.trim()).filter(Boolean);
-  if(m.AusgabenKategorien) FIN.ausKat = String(m.AusgabenKategorien).split(',').map(x=>x.trim()).filter(Boolean);
-  if(m.VorjahrKasse!=null) FIN.vorjahrKasse = String(m.VorjahrKasse);
-  FIN.einnahmen = (data.einnahmen||[]).map(r=>({ kat:String(r.Kategorie||''), besch:String(r.Beschreibung||''), betrag:String(r.Betrag||''), vorjahr:String(r.Vorjahr||'') }));
-  FIN.ausgaben = (data.ausgaben||[]).map(r=>({ art:String(r.Zahlungsart||''), besch:String(r.Beschreibung||''), betrag:String(r.Betrag||''), vorjahr:String(r.Vorjahr||''), bem:String(r.Bemerkung||'') }));
-  FIN.stock = {}; (data.stock||[]).forEach(r=>{ FIN.stock[N(r.Wert)] = String(r.Anzahl||''); });
-  FIN.kasse = {}; (data.kasse||[]).forEach(r=>{ FIN.kasse[N(r.Wert)] = String(r.Anzahl||''); });
+  const m=data.meta||{};
+  if(m.Jahr) FIN.jahr=String(m.Jahr);
+  if(m.Vorjahr) FIN.vorjahr=String(m.Vorjahr);
+  if(m.VorjahrKasse!=null) FIN.vorjahrKasse=String(m.VorjahrKasse);
+  if(m.EinnahmenKategorien) FIN.einKat=String(m.EinnahmenKategorien).split(',').map(x=>x.trim()).filter(Boolean);
+  if(m.AusgabenKategorien) FIN.ausKat=String(m.AusgabenKategorien).split(',').map(x=>x.trim()).filter(Boolean);
+  if(m.SollStock!=null) FIN.stock.soll=String(m.SollStock);
+  if(m.SollKasse!=null) FIN.kasse.soll=String(m.SollKasse);
+  if(m.RgAbsender) FIN.rgAbsender=String(m.RgAbsender);
+  if(m.RgIntro) FIN.rgIntro=String(m.RgIntro);
+  if(m.RgIban) FIN.rgIban=String(m.RgIban);
+  if(m.RgGruss) FIN.rgGruss=String(m.RgGruss);
+  if(m.RgNext) FIN.rgNext=parseInt(m.RgNext)||1;
+  try{ if(m.MuenzProRolle) FIN.muenzProRolle=Object.assign(FIN.muenzProRolle,JSON.parse(m.MuenzProRolle)); }catch(e){}
+  FIN.einnahmen=(data.einnahmen||[]).map(r=>({kat:String(r.Kategorie||''),besch:String(r.Beschreibung||''),betrag:String(r.Betrag||''),vorjahr:String(r.Vorjahr||'')}));
+  FIN.ausgaben=(data.ausgaben||[]).map(r=>({art:String(r.Zahlungsart||''),besch:String(r.Beschreibung||''),betrag:String(r.Betrag||''),vorjahr:String(r.Vorjahr||''),bem:String(r.Bemerkung||'')}));
+  FIN.stock.noten={}; FIN.stock.muenz={}; FIN.kasse.noten={}; FIN.kasse.muenz={};
+  (data.stock||[]).forEach(r=>{ const w=N(r.Wert); if(w>=10) FIN.stock.noten[w]=String(r.Einzeln||''); else FIN.stock.muenz[w]={einzeln:String(r.Einzeln||''),rollen:String(r.Rollen||'')}; });
+  (data.kasse||[]).forEach(r=>{ const w=N(r.Wert); if(w>=10) FIN.kasse.noten[w]=String(r.Einzeln||''); else FIN.kasse.muenz[w]={einzeln:String(r.Einzeln||''),rollen:String(r.Rollen||'')}; });
+  FIN.rechnungen=(data.rechnungen||[]).map(r=>{ let o={}; try{ o=JSON.parse(r.JSON||'{}'); }catch(e){} return Object.assign({nr:String(r.Nr||''),datum:String(r.Datum||''),email:String(r.Email||''),betreff:String(r.Betreff||''),total:N(r.Total),empfaenger:[],positionen:[],intro:''},o); });
 }
 async function loadAll(){
-  try{
-    const res = await fetch(SCRIPT_URL + '?action=abrLoad&pw=' + encodeURIComponent(PW));
-    const data = await res.json();
-    if(data && data.ok){ applyData(data); renderAll(); status('Neu geladen.'); }
-  }catch(e){ status('Ladefehler: '+e.message); }
+  try{ const res=await fetch(SCRIPT_URL+'?action=abrLoad&pw='+encodeURIComponent(PW)); const data=await res.json(); if(data&&data.ok){ applyData(data); renderAll(); status('Neu geladen.'); } }
+  catch(e){ status('Ladefehler: '+e.message); }
 }
-function status(t){ const s=document.getElementById('saveStatus'); s.textContent=t; }
-
-function go(sec, btn){
+function status(t){ document.getElementById('saveStatus').textContent=t; }
+function go(sec,btn){
   document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
   if(btn) btn.classList.add('active');
   document.getElementById('sec-'+sec).classList.add('active');
 }
 
-// ---- Summen ----
-function stockTotal(){ return DENOMS.reduce((a,d)=>a + d*N(FIN.stock[d]), 0); }
-function kasseTotal(){ return DENOMS.reduce((a,d)=>a + d*N(FIN.kasse[d]), 0); }
-function nettoBar(){ return kasseTotal() - stockTotal(); }
-function einTotal(){ return nettoBar() + FIN.einnahmen.reduce((a,r)=>a+N(r.betrag),0); }
-function einTotalVor(){ return N(FIN.vorjahrKasse) + FIN.einnahmen.reduce((a,r)=>a+N(r.vorjahr),0); }
+function rolleStk(w){ return N(FIN.muenzProRolle[String(w)])||0; }
+function notenSub(side){ return NOTEN.reduce((a,w)=>a+w*N(FIN[side].noten[w]),0); }
+function muenzSub(side){ return MUENZ.reduce((a,w)=>{ const c=FIN[side].muenz[w]||{}; const stk=N(c.einzeln)+N(c.rollen)*rolleStk(w); return a+w*stk; },0); }
+function istTotal(side){ return notenSub(side)+muenzSub(side); }
+function nettoBar(){ return istTotal('kasse')-istTotal('stock'); }
+
+function rechnungenSum(){ return FIN.rechnungen.reduce((a,r)=>a+N(r.total),0); }
+function einManuell(){ return FIN.einnahmen.reduce((a,r)=>a+N(r.betrag),0); }
+function einTotal(){ return nettoBar()+rechnungenSum()+einManuell(); }
+function einTotalVor(){ return N(FIN.vorjahrKasse)+FIN.einnahmen.reduce((a,r)=>a+N(r.vorjahr),0); }
 function ausTotal(){ return FIN.ausgaben.reduce((a,r)=>a+N(r.betrag),0); }
 function ausTotalVor(){ return FIN.ausgaben.reduce((a,r)=>a+N(r.vorjahr),0); }
 
-// ---- Render ----
-function renderAll(){ renderAbrechnung(); renderEinnahmen(); renderAusgaben(); renderDenom('stock'); renderDenom('kasse'); renderEinstellungen(); }
+function renderAll(){ renderAbrechnung(); renderEinnahmen(); renderAusgaben(); renderRechnungen(); renderDenom('stock'); renderDenom('kasse'); renderEinstellungen(); }
 
 function renderAbrechnung(){
-  const eJ=einTotal(), eV=einTotalVor(), aJ=ausTotal(), aV=ausTotalVor(), gJ=eJ-aJ, gV=eV-aV;
+  const eJ=einTotal(),eV=einTotalVor(),aJ=ausTotal(),aV=ausTotalVor(),gJ=eJ-aJ,gV=eV-aV;
   const rowT=(l,cur,prev,bold)=>`<tr style="${bold?'font-weight:700;':''}"><td>${l}</td><td class="num">CHF ${F(cur)}</td><td class="num muted">CHF ${F(prev)}</td><td class="num ${cur-prev>=0?'pos':'neg'}">${pct(cur,prev)}</td></tr>`;
-  document.getElementById('sec-abrechnung').innerHTML = `
+  document.getElementById('sec-abrechnung').innerHTML=`
     <div class="card"><div class="card-title">Abrechnung ${esc(FIN.jahr)} <span class="muted" style="font-weight:400;font-size:12px;">(nur Ansicht)</span></div>
     <table><thead><tr><th></th><th class="num">${esc(FIN.jahr)}</th><th class="num">Vorjahr ${esc(FIN.vorjahr)}</th><th class="num">% Diff.</th></tr></thead><tbody>
-    <tr><td class="muted">davon Kasse (netto) = Kasse − Stock</td><td class="num muted">CHF ${F(nettoBar())}</td><td class="num muted">CHF ${F(N(FIN.vorjahrKasse))}</td><td></td></tr>
-    ${rowT('Total Einnahmen',eJ,eV,false)}
-    ${rowT('Total Ausgaben',aJ,aV,false)}
-    ${rowT('Gewinn / Verlust',gJ,gV,true)}
+    <tr><td class="muted">davon Kasse netto (Kasse − Stock)</td><td class="num muted">CHF ${F(nettoBar())}</td><td class="num muted">CHF ${F(N(FIN.vorjahrKasse))}</td><td></td></tr>
+    <tr><td class="muted">davon Rechnungen (${FIN.rechnungen.length})</td><td class="num muted">CHF ${F(rechnungenSum())}</td><td class="num muted"></td><td></td></tr>
+    ${rowT('Total Einnahmen',eJ,eV,false)}${rowT('Total Ausgaben',aJ,aV,false)}${rowT('Gewinn / Verlust',gJ,gV,true)}
     </tbody></table></div>
-    <div class="card"><div class="card-title">Bar / Kassensturz</div>
-      <div class="kv"><span>Stock (Startkasse)</span><span>CHF ${F(stockTotal())}</span></div>
-      <div class="kv"><span>Kasse (Endbestand)</span><span>CHF ${F(kasseTotal())}</span></div>
+    <div class="card"><div class="card-title">Bar</div>
+      <div class="kv"><span>Stock (Ist)</span><span>CHF ${F(istTotal('stock'))}</span></div>
+      <div class="kv"><span>Kasse (Ist)</span><span>CHF ${F(istTotal('kasse'))}</span></div>
       <div class="kv total"><span>Netto-Bareinnahme</span><span>CHF ${F(nettoBar())}</span></div>
     </div>`;
 }
 
 function renderEinnahmen(){
-  const rows = FIN.einnahmen.map((r,i)=>`<tr>
+  const rows=FIN.einnahmen.map((r,i)=>`<tr>
     <td><select class="in" onchange="FIN.einnahmen[${i}].kat=this.value">${FIN.einKat.map(k=>`<option${k===r.kat?' selected':''}>${esc(k)}</option>`).join('')}</select></td>
     <td><input class="in" value="${esc(r.besch)}" oninput="FIN.einnahmen[${i}].besch=this.value"></td>
     <td><input class="in num" value="${esc(r.betrag)}" oninput="FIN.einnahmen[${i}].betrag=this.value;renderEinTot()"></td>
     <td><input class="in num" value="${esc(r.vorjahr)}" oninput="FIN.einnahmen[${i}].vorjahr=this.value;renderEinTot()"></td>
     <td style="text-align:center"><button class="btn btn-sm" style="height:26px;padding:0 8px" onclick="FIN.einnahmen.splice(${i},1);renderEinnahmen()">✕</button></td></tr>`).join('');
-  document.getElementById('sec-einnahmen').innerHTML = `
+  document.getElementById('sec-einnahmen').innerHTML=`
     <div class="card"><div class="card-title">Einnahmen <span id="einTot" class="muted" style="font-weight:400;font-size:12px;"></span></div>
-    <div class="kv" style="margin-bottom:10px;"><span class="muted">Kasse (netto, automatisch aus Stock/Kasse)</span><span>CHF ${F(nettoBar())}</span></div>
+    <div class="kv"><span class="muted">Kasse netto (automatisch, Stock/Kasse)</span><span>CHF ${F(nettoBar())}</span></div>
+    <div class="kv" style="margin-bottom:10px"><span class="muted">Rechnungen (automatisch, ${FIN.rechnungen.length})</span><span>CHF ${F(rechnungenSum())}</span></div>
     <table><thead><tr><th style="width:150px">Kategorie</th><th>Beschreibung</th><th class="num" style="width:120px">Betrag ${esc(FIN.jahr)}</th><th class="num" style="width:120px">Vorjahr</th><th style="width:44px"></th></tr></thead>
-    <tbody>${rows||'<tr><td colspan="5" class="muted" style="padding:8px">Noch keine Einträge.</td></tr>'}</tbody></table>
+    <tbody>${rows||'<tr><td colspan="5" class="muted" style="padding:8px">Nur die automatischen Zeilen (Kasse netto, Rechnungen).</td></tr>'}</tbody></table>
     <button class="btn btn-sm" style="margin-top:10px" onclick="FIN.einnahmen.push({kat:FIN.einKat[0]||'',besch:'',betrag:'',vorjahr:''});renderEinnahmen()">+ Zeile</button></div>`;
   renderEinTot();
 }
-function renderEinTot(){ const e=document.getElementById('einTot'); if(e) e.textContent='· Total inkl. Kasse: CHF '+F(einTotal()); }
+function renderEinTot(){ const e=document.getElementById('einTot'); if(e) e.textContent='· Total inkl. Kasse & Rechnungen: CHF '+F(einTotal()); renderAbrechnung(); }
 
 function renderAusgaben(){
-  const rows = FIN.ausgaben.map((r,i)=>`<tr>
+  const rows=FIN.ausgaben.map((r,i)=>`<tr>
     <td><select class="in" onchange="FIN.ausgaben[${i}].art=this.value">${FIN.ausKat.map(k=>`<option${k===r.art?' selected':''}>${esc(k)}</option>`).join('')}</select></td>
     <td><input class="in" value="${esc(r.besch)}" oninput="FIN.ausgaben[${i}].besch=this.value"></td>
     <td><input class="in num" value="${esc(r.betrag)}" oninput="FIN.ausgaben[${i}].betrag=this.value;renderAusTot()"></td>
     <td><input class="in num" value="${esc(r.vorjahr)}" oninput="FIN.ausgaben[${i}].vorjahr=this.value;renderAusTot()"></td>
     <td><input class="in" value="${esc(r.bem)}" oninput="FIN.ausgaben[${i}].bem=this.value"></td>
     <td style="text-align:center"><button class="btn btn-sm" style="height:26px;padding:0 8px" onclick="FIN.ausgaben.splice(${i},1);renderAusgaben()">✕</button></td></tr>`).join('');
-  document.getElementById('sec-ausgaben').innerHTML = `
+  document.getElementById('sec-ausgaben').innerHTML=`
     <div class="card"><div class="card-title">Ausgaben <span id="ausTot" class="muted" style="font-weight:400;font-size:12px;"></span></div>
     <table><thead><tr><th style="width:130px">Zahlungsart</th><th>Beschreibung</th><th class="num" style="width:110px">Betrag ${esc(FIN.jahr)}</th><th class="num" style="width:100px">Vorjahr</th><th style="width:150px">Bemerkung</th><th style="width:44px"></th></tr></thead>
     <tbody>${rows||'<tr><td colspan="6" class="muted" style="padding:8px">Noch keine Einträge.</td></tr>'}</tbody></table>
     <button class="btn btn-sm" style="margin-top:10px" onclick="FIN.ausgaben.push({art:FIN.ausKat[0]||'',besch:'',betrag:'',vorjahr:'',bem:''});renderAusgaben()">+ Zeile</button></div>`;
   renderAusTot();
 }
-function renderAusTot(){ const e=document.getElementById('ausTot'); if(e) e.textContent='· Total: CHF '+F(ausTotal()); }
+function renderAusTot(){ const e=document.getElementById('ausTot'); if(e) e.textContent='· Total: CHF '+F(ausTotal()); renderAbrechnung(); }
 
-function renderDenom(which){
-  const map = FIN[which];
-  const label = which==='stock' ? 'Stock (Startkasse / Wechselgeld)' : 'Kasse (Endbestand)';
-  const rows = DENOMS.map(d=>`<tr>
-    <td>${d>=1? d+'.–' : (d*100)+' Rp.'}</td>
-    <td>${d>=1?'Note/Münze':'Münze'}</td>
-    <td><input class="in num" style="width:110px" value="${esc(map[d]||'')}" oninput="FIN.${which}[${d}]=this.value;renderDenomTot('${which}')"></td>
-    <td class="num" id="${which}-t-${String(d).replace('.','_')}">CHF ${F(d*N(map[d]))}</td></tr>`).join('');
-  document.getElementById('sec-'+which).innerHTML = `
+function renderDenom(side){
+  const label=side==='stock'?'Stock (Startkasse / Wechselgeld)':'Kasse (Endbestand)';
+  const notenRows=NOTEN.map(w=>`<tr>
+    <td>${denLabel(w)}</td>
+    <td><input class="in num" style="width:110px" value="${esc(FIN[side].noten[w]||'')}" oninput="FIN.${side}.noten[${w}]=this.value;denomRecalc('${side}')"></td>
+    <td class="num" id="${side}-n-${w}">CHF ${F(w*N(FIN[side].noten[w]))}</td></tr>`).join('');
+  const muenzRows=MUENZ.map(w=>{ const c=FIN[side].muenz[w]||{}; const stk=N(c.einzeln)+N(c.rollen)*rolleStk(w); return `<tr>
+    <td>${denLabel(w)}</td>
+    <td><input class="in num" style="width:80px" value="${esc(c.einzeln||'')}" oninput="FIN.${side}.muenz[${w}]=FIN.${side}.muenz[${w}]||{};FIN.${side}.muenz[${w}].einzeln=this.value;denomRecalc('${side}')"></td>
+    <td><input class="in num" style="width:80px" value="${esc(c.rollen||'')}" oninput="FIN.${side}.muenz[${w}]=FIN.${side}.muenz[${w}]||{};FIN.${side}.muenz[${w}].rollen=this.value;denomRecalc('${side}')"></td>
+    <td class="muted" style="font-size:12px">×${rolleStk(w)}/Rolle</td>
+    <td class="num" id="${side}-m-${String(w).replace('.','_')}">CHF ${F(w*stk)}</td></tr>`; }).join('');
+  document.getElementById('sec-'+side).innerHTML=`
     <div class="card"><div class="card-title">${label}</div>
-    <div class="muted" style="font-size:12px;margin:-6px 0 12px">Pro Stückelung die Anzahl Stück eingeben. Total rechnet automatisch.</div>
-    <table><thead><tr><th style="width:90px">Stückelung</th><th style="width:110px">Typ</th><th style="width:130px">Anzahl</th><th class="num">Total</th></tr></thead><tbody>${rows}</tbody></table>
-    <div class="kv total" style="margin-top:8px"><span>Total ${which==='stock'?'Stock':'Kasse'}</span><span id="${which}-total">CHF ${F(which==='stock'?stockTotal():kasseTotal())}</span></div>
-    ${which==='kasse' ? `<div class="kv total"><span>Netto-Bareinnahme (Kasse − Stock)</span><span id="netto-bar">CHF ${F(nettoBar())}</span></div>`:''}
+    <label class="fld" style="max-width:220px">Soll-Total (CHF)<input class="in num" value="${esc(FIN[side].soll)}" oninput="FIN.${side}.soll=this.value;denomRecalc('${side}')"></label>
+    <div style="font-weight:700;margin:10px 0 4px">Noten</div>
+    <table><thead><tr><th style="width:90px">Wert</th><th style="width:130px">Anzahl</th><th class="num">Total</th></tr></thead><tbody>${notenRows}</tbody></table>
+    <div class="kv sub" style="margin-top:6px"><span>Zwischensaldo Noten</span><span id="${side}-noten-sub">CHF ${F(notenSub(side))}</span></div>
+    <div style="font-weight:700;margin:16px 0 4px">Münz</div>
+    <table><thead><tr><th style="width:90px">Wert</th><th style="width:90px">Einzeln</th><th style="width:90px">Rollen</th><th></th><th class="num">Total</th></tr></thead><tbody>${muenzRows}</tbody></table>
+    <div class="kv sub" style="margin-top:6px"><span>Zwischensaldo Münz</span><span id="${side}-muenz-sub">CHF ${F(muenzSub(side))}</span></div>
+    <div class="kv total" style="margin-top:10px"><span>Gezählt total (Ist)</span><span id="${side}-ist">CHF ${F(istTotal(side))}</span></div>
+    <div class="kv total"><span>Differenz (Ist − Soll)</span><span id="${side}-diff">CHF ${F(istTotal(side)-N(FIN[side].soll))}</span></div>
+    ${side==='kasse'?`<div class="kv total"><span>Netto-Bareinnahme (Kasse − Stock)</span><span id="netto-bar">CHF ${F(nettoBar())}</span></div>`:''}
     </div>`;
 }
-function renderDenomTot(which){
-  const map = FIN[which];
-  DENOMS.forEach(d=>{ const c=document.getElementById(which+'-t-'+String(d).replace('.','_')); if(c) c.textContent='CHF '+F(d*N(map[d])); });
-  const tot=document.getElementById(which+'-total'); if(tot) tot.textContent='CHF '+F(which==='stock'?stockTotal():kasseTotal());
+function denomRecalc(side){
+  NOTEN.forEach(w=>{ const c=document.getElementById(side+'-n-'+w); if(c) c.textContent='CHF '+F(w*N(FIN[side].noten[w])); });
+  MUENZ.forEach(w=>{ const cc=FIN[side].muenz[w]||{}; const stk=N(cc.einzeln)+N(cc.rollen)*rolleStk(w); const c=document.getElementById(side+'-m-'+String(w).replace('.','_')); if(c) c.textContent='CHF '+F(w*stk); });
+  const ns=document.getElementById(side+'-noten-sub'); if(ns) ns.textContent='CHF '+F(notenSub(side));
+  const ms=document.getElementById(side+'-muenz-sub'); if(ms) ms.textContent='CHF '+F(muenzSub(side));
+  const ist=document.getElementById(side+'-ist'); if(ist) ist.textContent='CHF '+F(istTotal(side));
+  const diff=document.getElementById(side+'-diff'); if(diff){ const d=istTotal(side)-N(FIN[side].soll); diff.textContent='CHF '+F(d); diff.className=Math.abs(d)<0.005?'num':'num neg'; }
   const nb=document.getElementById('netto-bar'); if(nb) nb.textContent='CHF '+F(nettoBar());
-  // Abrechnung/Einnahmen hängen davon ab
   renderAbrechnung(); renderEinTot();
-  const einKasse = document.querySelector('#sec-einnahmen .kv span:last-child'); // aktualisiert beim nächsten Öffnen
+}
+
+function renderRechnungen(){
+  const list=FIN.rechnungen.map((r,i)=>`<tr>
+    <td>${esc(r.nr)}</td><td>${esc(r.datum)}</td><td>${esc((r.empfaenger&&r.empfaenger[0])||r.betreff||'')}</td>
+    <td class="num">CHF ${F(r.total)}</td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-sm" style="height:26px" onclick="rgEdit(${i})">Öffnen</button>
+      <button class="btn btn-sm" style="height:26px" onclick="rgPdf(${i})">PDF</button>
+      <button class="btn btn-sm" style="height:26px" onclick="rgSend(${i})">Senden</button>
+    </td></tr>`).join('');
+  document.getElementById('sec-rechnungen').innerHTML=`
+    <div class="card"><div class="card-title">Rechnungen <span class="muted" style="font-weight:400;font-size:12px;">· fliessen automatisch in die Einnahmen</span></div>
+    <table><thead><tr><th style="width:90px">Nr</th><th style="width:90px">Datum</th><th>Empfänger</th><th class="num" style="width:100px">Total</th><th style="width:230px"></th></tr></thead>
+    <tbody>${list||'<tr><td colspan="5" class="muted" style="padding:8px">Noch keine Rechnungen.</td></tr>'}</tbody></table>
+    <button class="btn btn-sm btn-red" style="margin-top:12px" onclick="rgNew()">+ Neue Rechnung</button></div>
+    <div id="rgForm"></div>`;
+}
+function _blankRg(){
+  const nr='R'+FIN.jahr+'-'+String(FIN.rgNext).padStart(3,'0');
+  return { nr, datum:new Date().toLocaleDateString('de-CH'), empfaenger:['','','',''], email:'', betreff:'Abrechnung Lunch an der Chilbi Herrliberg', anrede:'Sehr geehrte Damen und Herren', intro:FIN.rgIntro, positionen:[{anzahl:'',text:'',preis:''}], total:0, _new:true };
+}
+function rgNew(){ _rgCur=_blankRg(); renderRgForm(); }
+function rgEdit(i){ _rgCur=JSON.parse(JSON.stringify(FIN.rechnungen[i])); _rgCur._idx=i; if(!_rgCur.empfaenger||!_rgCur.empfaenger.length)_rgCur.empfaenger=['','','','']; if(!_rgCur.positionen||!_rgCur.positionen.length)_rgCur.positionen=[{anzahl:'',text:'',preis:''}]; if(!_rgCur.anrede)_rgCur.anrede='Sehr geehrte Damen und Herren'; renderRgForm(); }
+function rgPosTotal(){ return (_rgCur.positionen||[]).reduce((a,p)=>a+N(p.anzahl)*N(p.preis),0); }
+function renderRgForm(){
+  if(!_rgCur){ document.getElementById('rgForm').innerHTML=''; return; }
+  const posRows=_rgCur.positionen.map((p,i)=>`<tr>
+    <td><input class="in num" style="width:70px" value="${esc(p.anzahl)}" oninput="_rgCur.positionen[${i}].anzahl=this.value;rgTot()"></td>
+    <td><input class="in" value="${esc(p.text)}" oninput="_rgCur.positionen[${i}].text=this.value"></td>
+    <td><input class="in num" style="width:90px" value="${esc(p.preis)}" oninput="_rgCur.positionen[${i}].preis=this.value;rgTot()"></td>
+    <td class="num" id="rg-p-${i}">CHF ${F(N(p.anzahl)*N(p.preis))}</td>
+    <td style="text-align:center"><button class="btn btn-sm" style="height:26px;padding:0 8px" onclick="_rgCur.positionen.splice(${i},1);renderRgForm()">✕</button></td></tr>`).join('');
+  document.getElementById('rgForm').innerHTML=`
+    <div class="card"><div class="card-title">Rechnung ${esc(_rgCur.nr)}</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <label class="fld" style="flex:1 1 260px">Empfänger (4 Zeilen: Name / z.H. / Zusatz / PLZ Ort)
+        <input class="in" placeholder="Gewerbeverein Herrliberg" value="${esc(_rgCur.empfaenger[0]||'')}" oninput="_rgCur.empfaenger[0]=this.value">
+        <input class="in" style="margin-top:4px" placeholder="z.H. …" value="${esc(_rgCur.empfaenger[1]||'')}" oninput="_rgCur.empfaenger[1]=this.value">
+        <input class="in" style="margin-top:4px" placeholder="Postfach / Zusatz" value="${esc(_rgCur.empfaenger[2]||'')}" oninput="_rgCur.empfaenger[2]=this.value">
+        <input class="in" style="margin-top:4px" placeholder="8704 Herrliberg" value="${esc(_rgCur.empfaenger[3]||'')}" oninput="_rgCur.empfaenger[3]=this.value">
+      </label>
+      <div style="flex:1 1 220px">
+        <label class="fld">Datum<input class="in" value="${esc(_rgCur.datum)}" oninput="_rgCur.datum=this.value"></label>
+        <label class="fld">Anrede<input class="in" value="${esc(_rgCur.anrede)}" oninput="_rgCur.anrede=this.value"></label>
+        <label class="fld">E-Mail Empfänger<input class="in" value="${esc(_rgCur.email)}" oninput="_rgCur.email=this.value"></label>
+      </div>
+    </div>
+    <label class="fld">Betreff<input class="in" value="${esc(_rgCur.betreff)}" oninput="_rgCur.betreff=this.value"></label>
+    <label class="fld">Einleitungstext<textarea class="in" style="height:70px" oninput="_rgCur.intro=this.value">${esc(_rgCur.intro)}</textarea></label>
+    <div style="font-weight:700;margin:6px 0 4px">Positionen</div>
+    <table><thead><tr><th style="width:80px">Anzahl</th><th>Text</th><th style="width:100px">à-Preis</th><th class="num" style="width:100px">Betrag</th><th style="width:40px"></th></tr></thead><tbody>${posRows}</tbody></table>
+    <button class="btn btn-sm" style="margin-top:8px" onclick="_rgCur.positionen.push({anzahl:'',text:'',preis:''});renderRgForm()">+ Position</button>
+    <div class="kv total" style="margin-top:10px"><span>Total</span><span id="rg-total">CHF ${F(rgPosTotal())}</span></div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn btn-red btn-sm" onclick="rgSave()">Rechnung speichern</button>
+      <button class="btn btn-sm" onclick="rgPdfCur()">PDF herunterladen</button>
+      <button class="btn btn-sm" onclick="_rgCur=null;renderRgForm()">Schliessen</button>
+      <span id="rgMsg" class="muted" style="font-size:12px;align-self:center"></span>
+    </div></div>`;
+}
+function rgTot(){ _rgCur.positionen.forEach((p,i)=>{ const c=document.getElementById('rg-p-'+i); if(c) c.textContent='CHF '+F(N(p.anzahl)*N(p.preis)); }); const t=document.getElementById('rg-total'); if(t) t.textContent='CHF '+F(rgPosTotal()); }
+function rgSave(){
+  _rgCur.total=rgPosTotal();
+  const obj=JSON.parse(JSON.stringify(_rgCur));
+  if(_rgCur._new){ delete obj._new; FIN.rechnungen.push(obj); FIN.rgNext=(FIN.rgNext||1)+1; }
+  else { const idx=_rgCur._idx; delete obj._idx; FIN.rechnungen[idx]=obj; }
+  _rgCur=null;
+  renderRechnungen(); renderEinnahmen(); renderAbrechnung();
+  status('Rechnung gespeichert (lokal) – zum dauerhaften Sichern oben «Speichern» drücken.');
+}
+function _rgDoc(r){
+  const { jsPDF }=window.jspdf; const doc=new jsPDF({unit:'mm',format:'a4'});
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.text(String(FIN.rgAbsender||''),20,20); doc.setFont('helvetica','normal');
+  doc.setFontSize(11); let ey=45; (r.empfaenger||[]).forEach(l=>{ if(l){ doc.text(String(l),120,ey); ey+=5.5; } });
+  let y=75; doc.text('Herrliberg, '+(r.datum||''),20,y);
+  y=92; doc.setFont('helvetica','bold'); doc.text(String(r.betreff||''),20,y); doc.setFont('helvetica','normal');
+  y=105; doc.text(String(r.anrede||''),20,y);
+  y=118; doc.splitTextToSize(String(r.intro||''),170).forEach(l=>{ doc.text(l,20,y); y+=5.5; });
+  y+=8; doc.text('Wie vereinbart stellen wir Pauschal in Rechnung:',20,y);
+  y+=12; (r.positionen||[]).forEach(p=>{ const bez=(p.anzahl?p.anzahl+'x ':'')+(p.text||'')+(p.preis?' (à '+F(N(p.preis))+')':''); doc.text(bez,20,y); doc.text('CHF '+F(N(p.anzahl)*N(p.preis)),150,y); y+=7; });
+  y+=2; doc.setFont('helvetica','bold'); doc.text('Total',20,y); doc.text('CHF '+F(r.total||rgPosTotal()),150,y); doc.setLineWidth(0.3); doc.line(150,y+1.5,190,y+1.5); doc.setFont('helvetica','normal');
+  y+=14; doc.splitTextToSize('Danke für die Unterstützung und die Überweisung auf unser Feuerwehr-Mannschaftskonto:',170).forEach(l=>{ doc.text(l,20,y); y+=5.5; });
+  doc.text('Raiffeisen, IBAN: '+(FIN.rgIban||''),20,y); y+=14;
+  doc.splitTextToSize(String(FIN.rgGruss||''),170).forEach(l=>{ doc.text(l,20,y); y+=5.5; });
+  return doc;
+}
+function rgPdf(i){ const doc=_rgDoc(FIN.rechnungen[i]); doc.save(FIN.rechnungen[i].nr+'.pdf'); }
+function rgPdfCur(){ _rgCur.total=rgPosTotal(); const doc=_rgDoc(_rgCur); doc.save(_rgCur.nr+'.pdf'); }
+async function rgSend(i){
+  const r=FIN.rechnungen[i];
+  if(!r.email||!/@/.test(r.email)){ alert('Für diese Rechnung ist keine E-Mail hinterlegt (Rechnung öffnen und Adresse eintragen).'); return; }
+  if(!confirm('Rechnung '+r.nr+' an '+r.email+' senden?')) return;
+  const doc=_rgDoc(r); const pdf=doc.output('datauristring').split(',')[1];
+  const html='<div style="font-family:Arial,sans-serif;font-size:14px;color:#222">'+esc(r.anrede||'')+'<br><br>'+esc(r.intro||'').replace(/\n/g,'<br>')+'<br><br>Die Rechnung ('+esc(r.nr)+', Total CHF '+F(r.total)+') findest Du im Anhang.<br><br>'+esc(FIN.rgGruss||'').replace(/\n/g,'<br>')+'</div>';
+  const text=(r.anrede||'')+'\n\n'+(r.intro||'')+'\n\nRechnung '+r.nr+', Total CHF '+F(r.total)+' – siehe Anhang.\n\n'+(FIN.rgGruss||'');
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'rechnungMail',pw:PW,email:r.email,subject:r.betreff||('Rechnung '+r.nr),html,text,pdf,pdfname:r.nr+'.pdf'})});
+    status('Rechnung '+r.nr+' an '+r.email+' ausgelöst.');
+  }catch(e){ status('Sendefehler: '+e.message); }
 }
 
 function renderEinstellungen(){
-  document.getElementById('sec-einstellungen').innerHTML = `
-    <div class="card"><div class="card-title">Einstellungen</div>
-    <div style="display:flex;gap:20px;flex-wrap:wrap;">
-      <label class="fld">Jahr<input class="in" style="width:100px" value="${esc(FIN.jahr)}" oninput="FIN.jahr=this.value;renderAbrechnung()"></label>
-      <label class="fld">Vorjahr<input class="in" style="width:100px" value="${esc(FIN.vorjahr)}" oninput="FIN.vorjahr=this.value;renderAbrechnung()"></label>
-      <label class="fld">Vorjahr Kasse netto (CHF)<input class="in num" style="width:140px" value="${esc(FIN.vorjahrKasse)}" oninput="FIN.vorjahrKasse=this.value;renderAbrechnung()"></label>
+  const rolleRows=MUENZ.map(w=>`<label class="fld" style="display:inline-block;width:110px;margin-right:10px">${denLabel(w)}/Rolle<input class="in num" value="${esc(FIN.muenzProRolle[String(w)]||'')}" oninput="FIN.muenzProRolle['${w}']=this.value"></label>`).join('');
+  document.getElementById('sec-einstellungen').innerHTML=`
+    <div class="card"><div class="card-title">Allgemein</div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap">
+      <label class="fld" style="width:100px">Jahr<input class="in" value="${esc(FIN.jahr)}" oninput="FIN.jahr=this.value;renderAbrechnung()"></label>
+      <label class="fld" style="width:100px">Vorjahr<input class="in" value="${esc(FIN.vorjahr)}" oninput="FIN.vorjahr=this.value;renderAbrechnung()"></label>
+      <label class="fld" style="width:150px">Vorjahr Kasse netto<input class="in num" value="${esc(FIN.vorjahrKasse)}" oninput="FIN.vorjahrKasse=this.value;renderAbrechnung()"></label>
     </div>
-    <label class="fld" style="margin-top:6px">Einnahmen-Kategorien (Komma-getrennt)
-      <input class="in" value="${esc(FIN.einKat.join(', '))}" onchange="FIN.einKat=this.value.split(',').map(x=>x.trim()).filter(Boolean);renderEinnahmen()"></label>
-    <label class="fld">Ausgaben-Kategorien (Komma-getrennt)
-      <input class="in" value="${esc(FIN.ausKat.join(', '))}" onchange="FIN.ausKat=this.value.split(',').map(x=>x.trim()).filter(Boolean);renderAusgaben()"></label>
-    <div class="muted" style="font-size:12px">Änderungen greifen nach dem Speichern dauerhaft.</div>
+    <label class="fld">Einnahmen-Kategorien (Komma)<input class="in" value="${esc(FIN.einKat.join(', '))}" onchange="FIN.einKat=this.value.split(',').map(x=>x.trim()).filter(Boolean);renderEinnahmen()"></label>
+    <label class="fld">Ausgaben-Kategorien (Komma)<input class="in" value="${esc(FIN.ausKat.join(', '))}" onchange="FIN.ausKat=this.value.split(',').map(x=>x.trim()).filter(Boolean);renderAusgaben()"></label>
+    </div>
+    <div class="card"><div class="card-title">Münzen je Rolle</div>${rolleRows}</div>
+    <div class="card"><div class="card-title">Rechnungs-Vorlage</div>
+    <label class="fld">Absender (Kopfzeile)<input class="in" value="${esc(FIN.rgAbsender)}" oninput="FIN.rgAbsender=this.value"></label>
+    <label class="fld">Standard-Einleitungstext<textarea class="in" style="height:80px" oninput="FIN.rgIntro=this.value">${esc(FIN.rgIntro)}</textarea></label>
+    <label class="fld">IBAN<input class="in" value="${esc(FIN.rgIban)}" oninput="FIN.rgIban=this.value"></label>
+    <label class="fld">Gruss / OK-Namen<textarea class="in" style="height:60px" oninput="FIN.rgGruss=this.value">${esc(FIN.rgGruss)}</textarea></label>
+    <label class="fld" style="width:200px">Nächste Rechnungsnummer (lfd.)<input class="in num" value="${esc(FIN.rgNext)}" oninput="FIN.rgNext=parseInt(this.value)||1"></label>
     </div>`;
 }
 
 async function saveAll(){
   status('Speichere…');
-  const stockArr = DENOMS.map(d=>({wert:d, anzahl:FIN.stock[d]||''})).filter(r=>N(r.anzahl)!==0);
-  const kasseArr = DENOMS.map(d=>({wert:d, anzahl:FIN.kasse[d]||''})).filter(r=>N(r.anzahl)!==0);
-  const payload = { action:'abrSave', pw:PW,
-    meta:{ jahr:FIN.jahr, vorjahr:FIN.vorjahr, einKat:FIN.einKat, ausKat:FIN.ausKat, vorjahrKasse:FIN.vorjahrKasse },
-    einnahmen:FIN.einnahmen, ausgaben:FIN.ausgaben, stock:stockArr, kasse:kasseArr };
-  try{
-    await fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload) });
-    status('✓ Gespeichert · ' + new Date().toLocaleTimeString('de-CH'));
-  }catch(e){ status('Speicherfehler: ' + e.message); }
+  const denomArr=(side)=>{ const out=[]; NOTEN.forEach(w=>{ if(N(FIN[side].noten[w])) out.push({wert:w,einzeln:FIN[side].noten[w],rollen:''}); }); MUENZ.forEach(w=>{ const c=FIN[side].muenz[w]||{}; if(N(c.einzeln)||N(c.rollen)) out.push({wert:w,einzeln:c.einzeln||'',rollen:c.rollen||''}); }); return out; };
+  const payload={ action:'abrSave', pw:PW,
+    meta:{ jahr:FIN.jahr, vorjahr:FIN.vorjahr, vorjahrKasse:FIN.vorjahrKasse, einKat:FIN.einKat, ausKat:FIN.ausKat,
+      sollStock:FIN.stock.soll, sollKasse:FIN.kasse.soll, muenzProRolle:JSON.stringify(FIN.muenzProRolle),
+      rgAbsender:FIN.rgAbsender, rgIntro:FIN.rgIntro, rgIban:FIN.rgIban, rgGruss:FIN.rgGruss, rgNext:FIN.rgNext },
+    einnahmen:FIN.einnahmen, ausgaben:FIN.ausgaben, stock:denomArr('stock'), kasse:denomArr('kasse'),
+    rechnungen:FIN.rechnungen.map(r=>({ nr:r.nr, datum:r.datum, empfaenger:(r.empfaenger&&r.empfaenger[0])||'', email:r.email||'', betreff:r.betreff||'', total:r.total||0, json:JSON.stringify(r) })) };
+  try{ await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)}); status('✓ Gespeichert · '+new Date().toLocaleTimeString('de-CH')); }
+  catch(e){ status('Speicherfehler: '+e.message); }
 }
 </script>
 </body>
