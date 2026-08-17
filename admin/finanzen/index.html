@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="app-version" content="Cl1.128">
+<meta name="app-version" content="Cl1.129">
 <script>
 (function(){var el=document.querySelector('meta[name="app-version"]');var RUN=el?el.content:'';fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/name="app-version" content="([^"]+)"/);if(m&&RUN&&m[1]!==RUN){var tg='v='+encodeURIComponent(m[1]);if(location.search.indexOf(tg)===-1){location.replace(location.pathname+'?'+tg);}}}).catch(function(){});})();
 </script>
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.128 -->
+<!-- Cl1.129 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -60,7 +60,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.128</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.129</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -101,7 +101,6 @@ let FIN = {
   rechnungen:[], rgNext:1,
   rgAbsender:'Stützpunktfeuerwehr Meilen',
   rgIntro:'Ich hoffe Sie hatten so viel Freude am Mittagessen bei uns in der Füürwehrbeiz wie wir hatten, dieses zuzubereiten. Wir schätzen diese Tradition sehr - besten Dank für Ihren geschätzten Besuch!',
-  rgVorPos:'Wie vereinbart stellen wir Pauschal in Rechnung:',
   rgIban:'CH57 8148 1000 0068 1362 8',
   rgGruss:'Danke und besten Gruss vom Feuerwehr-Chilbi-OK\nConny, Christian, Christian, Michi, Freddy und Lars',
   rgFooter:'Stützpunktfeuerwehr Meilen · OK Chilbi Herrliberg · chilbi@feuerwehrmeilen.ch'
@@ -140,7 +139,6 @@ function applyData(data){
   if(m.SollKasse!=null) FIN.kasse.soll=String(m.SollKasse);
   if(m.RgAbsender) FIN.rgAbsender=String(m.RgAbsender);
   if(m.RgIntro) FIN.rgIntro=String(m.RgIntro);
-  if(m.RgVorPos) FIN.rgVorPos=String(m.RgVorPos);
   if(m.RgIban) FIN.rgIban=String(m.RgIban);
   if(m.RgGruss) FIN.rgGruss=String(m.RgGruss);
   if(m.RgFooter) FIN.rgFooter=String(m.RgFooter);
@@ -373,18 +371,15 @@ function _rgDoc(r){
   try{ doc.addImage(RG_LOGO,'PNG',158,10,34,34); }catch(e){}
   // Empfaenger links
   doc.setFontSize(11); let ey=52; (r.empfaenger||[]).forEach(l=>{ if(l){ doc.text(String(l),20,ey); ey+=5.5; } });
-  // Datum rechtsbuendig
+  // Datum + Rechnungsnummer rechtsbuendig
   doc.text('Herrliberg, '+(r.datum||''),RX,75,{align:'right'});
+  doc.setFontSize(10); doc.setTextColor(110); doc.text('Rechnung '+(r.nr||''),RX,80.5,{align:'right'}); doc.setTextColor(0); doc.setFontSize(11);
   // Betreff
-  let y=90; doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.text(String(r.betreff||''),20,y); doc.setFont('helvetica','normal'); doc.setFontSize(11);
-  // Rechnungsnummer
-  y+=6; doc.setFontSize(10); doc.setTextColor(110); doc.text('Rechnung '+(r.nr||''),20,y); doc.setTextColor(0); doc.setFontSize(11);
+  let y=92; doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.text(String(r.betreff||''),20,y); doc.setFont('helvetica','normal'); doc.setFontSize(11);
   // Anrede
-  y+=12; doc.text(String(r.anrede||''),20,y);
+  y+=14; doc.text(String(r.anrede||''),20,y);
   // Einleitung
   y+=10; doc.splitTextToSize(String(r.intro||''),170).forEach(l=>{ doc.text(l,20,y); y+=5.5; });
-  // Text vor Positionen
-  if(FIN.rgVorPos){ y+=4; doc.splitTextToSize(String(FIN.rgVorPos),170).forEach(function(l){ doc.text(l,20,y); y+=5.5; }); }
   // Positionstabelle
   y+=7;
   doc.setFont('helvetica','bold'); doc.setFontSize(10);
@@ -444,8 +439,6 @@ function renderEinstellungen(){
     <div class="card"><div class="card-title">Münzen je Rolle</div>${rolleRows}</div>
     <div class="card"><div class="card-title">Rechnungs-Vorlage</div>
     <label class="fld">Absender (Kopfzeile)<input class="in" value="${esc(FIN.rgAbsender)}" oninput="FIN.rgAbsender=this.value"></label>
-    <label class="fld">Standard-Einleitungstext<textarea class="in" style="height:80px" oninput="FIN.rgIntro=this.value">${esc(FIN.rgIntro)}</textarea></label>
-    <label class="fld">Text vor den Positionen<input class="in" value="${esc(FIN.rgVorPos)}" oninput="FIN.rgVorPos=this.value"></label>
     <label class="fld">IBAN<input class="in" value="${esc(FIN.rgIban)}" oninput="FIN.rgIban=this.value"></label>
     <label class="fld">Gruss / OK-Namen<textarea class="in" style="height:60px" oninput="FIN.rgGruss=this.value">${esc(FIN.rgGruss)}</textarea></label>
     <label class="fld">Fusszeile<input class="in" value="${esc(FIN.rgFooter)}" oninput="FIN.rgFooter=this.value"></label>
@@ -459,7 +452,7 @@ async function saveAll(){
   const payload={ action:'abrSave', pw:PW,
     meta:{ jahr:FIN.jahr, vorjahr:FIN.vorjahr, vorjahrKasse:FIN.vorjahrKasse, einKat:FIN.einKat, ausKat:FIN.ausKat,
       sollStock:FIN.stock.soll, sollKasse:FIN.kasse.soll, muenzProRolle:JSON.stringify(FIN.muenzProRolle),
-      rgAbsender:FIN.rgAbsender, rgIntro:FIN.rgIntro, rgVorPos:FIN.rgVorPos, rgIban:FIN.rgIban, rgGruss:FIN.rgGruss, rgFooter:FIN.rgFooter, rgNext:FIN.rgNext },
+      rgAbsender:FIN.rgAbsender, rgIntro:FIN.rgIntro, rgIban:FIN.rgIban, rgGruss:FIN.rgGruss, rgFooter:FIN.rgFooter, rgNext:FIN.rgNext },
     einnahmen:FIN.einnahmen, ausgaben:FIN.ausgaben, stock:denomArr('stock'), kasse:denomArr('kasse'),
     rechnungen:FIN.rechnungen.map(r=>({ nr:r.nr, datum:r.datum, empfaenger:(r.empfaenger&&r.empfaenger[0])||'', email:r.email||'', betreff:r.betreff||'', total:r.total||0, json:JSON.stringify(r) })) };
   try{ await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)}); status('✓ Gespeichert · '+new Date().toLocaleTimeString('de-CH')); }
