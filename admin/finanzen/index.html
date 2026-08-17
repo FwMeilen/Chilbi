@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="app-version" content="Cl1.134">
+<meta name="app-version" content="Cl1.135">
 <script>
 (function(){var el=document.querySelector('meta[name="app-version"]');var RUN=el?el.content:'';fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/name="app-version" content="([^"]+)"/);if(m&&RUN&&m[1]!==RUN){var tg='v='+encodeURIComponent(m[1]);if(location.search.indexOf(tg)===-1){location.replace(location.pathname+'?'+tg);}}}).catch(function(){});})();
 </script>
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.134 -->
+<!-- Cl1.135 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -46,6 +46,13 @@
   .muted{color:var(--t3);}.pos{color:var(--green);}.neg{color:var(--red);}
   label.fld{display:block;font-size:12px;color:var(--t2);margin-bottom:10px;}
   label.fld input,label.fld textarea{display:block;margin-top:3px;width:100%;}
+  .menu button{font-weight:400;}
+  .menu button[data-s="abrechnung"]{font-weight:700;}
+  .menu button[data-s="einnahmen"]:not(.active){background:#e8f5e9;border-color:#c8e6cd;}
+  .menu button[data-s="rechnungen"]:not(.active){background:#e8f5e9;border-color:#c8e6cd;}
+  .menu button[data-s="ausgaben"]:not(.active){background:#fdeaea;border-color:#f5c9c9;}
+  .menu button[data-s="stock"]:not(.active){background:#fff8e1;border-color:#f2e4b3;}
+  .menu button[data-s="kasse"]:not(.active){background:#fff8e1;border-color:#f2e4b3;}
 </style>
 </head>
 <body>
@@ -60,7 +67,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.134</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.135</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
