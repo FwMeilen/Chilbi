@@ -1,6 +1,6 @@
 // ============================================================
 // Chilbi Herrliberg – Schichtplanung Backend
-// Google Apps Script  |  Cl1.119
+// Google Apps Script  |  Cl1.120
 // Schema Konfiguration: ID|Datum|Von|Bis|Schicht|Aufgabe|Max Personen|Farbe|Informationen|Geschlossen
 // Schema Anmeldungen:   ID|Name|Schicht|Aufgabe|Timestamp
 // Schema Tage:          Datum|Typ
@@ -439,7 +439,7 @@ function abrSave(p){
   var meta = p.meta || {};
   var mSheet = ss.getSheetByName('Meta') || ss.insertSheet('Meta');
   mSheet.clear();
-  mSheet.getRange(1,1,14,2).setValues([
+  mSheet.getRange(1,1,15,2).setValues([
     ['Schlüssel','Wert'],
     ['Jahr', meta.jahr||''],
     ['Vorjahr', meta.vorjahr||''],
@@ -451,6 +451,7 @@ function abrSave(p){
     ['MuenzProRolle', meta.muenzProRolle||''],
     ['RgAbsender', meta.rgAbsender||''],
     ['RgIntro', meta.rgIntro||''],
+    ['RgVorPos', meta.rgVorPos||''],
     ['RgIban', meta.rgIban||''],
     ['RgGruss', meta.rgGruss||''],
     ['RgNext', meta.rgNext||'']
