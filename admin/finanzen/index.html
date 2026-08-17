@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.124 -->
+<!-- Cl1.125 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -55,7 +55,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.124</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.125</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -204,7 +204,7 @@ function renderEinnahmen(){
     <table><thead><tr><th style="width:150px">Kategorie</th><th>Beschreibung</th><th class="num" style="width:120px">Betrag ${esc(FIN.jahr)}</th><th class="num" style="width:120px">Vorjahr</th><th style="width:44px"></th></tr></thead>
     <tbody>
     <tr><td class="muted">—</td><td class="muted">Kasse netto (automatisch)</td><td class="num muted">CHF ${F(nettoBar())}</td><td class="num muted">CHF ${F(N(FIN.vorjahrKasse))}</td><td></td></tr>
-    ${FIN.rechnungen.map((r,i)=>`<tr><td class="muted">Rechnung</td><td class="muted">${esc((r.empfaenger&&r.empfaenger[0])||r.betreff||'Rechnung')} (${esc(r.nr)})</td><td class="num muted">CHF ${F(N(r.total))}</td><td><input class="in num" value="${esc(r.vorjahr||'')}" oninput="FIN.rechnungen[${i}].vorjahr=this.value;renderEinTot()"></td><td></td></tr>`).join('')}
+    ${FIN.rechnungen.map((r,i)=>`<tr><td class="muted">Rechnung</td><td class="muted">${esc((r.empfaenger&&r.empfaenger[0])||r.betreff||'Rechnung')} (${esc(r.nr)})</td><td class="num muted">CHF ${F(N(r.total))}</td><td class="num muted">${N(r.vorjahr)?'CHF '+F(N(r.vorjahr)):'–'}</td><td></td></tr>`).join('')}
     ${rows}</tbody></table>
     <button class="btn btn-sm" style="margin-top:10px" onclick="FIN.einnahmen.push({kat:FIN.einKat[0]||'',besch:'',betrag:'',vorjahr:''});renderEinnahmen()">+ Zeile</button></div>`;
   renderEinTot();
@@ -283,7 +283,7 @@ function renderRechnungen(){
 }
 function _blankRg(){
   const nr='R'+FIN.jahr+'-'+String(FIN.rgNext).padStart(3,'0');
-  return { nr, datum:new Date().toLocaleDateString('de-CH'), empfaenger:['','','',''], email:'', betreff:'Abrechnung Lunch an der Chilbi Herrliberg', anrede:'Sehr geehrte Damen und Herren', intro:FIN.rgIntro, positionen:[{anzahl:'',text:'',preis:''}], total:0, _new:true };
+  return { nr, datum:new Date().toLocaleDateString('de-CH'), empfaenger:['','','',''], email:'', betreff:'Abrechnung Lunch an der Chilbi Herrliberg', anrede:'Sehr geehrte Damen und Herren', intro:FIN.rgIntro, positionen:[{anzahl:'',text:'',preis:''}], total:0, vorjahr:'', _new:true };
 }
 function rgNew(){ _rgCur=_blankRg(); renderRgForm(); }
 function rgEdit(i){ _rgCur=JSON.parse(JSON.stringify(FIN.rechnungen[i])); _rgCur._idx=i; if(!_rgCur.empfaenger||!_rgCur.empfaenger.length)_rgCur.empfaenger=['','','','']; if(!_rgCur.positionen||!_rgCur.positionen.length)_rgCur.positionen=[{anzahl:'',text:'',preis:''}]; if(!_rgCur.anrede)_rgCur.anrede='Sehr geehrte Damen und Herren'; renderRgForm(); }
@@ -309,6 +309,7 @@ function renderRgForm(){
         <label class="fld">Datum<input class="in" value="${esc(_rgCur.datum)}" oninput="_rgCur.datum=this.value"></label>
         <label class="fld">Anrede<input class="in" value="${esc(_rgCur.anrede)}" oninput="_rgCur.anrede=this.value"></label>
         <label class="fld">E-Mail Empfänger<input class="in" value="${esc(_rgCur.email)}" oninput="_rgCur.email=this.value"></label>
+        <label class="fld">Betrag Vorjahr (für Vergleich)<input class="in num" value="${esc(_rgCur.vorjahr||'')}" oninput="_rgCur.vorjahr=this.value"></label>
       </div>
     </div>
     <label class="fld">Betreff<input class="in" value="${esc(_rgCur.betreff)}" oninput="_rgCur.betreff=this.value"></label>
