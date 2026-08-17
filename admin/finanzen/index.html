@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="app-version" content="Cl1.132">
+<meta name="app-version" content="Cl1.133">
 <script>
 (function(){var el=document.querySelector('meta[name="app-version"]');var RUN=el?el.content:'';fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/name="app-version" content="([^"]+)"/);if(m&&RUN&&m[1]!==RUN){var tg='v='+encodeURIComponent(m[1]);if(location.search.indexOf(tg)===-1){location.replace(location.pathname+'?'+tg);}}}).catch(function(){});})();
 </script>
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.132 -->
+<!-- Cl1.133 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -60,7 +60,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.132</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.133</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -197,6 +197,7 @@ function renderAbrechnung(){
   const mJ=eJ?gJ/eJ:0, mV=eV?gV/eV:0, kJ=eJ?aJ/eJ:0, kV=eV?aV/eV:0;
   const eGrow=eV?(eJ-eV)/eV:null, gGrow=gV?(gJ-gV)/Math.abs(gV):null, bar=eJ?nb/eJ:0, avg=rc?rs/rc:0;
   const sollSet=N(FIN.stock.soll)>0||N(FIN.kasse.soll)>0, dTot=(istTotal('stock')-N(FIN.stock.soll))+(istTotal('kasse')-N(FIN.kasse.soll));
+  const twintAmt=FIN.einnahmen.reduce((a,r)=>a+(/twint/i.test(r.kat||'')?N(r.betrag):0),0), tb=twintAmt+nb;
   const tile=(l,v,sub,good)=>`<div style="border:1px solid var(--gray-mid);padding:12px"><div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.05em">${l}</div><div style="font-size:22px;font-weight:700;margin:3px 0">${v}</div><div class="${good==null?'muted':(good?'pos':'neg')}" style="font-size:12px">${sub}</div></div>`;
   const kpis=[
     tile('Gewinnmarge',fp(mJ),'Vorjahr '+fp(mV)+(eV?' · '+pp(mJ-mV):''),eV?mJ-mV>=0:null),
@@ -204,7 +205,7 @@ function renderAbrechnung(){
     tile('Einnahmen-Wachstum',eGrow==null?'–':gr(eGrow),'CHF '+F(eJ)+' vs. '+F(eV),eGrow==null?null:eGrow>=0),
     tile('Gewinn-Wachstum',gGrow==null?'–':gr(gGrow),'CHF '+F(gJ)+' vs. '+F(gV),gGrow==null?null:gGrow>=0),
     tile('Bar-Anteil',fp(bar),'CHF '+F(nb)+' bar von '+F(eJ),null),
-    tile('Ø pro Rechnung',rc?'CHF '+F(avg):'–',rc+' Rechnung(en) · total CHF '+F(rs),null),
+    tile('TWINT vs. Bar',tb?fp(twintAmt/tb)+' / '+fp(nb/tb):'–','TWINT CHF '+F(twintAmt)+' · Bar CHF '+F(nb),null),
     tile('Bargeld-Differenz',sollSet?'CHF '+F(dTot):'–',sollSet?(Math.abs(dTot)<0.005?'stimmt mit Soll':'Abweichung – prüfen'):'kein Soll erfasst',sollSet?Math.abs(dTot)<0.005:null)
   ].join('');
   document.getElementById('sec-abrechnung').innerHTML=`
