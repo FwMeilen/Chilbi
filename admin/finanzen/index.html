@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="app-version" content="Cl1.133">
+<meta name="app-version" content="Cl1.134">
 <script>
 (function(){var el=document.querySelector('meta[name="app-version"]');var RUN=el?el.content:'';fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/name="app-version" content="([^"]+)"/);if(m&&RUN&&m[1]!==RUN){var tg='v='+encodeURIComponent(m[1]);if(location.search.indexOf(tg)===-1){location.replace(location.pathname+'?'+tg);}}}).catch(function(){});})();
 </script>
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.133 -->
+<!-- Cl1.134 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -60,7 +60,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.133</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.134</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -206,7 +206,6 @@ function renderAbrechnung(){
     tile('Gewinn-Wachstum',gGrow==null?'–':gr(gGrow),'CHF '+F(gJ)+' vs. '+F(gV),gGrow==null?null:gGrow>=0),
     tile('Bar-Anteil',fp(bar),'CHF '+F(nb)+' bar von '+F(eJ),null),
     tile('TWINT vs. Bar',tb?fp(twintAmt/tb)+' / '+fp(nb/tb):'–','TWINT CHF '+F(twintAmt)+' · Bar CHF '+F(nb),null),
-    tile('Bargeld-Differenz',sollSet?'CHF '+F(dTot):'–',sollSet?(Math.abs(dTot)<0.005?'stimmt mit Soll':'Abweichung – prüfen'):'kein Soll erfasst',sollSet?Math.abs(dTot)<0.005:null)
   ].join('');
   document.getElementById('sec-abrechnung').innerHTML=`
     <div class="card"><div class="card-title">Abrechnung ${esc(FIN.jahr)} <span class="muted" style="font-weight:400;font-size:12px;">· Zeile antippen für Details</span></div>
@@ -273,15 +272,13 @@ function renderDenom(side){
     <td class="num" id="${side}-m-${String(w).replace('.','_')}">CHF ${F(w*stk)}</td></tr>`; }).join('');
   document.getElementById('sec-'+side).innerHTML=`
     <div class="card"><div class="card-title">${label}</div>
-    <label class="fld" style="max-width:220px">Soll-Total (CHF)<input class="in num" value="${esc(FIN[side].soll)}" oninput="FIN.${side}.soll=this.value;denomRecalc('${side}')"></label>
     <div style="font-weight:700;margin:10px 0 4px">Noten</div>
     <table><thead><tr><th style="width:90px">Wert</th><th style="width:130px">Anzahl</th><th class="num">Total</th></tr></thead><tbody>${notenRows}</tbody></table>
     <div class="kv sub" style="margin-top:6px"><span>Zwischensaldo Noten</span><span id="${side}-noten-sub">CHF ${F(notenSub(side))}</span></div>
     <div style="font-weight:700;margin:16px 0 4px">Münz</div>
     <table><thead><tr><th style="width:90px">Wert</th><th style="width:90px">Einzeln</th><th style="width:90px">Rollen</th><th></th><th class="num">Total</th></tr></thead><tbody>${muenzRows}</tbody></table>
     <div class="kv sub" style="margin-top:6px"><span>Zwischensaldo Münz</span><span id="${side}-muenz-sub">CHF ${F(muenzSub(side))}</span></div>
-    <div class="kv total" style="margin-top:10px"><span>Gezählt total (Ist)</span><span id="${side}-ist">CHF ${F(istTotal(side))}</span></div>
-    <div class="kv total"><span>Differenz (Ist − Soll)</span><span id="${side}-diff">CHF ${F(istTotal(side)-N(FIN[side].soll))}</span></div>
+    <div class="kv total" style="margin-top:10px"><span>Total</span><span id="${side}-ist">CHF ${F(istTotal(side))}</span></div>
     ${side==='kasse'?`<div class="kv total"><span>Netto-Bareinnahme (Kasse − Stock)</span><span id="netto-bar">CHF ${F(nettoBar())}</span></div>`:''}
     </div>`;
 }
@@ -291,7 +288,6 @@ function denomRecalc(side){
   const ns=document.getElementById(side+'-noten-sub'); if(ns) ns.textContent='CHF '+F(notenSub(side));
   const ms=document.getElementById(side+'-muenz-sub'); if(ms) ms.textContent='CHF '+F(muenzSub(side));
   const ist=document.getElementById(side+'-ist'); if(ist) ist.textContent='CHF '+F(istTotal(side));
-  const diff=document.getElementById(side+'-diff'); if(diff){ const d=istTotal(side)-N(FIN[side].soll); diff.textContent='CHF '+F(d); diff.className=Math.abs(d)<0.005?'num':'num neg'; }
   const nb=document.getElementById('netto-bar'); if(nb) nb.textContent='CHF '+F(nettoBar());
   renderAbrechnung(); renderEinTot();
 }
