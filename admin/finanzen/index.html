@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="app-version" content="Cl1.136">
+<meta name="app-version" content="Cl1.137">
 <script>
 (function(){var el=document.querySelector('meta[name="app-version"]');var RUN=el?el.content:'';fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/name="app-version" content="([^"]+)"/);if(m&&RUN&&m[1]!==RUN){var tg='v='+encodeURIComponent(m[1]);if(location.search.indexOf(tg)===-1){location.replace(location.pathname+'?'+tg);}}}).catch(function(){});})();
 </script>
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.136 -->
+<!-- Cl1.137 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -67,7 +67,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.136</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.137</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -197,10 +197,13 @@ function renderAbrechnung(){
   const fp=x=>(x*100).toFixed(1)+'%';
   const pp=d=>(d>=0?'+':'')+(d*100).toFixed(1)+' pp';
   const gr=x=>(x>=0?'+':'')+(x*100).toFixed(1)+'%';
-  const detRow=(l,c,p)=>`<tr><td style="padding-left:12px" class="muted">${esc(l)}</td><td class="num muted">CHF ${F(c)}</td><td class="num muted">${p!=null?'CHF '+F(p):'–'}</td><td class="num ${(p!=null&&p!==0)?(c-p>=0?'pos':'neg'):''}">${(p!=null&&p!==0)?pct(c,p):''}</td></tr>`;
-  const einDet=[detRow('Kasse netto (Kasse − Stock)',nb,N(FIN.vorjahrKasse))]
-    .concat(FIN.rechnungen.map(r=>detRow(((r.empfaenger&&r.empfaenger[0])||r.betreff||'Rechnung')+' ('+r.nr+')',N(r.total),N(r.vorjahr)||null)))
-    .concat(FIN.einnahmen.map(r=>detRow((r.kat?r.kat+' – ':'')+(r.besch||''),N(r.betrag),N(r.vorjahr)||null))).join('');
+  const detRow=(l,c,p,bold)=>`<tr style="${bold?'font-weight:700':''}"><td style="padding-left:12px" class="${bold?'':'muted'}">${esc(l)}</td><td class="num ${bold?'':'muted'}">CHF ${F(c)}</td><td class="num ${bold?'':'muted'}">${p!=null?'CHF '+F(p):'–'}</td><td class="num ${(p!=null&&p!==0)?(c-p>=0?'pos':'neg'):''}">${(p!=null&&p!==0)?pct(c,p):''}</td></tr>`;
+  const _twR=FIN.einnahmen.filter(r=>/twint/i.test(r.kat||'')), _otR=FIN.einnahmen.filter(r=>!/twint/i.test(r.kat||''));
+  const _twS=_twR.reduce((a,r)=>a+N(r.betrag),0), _twV=_twR.reduce((a,r)=>a+N(r.vorjahr),0);
+  const einDet=detRow('Kasse netto (Kasse − Stock)',nb,N(FIN.vorjahrKasse),true)
+    +detRow('TWINT',_twS,_twV||null,true)
+    +FIN.rechnungen.map(r=>detRow(((r.empfaenger&&r.empfaenger[0])||r.betreff||'Rechnung')+' ('+r.nr+')',N(r.total),N(r.vorjahr)||null)).join('')
+    +_otR.map(r=>detRow((r.kat?r.kat+' – ':'')+(r.besch||''),N(r.betrag),N(r.vorjahr)||null)).join('');
   const ausDet=FIN.ausgaben.length?FIN.ausgaben.map(r=>detRow((r.art?r.art+' – ':'')+(r.besch||''),N(r.betrag),N(r.vorjahr)||null)).join(''):detRow('keine Ausgaben',0,null);
   const gvDet=detRow('Total Einnahmen',eJ,eV)+detRow('− Total Ausgaben',aJ,aV)+detRow('= Gewinn / Verlust',gJ,gV);
   const head=(id,l,cur,prev,bold)=>`<tr style="cursor:pointer;${bold?'font-weight:700;':''}" onclick="abrTog('${id}')"><td><span id="ico-${id}" style="display:inline-block;width:14px;color:#999">▸</span>${l}</td><td class="num">CHF ${F(cur)}</td><td class="num muted">CHF ${F(prev)}</td><td class="num ${cur-prev>=0?'pos':'neg'}">${pct(cur,prev)}</td></tr><tr id="det-${id}" style="display:none"><td colspan="4" style="padding:0 0 8px"><table style="width:100%">${({ein:einDet,aus:ausDet,gv:gvDet})[id]}</table></td></tr>`;
