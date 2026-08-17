@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="app-version" content="Cl1.137">
+<meta name="app-version" content="Cl1.138">
 <script>
 (function(){var el=document.querySelector('meta[name="app-version"]');var RUN=el?el.content:'';fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/name="app-version" content="([^"]+)"/);if(m&&RUN&&m[1]!==RUN){var tg='v='+encodeURIComponent(m[1]);if(location.search.indexOf(tg)===-1){location.replace(location.pathname+'?'+tg);}}}).catch(function(){});})();
 </script>
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.137 -->
+<!-- Cl1.138 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -53,6 +53,9 @@
   .menu button[data-s="ausgaben"]:not(.active){background:#fdeaea;border-color:#f5c9c9;}
   .menu button[data-s="stock"]:not(.active){background:#fff8e1;border-color:#f2e4b3;}
   .menu button[data-s="kasse"]:not(.active){background:#fff8e1;border-color:#f2e4b3;}
+  .detrow{display:none;}
+  .detrow.show{display:table-row;}
+  .detrow.db{font-weight:700;}
 </style>
 </head>
 <body>
@@ -67,7 +70,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.137</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.138</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -190,23 +193,23 @@ function renderAll(){ renderAbrechnung(); renderEinnahmen(); renderAusgaben(); r
 function _svgBar(frac,color){ var p=Math.max(0,Math.min(100,(frac||0)*100)); return '<svg viewBox="0 0 100 8" preserveAspectRatio="none" style="width:100%;height:8px;display:block"><rect width="100" height="8" rx="2" fill="#eee"/><rect width="'+p.toFixed(1)+'" height="8" rx="2" fill="'+color+'"/></svg>'; }
 function _svgPair(prev,cur,color){ var mx=Math.max(Math.abs(prev),Math.abs(cur),1); var hp=Math.max(2,Math.abs(prev)/mx*30), hc=Math.max(2,Math.abs(cur)/mx*30); return '<svg viewBox="0 0 64 42" style="width:100%;height:42px;display:block"><rect x="11" y="'+(34-hp).toFixed(1)+'" width="16" height="'+hp.toFixed(1)+'" fill="#cbcbcb"/><rect x="37" y="'+(34-hc).toFixed(1)+'" width="16" height="'+hc.toFixed(1)+'" fill="'+color+'"/><text x="19" y="40" font-size="5" text-anchor="middle" fill="#999">VJ</text><text x="45" y="40" font-size="5" text-anchor="middle" fill="#999">akt.</text></svg>'; }
 function _svgSplit(a,b,ca,cb){ var t=(a||0)+(b||0); if(t<=0) return '<svg viewBox="0 0 100 8" style="width:100%;height:8px;display:block"><rect width="100" height="8" rx="2" fill="#eee"/></svg>'; var pa=a/t*100; return '<svg viewBox="0 0 100 8" preserveAspectRatio="none" style="width:100%;height:8px;display:block"><rect width="'+pa.toFixed(1)+'" height="8" fill="'+ca+'"/><rect x="'+pa.toFixed(1)+'" width="'+(100-pa).toFixed(1)+'" height="8" fill="'+cb+'"/></svg>'; }
-function abrTog(id){ var d=document.getElementById('det-'+id), ic=document.getElementById('ico-'+id); if(!d) return; var open=d.style.display==='none'; d.style.display=open?'table-row':'none'; if(ic) ic.textContent=open?'▾':'▸'; }
+function abrTog(id){ var rows=document.querySelectorAll('.det-'+id); var ic=document.getElementById('ico-'+id); if(!rows.length) return; var open=rows[0].classList.contains('show'); rows.forEach(function(r){ r.classList.toggle('show',!open); }); if(ic) ic.textContent=open?'▸':'▾'; }
 function renderAbrechnung(){
   const eJ=einTotal(),eV=einTotalVor(),aJ=ausTotal(),aV=ausTotalVor(),gJ=eJ-aJ,gV=eV-aV;
   const nb=nettoBar(), rs=rechnungenSum(), rc=FIN.rechnungen.length;
   const fp=x=>(x*100).toFixed(1)+'%';
   const pp=d=>(d>=0?'+':'')+(d*100).toFixed(1)+' pp';
   const gr=x=>(x>=0?'+':'')+(x*100).toFixed(1)+'%';
-  const detRow=(l,c,p,bold)=>`<tr style="${bold?'font-weight:700':''}"><td style="padding-left:12px" class="${bold?'':'muted'}">${esc(l)}</td><td class="num ${bold?'':'muted'}">CHF ${F(c)}</td><td class="num ${bold?'':'muted'}">${p!=null?'CHF '+F(p):'–'}</td><td class="num ${(p!=null&&p!==0)?(c-p>=0?'pos':'neg'):''}">${(p!=null&&p!==0)?pct(c,p):''}</td></tr>`;
+  const detRow=(id,l,c,p,bold)=>`<tr class="detrow det-${id}${bold?' db':''}"><td style="padding-left:12px" class="${bold?'':'muted'}">${esc(l)}</td><td class="num ${bold?'':'muted'}">CHF ${F(c)}</td><td class="num ${bold?'':'muted'}">${p!=null?'CHF '+F(p):'–'}</td><td class="num ${(p!=null&&p!==0)?(c-p>=0?'pos':'neg'):''}">${(p!=null&&p!==0)?pct(c,p):''}</td></tr>`;
   const _twR=FIN.einnahmen.filter(r=>/twint/i.test(r.kat||'')), _otR=FIN.einnahmen.filter(r=>!/twint/i.test(r.kat||''));
   const _twS=_twR.reduce((a,r)=>a+N(r.betrag),0), _twV=_twR.reduce((a,r)=>a+N(r.vorjahr),0);
-  const einDet=detRow('Kasse netto (Kasse − Stock)',nb,N(FIN.vorjahrKasse),true)
-    +detRow('TWINT',_twS,_twV||null,true)
-    +FIN.rechnungen.map(r=>detRow(((r.empfaenger&&r.empfaenger[0])||r.betreff||'Rechnung')+' ('+r.nr+')',N(r.total),N(r.vorjahr)||null)).join('')
-    +_otR.map(r=>detRow((r.kat?r.kat+' – ':'')+(r.besch||''),N(r.betrag),N(r.vorjahr)||null)).join('');
-  const ausDet=FIN.ausgaben.length?FIN.ausgaben.map(r=>detRow((r.art?r.art+' – ':'')+(r.besch||''),N(r.betrag),N(r.vorjahr)||null)).join(''):detRow('keine Ausgaben',0,null);
-  const gvDet=detRow('Total Einnahmen',eJ,eV)+detRow('− Total Ausgaben',aJ,aV)+detRow('= Gewinn / Verlust',gJ,gV);
-  const head=(id,l,cur,prev,bold)=>`<tr style="cursor:pointer;${bold?'font-weight:700;':''}" onclick="abrTog('${id}')"><td><span id="ico-${id}" style="display:inline-block;width:14px;color:#999">▸</span>${l}</td><td class="num">CHF ${F(cur)}</td><td class="num muted">CHF ${F(prev)}</td><td class="num ${cur-prev>=0?'pos':'neg'}">${pct(cur,prev)}</td></tr><tr id="det-${id}" style="display:none"><td colspan="4" style="padding:0 0 8px"><table style="width:100%">${({ein:einDet,aus:ausDet,gv:gvDet})[id]}</table></td></tr>`;
+  const einDet=detRow('ein','Kasse netto (Kasse − Stock)',nb,N(FIN.vorjahrKasse),true)
+    +detRow('ein','TWINT',_twS,_twV||null,true)
+    +FIN.rechnungen.map(r=>detRow('ein',((r.empfaenger&&r.empfaenger[0])||r.betreff||'Rechnung')+' ('+r.nr+')',N(r.total),N(r.vorjahr)||null)).join('')
+    +_otR.map(r=>detRow('ein',(r.kat?r.kat+' – ':'')+(r.besch||''),N(r.betrag),N(r.vorjahr)||null)).join('');
+  const ausDet=FIN.ausgaben.length?FIN.ausgaben.map(r=>detRow('aus',(r.art?r.art+' – ':'')+(r.besch||''),N(r.betrag),N(r.vorjahr)||null)).join(''):detRow('aus','keine Ausgaben',0,null);
+  const gvDet=detRow('gv','Total Einnahmen',eJ,eV)+detRow('gv','− Total Ausgaben',aJ,aV)+detRow('gv','= Gewinn / Verlust',gJ,gV);
+  const head=(id,l,cur,prev,bold)=>`<tr style="cursor:pointer;${bold?'font-weight:700;':''}" onclick="abrTog('${id}')"><td><span id="ico-${id}" style="display:inline-block;width:14px;color:#999">▸</span>${l}</td><td class="num">CHF ${F(cur)}</td><td class="num muted">CHF ${F(prev)}</td><td class="num ${cur-prev>=0?'pos':'neg'}">${pct(cur,prev)}</td></tr>${({ein:einDet,aus:ausDet,gv:gvDet})[id]}`;
   const mJ=eJ?gJ/eJ:0, mV=eV?gV/eV:0, kJ=eJ?aJ/eJ:0, kV=eV?aV/eV:0;
   const eGrow=eV?(eJ-eV)/eV:null, gGrow=gV?(gJ-gV)/Math.abs(gV):null, bar=eJ?nb/eJ:0, avg=rc?rs/rc:0;
   const sollSet=N(FIN.stock.soll)>0||N(FIN.kasse.soll)>0, dTot=(istTotal('stock')-N(FIN.stock.soll))+(istTotal('kasse')-N(FIN.kasse.soll));
