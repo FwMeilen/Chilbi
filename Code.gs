@@ -1,6 +1,6 @@
 // ============================================================
 // Chilbi Herrliberg – Schichtplanung Backend
-// Google Apps Script  |  Cl1.116
+// Google Apps Script  |  Cl1.118
 // Schema Konfiguration: ID|Datum|Von|Bis|Schicht|Aufgabe|Max Personen|Farbe|Informationen|Geschlossen
 // Schema Anmeldungen:   ID|Name|Schicht|Aufgabe|Timestamp
 // Schema Tage:          Datum|Typ
@@ -10,6 +10,8 @@
 const SHEET_ID       = '1XqTNfgONmHX9GvmfOVvb94BUo_oQ04Uy7R97FVfdWyo';
 const KUERZEL_SHEET_ID = '1bK6IuVpAdLyYc9_NPbJxFMkvCZ0fNvadJABBUM-Rc0M';
 const ADMIN_PW       = 'chilbi2025';
+const ABRECHNUNG_SHEET_ID = '1IbXEr2UJLh6GOJsvFttVScuF3l4KpLR6hVUESqHlQ4s';
+const ABRECHNUNG_PW  = 'stock2026';
 const SS             = SpreadsheetApp.openById(SHEET_ID);
 const SS_KUERZEL     = SpreadsheetApp.openById(KUERZEL_SHEET_ID);
 const SH_CONFIG      = 'Konfiguration';
@@ -21,6 +23,11 @@ const SH_FEUERWEHR   = 'Feuerwehr';
 const SH_FEUERWEHREN = 'Feuerwehren';
 
 function doGet(e) {
+  var p = (e && e.parameter) || {};
+  if (p.action === 'abrLoad') {
+    if (p.pw !== ABRECHNUNG_PW) return jsonResponse({ ok: false, error: 'Falsches Passwort' });
+    return jsonResponse(abrLoad());
+  }
   return jsonResponse({ config: getConfig(), signups: getSignups(), tage: getTage() });
 }
 
@@ -56,6 +63,10 @@ function doPost(e) {
     if (p.action === 'importSignups') {
       if (p.password !== ADMIN_PW) return jsonResponse({ ok: false, error: 'Falsches Passwort' });
       return jsonResponse(importSignups(p.rows));
+    }
+    if (p.action === 'abrSave') {
+      if (p.password !== ABRECHNUNG_PW && p.pw !== ABRECHNUNG_PW) return jsonResponse({ ok: false, error: 'Falsches Passwort' });
+      return jsonResponse(abrSave(p));
     }
     return jsonResponse({ ok: false, error: 'Unbekannte Aktion' });
   } catch(err) {
@@ -391,6 +402,55 @@ function gutscheinMail(p) {
   } catch (e) {
     return { ok: false, error: String(e) };
   }
+}
+
+// ===== Finanzen / Abrechnung (separates Sheet ABRECHNUNG_SHEET_ID) =====
+function _abrNum(v){ var n = parseFloat(String(v==null?'':v).replace(',', '.')); return isNaN(n) ? 0 : n; }
+function _abrReadTab(ss, name){
+  var sh = ss.getSheetByName(name); if(!sh) return [];
+  var vals = sh.getDataRange().getValues(); if(vals.length < 2) return [];
+  var head = vals[0].map(function(h){ return String(h).trim(); });
+  var out = [];
+  for(var i=1;i<vals.length;i++){ var o={}; for(var j=0;j<head.length;j++){ o[head[j]] = vals[i][j]; } out.push(o); }
+  return out;
+}
+function _abrWriteTab(ss, name, header, rows){
+  var sh = ss.getSheetByName(name) || ss.insertSheet(name);
+  sh.clear();
+  sh.getRange(1,1,1,header.length).setValues([header]);
+  if(rows.length) sh.getRange(2,1,rows.length,header.length).setValues(rows);
+}
+function abrLoad(){
+  var ss = SpreadsheetApp.openById(ABRECHNUNG_SHEET_ID);
+  var meta = {};
+  var mSheet = ss.getSheetByName('Meta');
+  if(mSheet){ var mv = mSheet.getDataRange().getValues(); for(var i=1;i<mv.length;i++){ if(mv[i][0]) meta[String(mv[i][0]).trim()] = mv[i][1]; } }
+  return { ok:true, meta:meta,
+    einnahmen:_abrReadTab(ss,'Einnahmen'), ausgaben:_abrReadTab(ss,'Ausgaben'),
+    stock:_abrReadTab(ss,'Stock'), kasse:_abrReadTab(ss,'Kasse') };
+}
+function abrSave(p){
+  var ss = SpreadsheetApp.openById(ABRECHNUNG_SHEET_ID);
+  var meta = p.meta || {};
+  var mSheet = ss.getSheetByName('Meta') || ss.insertSheet('Meta');
+  mSheet.clear();
+  mSheet.getRange(1,1,6,2).setValues([
+    ['Schlüssel','Wert'],
+    ['Jahr', meta.jahr||''],
+    ['Vorjahr', meta.vorjahr||''],
+    ['EinnahmenKategorien', (meta.einKat||[]).join(', ')],
+    ['AusgabenKategorien', (meta.ausKat||[]).join(', ')],
+    ['VorjahrKasse', meta.vorjahrKasse||'']
+  ]);
+  _abrWriteTab(ss,'Einnahmen',['Nr','Kategorie','Beschreibung','Betrag','Vorjahr'],
+    (p.einnahmen||[]).map(function(r,i){ return [i+1, r.kat||'', r.besch||'', _abrNum(r.betrag), _abrNum(r.vorjahr)]; }));
+  _abrWriteTab(ss,'Ausgaben',['Nr','Zahlungsart','Beschreibung','Betrag','Vorjahr','Bemerkung'],
+    (p.ausgaben||[]).map(function(r,i){ return [i+1, r.art||'', r.besch||'', _abrNum(r.betrag), _abrNum(r.vorjahr), r.bem||'']; }));
+  _abrWriteTab(ss,'Stock',['Wert','Anzahl','Total'],
+    (p.stock||[]).map(function(r){ return [_abrNum(r.wert), _abrNum(r.anzahl), _abrNum(r.wert)*_abrNum(r.anzahl)]; }));
+  _abrWriteTab(ss,'Kasse',['Wert','Anzahl','Total'],
+    (p.kasse||[]).map(function(r){ return [_abrNum(r.wert), _abrNum(r.anzahl), _abrNum(r.wert)*_abrNum(r.anzahl)]; }));
+  return { ok:true };
 }
 
 function jsonResponse(obj) {
