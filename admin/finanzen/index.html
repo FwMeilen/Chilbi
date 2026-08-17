@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.122 -->
+<!-- Cl1.123 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -55,7 +55,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.122</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.123</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -336,7 +336,7 @@ function _rgDoc(r){
   const { jsPDF }=window.jspdf; const doc=new jsPDF({unit:'mm',format:'a4'});
   doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.text(String(FIN.rgAbsender||''),20,20); doc.setFont('helvetica','normal');
   try{ doc.addImage(RG_LOGO,'PNG',158,10,34,34); }catch(e){}
-  doc.setFontSize(11); let ey=45; (r.empfaenger||[]).forEach(l=>{ if(l){ doc.text(String(l),120,ey); ey+=5.5; } });
+  doc.setFontSize(11); let ey=52; (r.empfaenger||[]).forEach(l=>{ if(l){ doc.text(String(l),20,ey); ey+=5.5; } });
   let y=75; doc.text('Herrliberg, '+(r.datum||''),20,y);
   y=92; doc.setFont('helvetica','bold'); doc.text(String(r.betreff||''),20,y); doc.setFont('helvetica','normal');
   y=105; doc.text(String(r.anrede||''),20,y);
