@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.125 -->
+<!-- Cl1.126 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -55,7 +55,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.125</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.126</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -175,20 +175,45 @@ function ausTotalVor(){ return FIN.ausgaben.reduce((a,r)=>a+N(r.vorjahr),0); }
 
 function renderAll(){ renderAbrechnung(); renderEinnahmen(); renderAusgaben(); renderRechnungen(); renderDenom('stock'); renderDenom('kasse'); renderEinstellungen(); }
 
+function abrTog(id){ var d=document.getElementById('det-'+id), ic=document.getElementById('ico-'+id); if(!d) return; var open=d.style.display==='none'; d.style.display=open?'table-row':'none'; if(ic) ic.textContent=open?'▾':'▸'; }
 function renderAbrechnung(){
   const eJ=einTotal(),eV=einTotalVor(),aJ=ausTotal(),aV=ausTotalVor(),gJ=eJ-aJ,gV=eV-aV;
-  const rowT=(l,cur,prev,bold)=>`<tr style="${bold?'font-weight:700;':''}"><td>${l}</td><td class="num">CHF ${F(cur)}</td><td class="num muted">CHF ${F(prev)}</td><td class="num ${cur-prev>=0?'pos':'neg'}">${pct(cur,prev)}</td></tr>`;
+  const nb=nettoBar(), rs=rechnungenSum(), rc=FIN.rechnungen.length;
+  const fp=x=>(x*100).toFixed(1)+'%';
+  const pp=d=>(d>=0?'+':'')+(d*100).toFixed(1)+' pp';
+  const gr=x=>(x>=0?'+':'')+(x*100).toFixed(1)+'%';
+  const detRow=(l,c,p)=>`<tr><td style="padding-left:20px" class="muted">${esc(l)}</td><td class="num muted">CHF ${F(c)}</td><td class="num muted">${p!=null?'CHF '+F(p):'–'}</td><td></td></tr>`;
+  const einDet=[detRow('Kasse netto (Kasse − Stock)',nb,N(FIN.vorjahrKasse))]
+    .concat(FIN.rechnungen.map(r=>detRow(((r.empfaenger&&r.empfaenger[0])||r.betreff||'Rechnung')+' ('+r.nr+')',N(r.total),N(r.vorjahr)||null)))
+    .concat(FIN.einnahmen.map(r=>detRow((r.kat?r.kat+' – ':'')+(r.besch||''),N(r.betrag),N(r.vorjahr)||null))).join('');
+  const ausDet=FIN.ausgaben.length?FIN.ausgaben.map(r=>detRow((r.art?r.art+' – ':'')+(r.besch||''),N(r.betrag),N(r.vorjahr)||null)).join(''):detRow('keine Ausgaben',0,null);
+  const gvDet=detRow('Total Einnahmen',eJ,eV)+detRow('− Total Ausgaben',aJ,aV)+detRow('= Gewinn / Verlust',gJ,gV);
+  const head=(id,l,cur,prev,bold)=>`<tr style="cursor:pointer;${bold?'font-weight:700;':''}" onclick="abrTog('${id}')"><td><span id="ico-${id}" style="display:inline-block;width:14px;color:#999">▸</span>${l}</td><td class="num">CHF ${F(cur)}</td><td class="num muted">CHF ${F(prev)}</td><td class="num ${cur-prev>=0?'pos':'neg'}">${pct(cur,prev)}</td></tr><tr id="det-${id}" style="display:none"><td colspan="4" style="padding:0 0 8px"><table style="width:100%">${({ein:einDet,aus:ausDet,gv:gvDet})[id]}</table></td></tr>`;
+  const mJ=eJ?gJ/eJ:0, mV=eV?gV/eV:0, kJ=eJ?aJ/eJ:0, kV=eV?aV/eV:0;
+  const eGrow=eV?(eJ-eV)/eV:null, gGrow=gV?(gJ-gV)/Math.abs(gV):null, bar=eJ?nb/eJ:0, avg=rc?rs/rc:0;
+  const sollSet=N(FIN.stock.soll)>0||N(FIN.kasse.soll)>0, dTot=(istTotal('stock')-N(FIN.stock.soll))+(istTotal('kasse')-N(FIN.kasse.soll));
+  const tile=(l,v,sub,good)=>`<div style="border:1px solid var(--gray-mid);padding:12px"><div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.05em">${l}</div><div style="font-size:22px;font-weight:700;margin:3px 0">${v}</div><div class="${good==null?'muted':(good?'pos':'neg')}" style="font-size:12px">${sub}</div></div>`;
+  const kpis=[
+    tile('Gewinnmarge',fp(mJ),'Vorjahr '+fp(mV)+(eV?' · '+pp(mJ-mV):''),eV?mJ-mV>=0:null),
+    tile('Kostenquote',fp(kJ),'Vorjahr '+fp(kV)+(eV?' · '+pp(kJ-kV):''),eV?kJ-kV<=0:null),
+    tile('Einnahmen-Wachstum',eGrow==null?'–':gr(eGrow),'CHF '+F(eJ)+' vs. '+F(eV),eGrow==null?null:eGrow>=0),
+    tile('Gewinn-Wachstum',gGrow==null?'–':gr(gGrow),'CHF '+F(gJ)+' vs. '+F(gV),gGrow==null?null:gGrow>=0),
+    tile('Bar-Anteil',fp(bar),'CHF '+F(nb)+' bar von '+F(eJ),null),
+    tile('Ø pro Rechnung',rc?'CHF '+F(avg):'–',rc+' Rechnung(en) · total CHF '+F(rs),null),
+    tile('Bargeld-Differenz',sollSet?'CHF '+F(dTot):'–',sollSet?(Math.abs(dTot)<0.005?'stimmt mit Soll':'Abweichung – prüfen'):'kein Soll erfasst',sollSet?Math.abs(dTot)<0.005:null)
+  ].join('');
   document.getElementById('sec-abrechnung').innerHTML=`
-    <div class="card"><div class="card-title">Abrechnung ${esc(FIN.jahr)} <span class="muted" style="font-weight:400;font-size:12px;">(nur Ansicht)</span></div>
+    <div class="card"><div class="card-title">Abrechnung ${esc(FIN.jahr)} <span class="muted" style="font-weight:400;font-size:12px;">· Zeile antippen für Details</span></div>
     <table><thead><tr><th></th><th class="num">${esc(FIN.jahr)}</th><th class="num">Vorjahr ${esc(FIN.vorjahr)}</th><th class="num">% Diff.</th></tr></thead><tbody>
-    <tr><td class="muted">davon Kasse netto (Kasse − Stock)</td><td class="num muted">CHF ${F(nettoBar())}</td><td class="num muted">CHF ${F(N(FIN.vorjahrKasse))}</td><td></td></tr>
-    <tr><td class="muted">davon Rechnungen (${FIN.rechnungen.length})</td><td class="num muted">CHF ${F(rechnungenSum())}</td><td class="num muted"></td><td></td></tr>
-    ${rowT('Total Einnahmen',eJ,eV,false)}${rowT('Total Ausgaben',aJ,aV,false)}${rowT('Gewinn / Verlust',gJ,gV,true)}
+    ${head('ein','Total Einnahmen',eJ,eV,false)}${head('aus','Total Ausgaben',aJ,aV,false)}${head('gv','Gewinn / Verlust',gJ,gV,true)}
     </tbody></table></div>
     <div class="card"><div class="card-title">Bar</div>
       <div class="kv"><span>Stock (Ist)</span><span>CHF ${F(istTotal('stock'))}</span></div>
       <div class="kv"><span>Kasse (Ist)</span><span>CHF ${F(istTotal('kasse'))}</span></div>
-      <div class="kv total"><span>Netto-Bareinnahme</span><span>CHF ${F(nettoBar())}</span></div>
+      <div class="kv total"><span>Netto-Bareinnahme</span><span>CHF ${F(nb)}</span></div>
+    </div>
+    <div class="card"><div class="card-title">Kennzahlen ${esc(FIN.jahr)}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px">${kpis}</div>
     </div>`;
 }
 
