@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="app-version" content="Cl1.147">
+<meta name="app-version" content="Cl1.148">
 <script>
 (function(){var el=document.querySelector('meta[name="app-version"]');var RUN=el?el.content:'';fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/name="app-version" content="([^"]+)"/);if(m&&RUN&&m[1]!==RUN){var tg='v='+encodeURIComponent(m[1]);if(location.search.indexOf(tg)===-1){location.replace(location.pathname+'?'+tg);}}}).catch(function(){});})();
 </script>
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.147 -->
+<!-- Cl1.148 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -56,6 +56,9 @@
   .detrow{display:none;}
   .detrow.show{display:table-row;}
   .detrow.db{font-weight:700;}
+  .kpi-i{position:absolute;top:8px;right:9px;width:15px;height:15px;border:1px solid #bbb;border-radius:50%;color:#999;font-size:10px;line-height:14px;text-align:center;cursor:help;font-family:Georgia,serif;font-style:italic;}
+  .kpi-i:hover{border-color:#888;color:#555;}
+  .kpi-i:hover::after{content:attr(data-tip);position:absolute;top:19px;right:-2px;width:180px;background:#1a1a1a;color:#fff;font-size:11px;font-style:normal;font-family:Arial,sans-serif;font-weight:400;line-height:1.35;text-align:left;padding:7px 9px;border-radius:4px;z-index:20;box-shadow:0 2px 10px rgba(0,0,0,.25);}
 </style>
 </head>
 <body>
@@ -70,7 +73,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.147</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.148</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -221,14 +224,14 @@ function renderAbrechnung(){
   const eGrow=eV?(eJ-eV)/eV:null, gGrow=gV?(gJ-gV)/Math.abs(gV):null, bar=eJ?nb/eJ:0, avg=rc?rs/rc:0;
   const sollSet=N(FIN.stock.soll)>0||N(FIN.kasse.soll)>0, dTot=(istTotal('stock')-N(FIN.stock.soll))+(istTotal('kasse')-N(FIN.kasse.soll));
   const twintAmt=FIN.einnahmen.reduce((a,r)=>a+(/twint/i.test(r.kat||'')?N(r.betrag):0),0), tb=twintAmt+nb;
-  const ctile=(l,chart,v,sub,good)=>`<div style="border:1px solid var(--gray-mid);padding:10px 12px"><div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">${l}</div>${chart}<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:7px"><span style="font-size:13px;font-weight:700">${v}</span><span class="${good==null?'muted':(good?'pos':'neg')}" style="font-size:10px">${sub}</span></div></div>`;
+  const ctile=(l,chart,v,sub,good,tip)=>`<div style="border:1px solid var(--gray-mid);padding:10px 12px;position:relative">${tip?`<span class="kpi-i" data-tip="${esc(tip)}">i</span>`:''}<div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px;padding-right:16px">${l}</div>${chart}<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:7px"><span style="font-size:13px;font-weight:700">${v}</span><span class="${good==null?'muted':(good?'pos':'neg')}" style="font-size:10px">${sub}</span></div></div>`;
   const kpis=[
-    ctile('Gewinnmarge',_svgBar(mJ,mJ>=0?'#0a8f38':'#cc0000'),fp(mJ),'VJ '+fp(mV)+(eV?' · '+pp(mJ-mV):''),eV?mJ-mV>=0:null),
-    ctile('Kostenquote',_svgBar(kJ,'#e08a00'),fp(kJ),'VJ '+fp(kV),eV?kJ-kV<=0:null),
-    ctile('Einnahmen-Wachstum',_svgPair(eV,eJ,'#0a8f38'),eGrow==null?'–':gr(eGrow),'CHF '+F(eJ),eGrow==null?null:eGrow>=0),
-    ctile('Gewinn-Wachstum',_svgPair(gV,gJ,gJ>=0?'#0a8f38':'#cc0000'),gGrow==null?'–':gr(gGrow),'CHF '+F(gJ),gGrow==null?null:gGrow>=0),
-    ctile('Bar-Anteil',_svgBar(bar,'#2f6bd6'),fp(bar),'CHF '+F(nb),null),
-    ctile('TWINT vs. Bar',_svgSplit(twintAmt,nb,'#2f6bd6','#0a8f38'),tb?fp(twintAmt/tb)+' / '+fp(nb/tb):'–','● TWINT  ● Bar',null),
+    ctile('Gewinnmarge',_svgBar(mJ,mJ>=0?'#0a8f38':'#cc0000'),fp(mJ),'VJ '+fp(mV)+(eV?' · '+pp(mJ-mV):''),eV?mJ-mV>=0:null,'Gewinn geteilt durch Einnahmen – wie viel vom Umsatz als Gewinn übrig bleibt.'),
+    ctile('Kostenquote',_svgBar(kJ,'#e08a00'),fp(kJ),'VJ '+fp(kV),eV?kJ-kV<=0:null,'Ausgaben geteilt durch Einnahmen – wie viel vom Umsatz die Kosten ausmachen.'),
+    ctile('Einnahmen-Wachstum',_svgPair(eV,eJ,'#0a8f38'),eGrow==null?'–':gr(eGrow),'CHF '+F(eJ),eGrow==null?null:eGrow>=0,'Veränderung der Einnahmen gegenüber dem Vorjahr.'),
+    ctile('Gewinn-Wachstum',_svgPair(gV,gJ,gJ>=0?'#0a8f38':'#cc0000'),gGrow==null?'–':gr(gGrow),'CHF '+F(gJ),gGrow==null?null:gGrow>=0,'Veränderung des Gewinns gegenüber dem Vorjahr.'),
+    ctile('Bar-Anteil',_svgBar(bar,'#2f6bd6'),fp(bar),'CHF '+F(nb),null,'Anteil der Bareinnahmen (Kasse netto) an den gesamten Einnahmen.'),
+    ctile('TWINT vs. Bar',_svgSplit(twintAmt,nb,'#2f6bd6','#0a8f38'),tb?fp(twintAmt/tb)+' / '+fp(nb/tb):'–','● TWINT  ● Bar',null,'Verhältnis der TWINT-Einnahmen zu den Bareinnahmen.'),
   ].join('');
   const _otS=_otR.reduce((a,r)=>a+N(r.betrag),0);
   const einSegs=[{label:'Bar (Kasse netto)',value:nb,color:'#0a8f38'},{label:'TWINT',value:twintAmt,color:'#2f6bd6'},{label:'Rechnungen',value:rs,color:'#8b5cf6'},{label:'Andere',value:_otS,color:'#e08a00'}].filter(s=>s.value>0.005);
