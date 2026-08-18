@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="app-version" content="Cl1.154">
+<meta name="app-version" content="Cl1.155">
 <script>
 (function(){var el=document.querySelector('meta[name="app-version"]');var RUN=el?el.content:'';fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/name="app-version" content="([^"]+)"/);if(m&&RUN&&m[1]!==RUN){var tg='v='+encodeURIComponent(m[1]);if(location.search.indexOf(tg)===-1){location.replace(location.pathname+'?'+tg);}}}).catch(function(){});})();
 </script>
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.154 -->
+<!-- Cl1.155 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -76,7 +76,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.154</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.155</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -545,37 +545,37 @@ async function _doSave(payload,label){
   try{ await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)}); _lastSnap=_snap(); status((label||'✓ Gespeichert')+' · '+new Date().toLocaleTimeString('de-CH')); }
   catch(e){ status('Speicherfehler: '+e.message); }
 }
-const SP_DEF={portProKiste:'35',kisteProKuebel:'1',rezepteProKuebel:'1.2',eierProLiter:'20',speckProPortion:'80',kaeseProPortion:'40'};
+const SP_DEF={mehl:'5',ei:'2.5',wasser:'2.25',salz:'105',muskat:'15',portProKiste:'35',kisteProKuebel:'1',rezepteProKuebel:'1.2',eierProLiter:'20',speckProPortion:'80',kaeseProPortion:'40'};
 function fmtW(g){ g=g||0; if(g>=1e6) return (g/1e6).toFixed(2).replace(/\.00$/,'')+' t'; if(g>=1000) return (g/1000).toFixed(2).replace(/\.00$/,'')+' kg'; return Math.round(g)+' g'; }
 function fmtL(l){ l=l||0; return l.toFixed(2).replace(/\.00$/,'')+' l'; }
-var spState={mode:'kuebel', kuebel:'1', kisten:'', portionen:''};
+var spState={mode:'kuebel', kuebel:'1', portionen:'', kisten:''};
 function spTog(id){ var b=document.getElementById('spbx-'+id), ic=document.getElementById('spic-'+id); if(!b) return; var open=b.style.display!=='none'; b.style.display=open?'none':'block'; if(ic) ic.textContent=open?'▸':'▾'; }
 function spSet(mode,val){
-  spState.mode=mode; spState.kuebel=''; spState.kisten=''; spState.portionen=''; spState[mode]=val;
-  var active = mode==='portionen'?'sp-in-port':'sp-in-'+mode;
-  ['sp-in-kuebel','sp-in-kisten','sp-in-port'].forEach(function(id){ if(id!==active){ var el=document.getElementById(id); if(el) el.value=''; } });
+  spState.mode=mode; spState.kuebel=''; spState.portionen=''; spState.kisten=''; spState[mode]=val;
+  var map={kuebel:'sp-in-kuebel',portionen:'sp-in-port',kisten:'sp-in-kisten'};
+  Object.keys(map).forEach(function(k){ if(k!==mode){ var el=document.getElementById(map[k]); if(el) el.value=''; } });
   spCalc();
 }
 function spCalc(){
   var sp=FIN.sp, ppk=N(sp.portProKiste)*N(sp.kisteProKuebel), rpk=N(sp.rezepteProKuebel)||1, kpk=N(sp.kisteProKuebel);
   var kuebelExact;
-  if(spState.mode==='portionen') kuebelExact = ppk>0 ? N(spState.portionen)/ppk : 0;
-  else if(spState.mode==='kisten') kuebelExact = kpk>0 ? N(spState.kisten)/kpk : 0;
-  else kuebelExact = N(spState.kuebel);
+  if(spState.mode==='portionen'){ kuebelExact = ppk>0?N(spState.portionen)/ppk:0; }
+  else if(spState.mode==='kisten'){ kuebelExact = kpk>0?N(spState.kisten)/kpk:0; }
+  else { kuebelExact = N(spState.kuebel); }
   var kuebel=Math.ceil(kuebelExact*2)/2; if(!(kuebel>0)) kuebel=0;
   var portions=Math.round(kuebel*ppk), rezepte=rpk*kuebel, kisten=kuebel*kpk;
   var mehlG=N(sp.mehl)*1000*rezepte, salzG=N(sp.salz)*rezepte, muskatG=N(sp.muskat)*rezepte;
   var eiL=N(sp.ei)*rezepte, wasserL=N(sp.wasser)*rezepte, eier=Math.ceil(eiL*N(sp.eierProLiter));
   var speckG=N(sp.speckProPortion)*portions, boelleG=speckG/2, kaeseG=N(sp.kaeseProPortion)*portions;
-  var rest = (Math.abs(kuebelExact-kuebel)>0.001) ? `<div class="muted" style="font-size:11px;margin-top:4px">aufgerundet von ${kuebelExact.toFixed(2)} Kübel</div>` : '';
+  var rest = (Math.abs(kuebelExact-kuebel)>0.001 && kuebelExact>0) ? `<div class="muted" style="font-size:11px;margin-top:4px">aufgerundet von ${kuebelExact.toFixed(2)} Kübel</div>` : '';
   var row=(l,v)=>`<div class="kv"><span>${l}</span><span>${v}</span></div>`;
   var out=document.getElementById('sp-out');
   if(out) out.innerHTML=`
     <div style="font-weight:700;margin-bottom:4px">Zutaten</div>
     ${row('Mehl',fmtW(mehlG))}${row('Eier',eier+' Stück')}${row('Wasser',fmtL(wasserL))}${row('Salz',fmtW(salzG))}${row('Muskat',fmtW(muskatG))}
     <div class="kv total"><span>Kübel</span><span>${kuebel}</span></div>
-    <div class="kv total"><span>Migros-Kisten</span><span>${Math.round(kisten*10)/10}</span></div>
-    <div class="kv total"><span>Rezepte</span><span>${Math.round(rezepte*10)/10}</span></div>
+    <div class="kv total"><span>Rezepte</span><span>${(Math.round(rezepte*10)/10)}</span></div>
+    <div class="kv total"><span>Migros-Kisten</span><span>${(Math.round(kisten*10)/10)}</span></div>
     <div class="kv total"><span>Portionen</span><span>${portions}</span></div>
     ${rest}
     <div style="font-weight:700;margin:14px 0 4px">Braten</div>
@@ -586,14 +586,14 @@ function spCalc(){
 }
 function renderSpaetzli(){
   var sp=FIN.sp;
-  var ri=(k,unit)=>`<input class="in num" style="width:80px;display:inline-block" value="${esc(sp[k])}" oninput="FIN.sp.${k}=this.value;spCalc()"> ${unit}`;
+  var ri=(k,unit)=>`<input class="in num" style="width:80px;display:inline-block" value="${esc(sp[k])}" oninput="FIN.sp.${k}=this.value;spCalc()"> ${unit} <span class="muted" style="font-size:11px;margin-left:6px">Standard ${SP_DEF[k]}</span>`;
   var sset=(k,label)=>`<label class="fld" style="max-width:340px">${label}<span style="display:flex;align-items:center;gap:10px;margin-top:3px"><input class="in num" style="margin-top:0;width:auto;flex:1" value="${esc(sp[k])}" oninput="FIN.sp.${k}=this.value;spCalc()"><span class="muted" style="font-size:11px;white-space:nowrap">Standard ${SP_DEF[k]}</span></span></label>`;
   document.getElementById('sec-spaetzli').innerHTML=`
     <div class="card" style="border-top:3px solid #e91e63">
       <div class="card-title" style="cursor:pointer;color:#c2185b" onclick="spTog('rezept')"><span id="spic-rezept">▸</span> Rezept</div>
       <div id="spbx-rezept" style="display:none">
         <div style="font-weight:600;margin-bottom:8px">Rezept Spätzli (1 Rezept)</div>
-        <div style="line-height:2.1">
+        <div style="line-height:2.4">
           ${ri('mehl','kg Mehl')}<br>${ri('ei','l Ei')}<br>${ri('wasser','l Wasser')}<br>${ri('salz','g Salz')}<br>${ri('muskat','g Muskat')}
         </div>
         <div class="muted" style="font-size:12px;margin-top:12px;line-height:1.7">
@@ -608,10 +608,10 @@ function renderSpaetzli(){
     <div class="card" style="border-top:3px solid #e91e63">
       <div class="card-title" style="cursor:pointer;color:#c2185b" onclick="spTog('rechner')"><span id="spic-rechner">▸</span> Rechner</div>
       <div id="spbx-rechner" style="display:none">
-        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px">
           <label class="fld" style="width:150px">Anzahl Kübel<input id="sp-in-kuebel" class="in num" value="${esc(spState.kuebel)}" oninput="spSet('kuebel',this.value)"></label>
-          <label class="fld" style="width:150px">Anzahl Migros-Kisten<input id="sp-in-kisten" class="in num" value="${esc(spState.kisten)}" oninput="spSet('kisten',this.value)"></label>
-          <label class="fld" style="width:150px">Anzahl Portionen<input id="sp-in-port" class="in num" value="${esc(spState.portionen)}" oninput="spSet('portionen',this.value)"></label>
+          <label class="fld" style="width:150px">oder Anzahl Portionen<input id="sp-in-port" class="in num" value="${esc(spState.portionen)}" oninput="spSet('portionen',this.value)"></label>
+          <label class="fld" style="width:150px">oder Anzahl Migros-Kisten<input id="sp-in-kisten" class="in num" value="${esc(spState.kisten)}" oninput="spSet('kisten',this.value)"></label>
         </div>
         <div id="sp-out"></div>
       </div>
