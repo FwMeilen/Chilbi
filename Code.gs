@@ -439,13 +439,14 @@ function abrSave(p){
   var meta = p.meta || {};
   var mSheet = ss.getSheetByName('Meta') || ss.insertSheet('Meta');
   mSheet.clear();
-  mSheet.getRange(1,1,16,2).setValues([
+  mSheet.getRange(1,1,17,2).setValues([
     ['Schlüssel','Wert'],
     ['Jahr', meta.jahr||''],
     ['Vorjahr', meta.vorjahr||''],
     ['VorjahrKasse', meta.vorjahrKasse||''],
     ['EinnahmenKategorien', (meta.einKat||[]).join(', ')],
     ['AusgabenKategorien', (meta.ausKat||[]).join(', ')],
+    ['KostenKategorien', (meta.kostKat||[]).join(', ')],
     ['SollStock', meta.sollStock||''],
     ['SollKasse', meta.sollKasse||''],
     ['MuenzProRolle', meta.muenzProRolle||''],
@@ -459,8 +460,8 @@ function abrSave(p){
   ]);
   _abrWriteTab(ss,'Einnahmen',['Nr','Kategorie','Beschreibung','Betrag','Vorjahr'],
     (p.einnahmen||[]).map(function(r,i){ return [i+1, r.kat||'', r.besch||'', _abrNum(r.betrag), _abrNum(r.vorjahr)]; }));
-  _abrWriteTab(ss,'Ausgaben',['Nr','Zahlungsart','Beschreibung','Betrag','Vorjahr','Bemerkung','Vorschuss','Zurueckbezahlt'],
-    (p.ausgaben||[]).map(function(r,i){ return [i+1, r.art||'', r.besch||'', _abrNum(r.betrag), _abrNum(r.vorjahr), r.bem||'', r.vorschuss?1:'', r.rueck?1:'']; }));
+  _abrWriteTab(ss,'Ausgaben',['Nr','Zahlungsart','Beschreibung','Betrag','Vorjahr','Bemerkung','Kostenart','Vorschuss','Zurueckbezahlt'],
+    (p.ausgaben||[]).map(function(r,i){ return [i+1, r.art||'', r.besch||'', _abrNum(r.betrag), _abrNum(r.vorjahr), r.bem||'', r.kostenart||'', r.vorschuss?1:'', r.rueck?1:'']; }));
   _abrWriteTab(ss,'Stock',['Wert','Einzeln','Rollen'],
     (p.stock||[]).map(function(r){ return [_abrNum(r.wert), _abrNum(r.einzeln), _abrNum(r.rollen)]; }));
   _abrWriteTab(ss,'Kasse',['Wert','Einzeln','Rollen'],
