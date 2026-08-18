@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="app-version" content="Cl1.150">
+<meta name="app-version" content="Cl1.151">
 <script>
 (function(){var el=document.querySelector('meta[name="app-version"]');var RUN=el?el.content:'';fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/name="app-version" content="([^"]+)"/);if(m&&RUN&&m[1]!==RUN){var tg='v='+encodeURIComponent(m[1]);if(location.search.indexOf(tg)===-1){location.replace(location.pathname+'?'+tg);}}}).catch(function(){});})();
 </script>
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.150 -->
+<!-- Cl1.151 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -73,7 +73,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.150</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.151</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -105,6 +105,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9sKAjkwW-0IZlQUD4h
 const NOTEN = [1000,200,100,50,20,10];
 const MUENZ = [5,2,1,0.5,0.2,0.1,0.05];
 let PW = '';
+let VIEW_ONLY=false;
 let FIN = {
   jahr:'2026', vorjahr:'2025', vorjahrKasse:'',
   einKat:['TWINT','Rechnung'], ausKat:['Bar','Rechnung'], kostKat:['Getränke','Lebensmittel','Material','Diverses'],
@@ -136,12 +137,12 @@ async function unlock(){
     const res=await fetch(SCRIPT_URL+'?action=abrLoad&pw='+encodeURIComponent(pw));
     const data=await res.json();
     if(!data||!data.ok){ err.textContent='Falsches Passwort.'; err.style.display='block'; b.disabled=false; b.textContent='Entsperren'; return; }
-    PW=pw; applyData(data);
+    PW=pw; VIEW_ONLY=!!data.readonly; applyData(data);
     document.getElementById('gate').style.display='none';
     document.getElementById('app').style.display='block';
     renderAll();
     _lastSnap=_snap();
-    if(!_autoTimer) _autoTimer=setInterval(autoSave,60000);
+    if(VIEW_ONLY){ applyViewMode(); } else if(!_autoTimer){ _autoTimer=setInterval(autoSave,60000); }
   }catch(e){ err.textContent='Verbindungsfehler: '+e.message; err.style.display='block'; b.disabled=false; b.textContent='Entsperren'; }
 }
 function applyData(data){
@@ -179,6 +180,12 @@ function go(sec,btn){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
   if(btn) btn.classList.add('active');
   document.getElementById('sec-'+sec).classList.add('active');
+}
+function applyViewMode(){
+  document.querySelectorAll('.menu button').forEach(function(b){ if(b.dataset.s!=='abrechnung') b.style.display='none'; });
+  var sv=document.querySelector('header button[onclick="saveAll()"]'); if(sv) sv.style.display='none';
+  var ab=document.querySelector('.menu button[data-s="abrechnung"]'); go('abrechnung',ab);
+  status('Nur-Ansicht-Modus');
 }
 
 function rolleStk(w){ return N(FIN.muenzProRolle[String(w)])||0; }
@@ -531,8 +538,8 @@ async function _doSave(payload,label){
   try{ await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)}); _lastSnap=_snap(); status((label||'✓ Gespeichert')+' · '+new Date().toLocaleTimeString('de-CH')); }
   catch(e){ status('Speicherfehler: '+e.message); }
 }
-async function saveAll(){ status('Speichere…'); await _doSave(_buildPayload()); }
-async function autoSave(){ if(!PW) return; if(_snap()===_lastSnap) return; await _doSave(_buildPayload(),'✓ Auto-gespeichert'); }
+async function saveAll(){ if(VIEW_ONLY) return; status('Speichere…'); await _doSave(_buildPayload()); }
+async function autoSave(){ if(VIEW_ONLY||!PW) return; if(_snap()===_lastSnap) return; await _doSave(_buildPayload(),'✓ Auto-gespeichert'); }
 </script>
 </body>
 </html>
