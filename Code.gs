@@ -441,7 +441,7 @@ function abrSave(p){
   var meta = p.meta || {};
   var mSheet = ss.getSheetByName('Meta') || ss.insertSheet('Meta');
   mSheet.clear();
-  mSheet.getRange(1,1,17,2).setValues([
+  mSheet.getRange(1,1,18,2).setValues([
     ['Schlüssel','Wert'],
     ['Jahr', meta.jahr||''],
     ['Vorjahr', meta.vorjahr||''],
@@ -452,6 +452,7 @@ function abrSave(p){
     ['SollStock', meta.sollStock||''],
     ['SollKasse', meta.sollKasse||''],
     ['MuenzProRolle', meta.muenzProRolle||''],
+    ['Spaetzli', meta.spaetzli||''],
     ['RgAbsender', meta.rgAbsender||''],
     ['RgIntro', meta.rgIntro||''],
     ['RgVorPos', meta.rgVorPos||''],
