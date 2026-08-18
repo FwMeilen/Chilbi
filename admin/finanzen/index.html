@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="app-version" content="Cl1.146">
+<meta name="app-version" content="Cl1.147">
 <script>
 (function(){var el=document.querySelector('meta[name="app-version"]');var RUN=el?el.content:'';fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/name="app-version" content="([^"]+)"/);if(m&&RUN&&m[1]!==RUN){var tg='v='+encodeURIComponent(m[1]);if(location.search.indexOf(tg)===-1){location.replace(location.pathname+'?'+tg);}}}).catch(function(){});})();
 </script>
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.146 -->
+<!-- Cl1.147 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -70,7 +70,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.146</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.147</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -163,7 +163,7 @@ function applyData(data){
   FIN.stock.noten={}; FIN.stock.muenz={}; FIN.kasse.noten={}; FIN.kasse.muenz={};
   (data.stock||[]).forEach(r=>{ const w=N(r.Wert); if(w>=10) FIN.stock.noten[w]=String(r.Einzeln||''); else FIN.stock.muenz[w]={einzeln:String(r.Einzeln||''),rollen:String(r.Rollen||'')}; });
   (data.kasse||[]).forEach(r=>{ const w=N(r.Wert); if(w>=10) FIN.kasse.noten[w]=String(r.Einzeln||''); else FIN.kasse.muenz[w]={einzeln:String(r.Einzeln||''),rollen:String(r.Rollen||'')}; });
-  FIN.rechnungen=(data.rechnungen||[]).map(r=>{ let o={}; try{ o=JSON.parse(r.JSON||'{}'); }catch(e){} return Object.assign({nr:String(r.Nr||''),datum:String(r.Datum||''),email:String(r.Email||''),betreff:String(r.Betreff||''),total:N(r.Total),vorjahr:'',empfaenger:[],positionen:[],intro:''},o); });
+  FIN.rechnungen=(data.rechnungen||[]).map(r=>{ let o={}; try{ o=JSON.parse(r.JSON||'{}'); }catch(e){} return Object.assign({nr:String(r.Nr||''),datum:String(r.Datum||''),email:String(r.Email||''),betreff:String(r.Betreff||''),total:N(r.Total),vorjahr:'',empfaenger:[],positionen:[],intro:'',abgeschlossen:false},o); });
 }
 async function loadAll(){
   try{ const res=await fetch(SCRIPT_URL+'?action=abrLoad&pw='+encodeURIComponent(PW)); const data=await res.json(); if(data&&data.ok){ applyData(data); renderAll(); status('Neu geladen.'); } }
@@ -212,7 +212,7 @@ function renderAbrechnung(){
   const _twS=_twR.reduce((a,r)=>a+N(r.betrag),0), _twV=_twR.reduce((a,r)=>a+N(r.vorjahr),0);
   const einDet=detRow('ein','Kasse netto (Kasse − Stock)',nb,N(FIN.vorjahrKasse),true)
     +detRow('ein','TWINT',_twS,_twV||null,true)
-    +FIN.rechnungen.map(r=>detRow('ein',((r.empfaenger&&r.empfaenger[0])||r.betreff||'Rechnung')+' ('+r.nr+')',N(r.total),N(r.vorjahr)||null)).join('')
+    +FIN.rechnungen.map(r=>detRow('ein',((r.empfaenger&&r.empfaenger[0])||r.betreff||'Rechnung')+' ('+r.nr+')'+(r.abgeschlossen?'':' — DRAFT'),N(r.total),N(r.vorjahr)||null)).join('')
     +_otR.map(r=>detRow('ein',(r.kat?r.kat+' – ':'')+(r.besch||''),N(r.betrag),N(r.vorjahr)||null)).join('');
   const _ausR=FIN.ausgaben.filter(r=>!/r[üu]ckzahlung/i.test(r.art||'')); const ausDet=_ausR.length?_ausR.map(r=>detRow('aus',(r.besch||'(ohne Bezeichnung)'),N(r.betrag),N(r.vorjahr)||null,false,true)).join(''):detRow('aus','keine Ausgaben',0,null,false,true);
   const gvDet=detRow('gv','Total Einnahmen',eJ,eV)+detRow('gv','− Total Ausgaben',aJ,aV,false,true)+detRow('gv','= Gewinn / Verlust',gJ,gV);
@@ -353,14 +353,17 @@ function denomRecalc(side){
   renderAbrechnung(); renderEinTot();
 }
 
+function rgClose(i){ var r=FIN.rechnungen[i]; if(!r) return; if(!confirm('Rechnung '+r.nr+' abschliessen? Danach ist sie nicht mehr bearbeitbar.')) return; r.abgeschlossen=true; renderRechnungen(); renderEinnahmen(); renderAbrechnung(); status('Rechnung '+r.nr+' abgeschlossen.'); }
+function rgUnlockAll(){ var p=prompt('Passwort zum Freigeben ALLER Rechnungen:'); if(p===null) return; if(p!==PW){ alert('Falsches Passwort.'); return; } FIN.rechnungen.forEach(function(r){ r.abgeschlossen=false; }); renderRechnungen(); renderEinnahmen(); renderAbrechnung(); status('Alle Rechnungen wieder freigegeben.'); }
 function renderRechnungen(){
   const list=FIN.rechnungen.map((r,i)=>`<tr>
-    <td>${esc(r.nr)}</td><td>${esc(r.datum)}</td><td>${esc((r.empfaenger&&r.empfaenger[0])||r.betreff||'')}</td>
+    <td>${esc(r.nr)}${r.abgeschlossen?'':' <span style="font-size:9px;background:#e08a00;color:#fff;padding:1px 5px;border-radius:2px;vertical-align:middle;font-weight:700">DRAFT</span>'}</td><td>${esc(r.datum)}</td><td>${esc((r.empfaenger&&r.empfaenger[0])||r.betreff||'')}</td>
     <td class="num">CHF ${F(r.total)}</td>
     <td style="white-space:nowrap">
-      <button class="btn btn-sm" style="height:26px" onclick="rgEdit(${i})">Öffnen</button>
+      ${r.abgeschlossen?'<span class="muted" style="font-size:11px;margin-right:6px">✓ abgeschlossen</span>':`<button class="btn btn-sm" style="height:26px" onclick="rgEdit(${i})">Öffnen</button>`}
       <button class="btn btn-sm" style="height:26px" onclick="rgPdf(${i})">PDF</button>
       <button class="btn btn-sm" style="height:26px" onclick="rgSend(${i})">Senden</button>
+      ${r.abgeschlossen?'':`<button class="btn btn-sm btn-red" style="height:26px" onclick="rgClose(${i})">Abschliessen</button>`}
     </td></tr>`).join('');
   document.getElementById('sec-rechnungen').innerHTML=`
     <div class="card"><div class="card-title">Rechnungen <span class="muted" style="font-weight:400;font-size:12px;">· fliessen automatisch in die Einnahmen</span></div>
@@ -371,10 +374,10 @@ function renderRechnungen(){
 }
 function _blankRg(){
   const nr='R'+FIN.jahr+'-'+String(FIN.rgNext).padStart(3,'0');
-  return { nr, datum:new Date().toLocaleDateString('de-CH'), empfaenger:['','','',''], email:'', betreff:'Abrechnung Lunch an der Chilbi Herrliberg', anrede:'Sehr geehrte Damen und Herren', intro:FIN.rgIntro, positionen:[{anzahl:'',text:'',preis:''}], total:0, vorjahr:'', _new:true };
+  return { nr, datum:new Date().toLocaleDateString('de-CH'), empfaenger:['','','',''], email:'', betreff:'Abrechnung Lunch an der Chilbi Herrliberg', anrede:'Sehr geehrte Damen und Herren', intro:FIN.rgIntro, positionen:[{anzahl:'',text:'',preis:''}], total:0, vorjahr:'', abgeschlossen:false, _new:true };
 }
 function rgNew(){ _rgCur=_blankRg(); renderRgForm(); }
-function rgEdit(i){ _rgCur=JSON.parse(JSON.stringify(FIN.rechnungen[i])); _rgCur._idx=i; if(!_rgCur.empfaenger||!_rgCur.empfaenger.length)_rgCur.empfaenger=['','','','']; if(!_rgCur.positionen||!_rgCur.positionen.length)_rgCur.positionen=[{anzahl:'',text:'',preis:''}]; if(!_rgCur.anrede)_rgCur.anrede='Sehr geehrte Damen und Herren'; renderRgForm(); }
+function rgEdit(i){ if(FIN.rechnungen[i]&&FIN.rechnungen[i].abgeschlossen){ alert('Diese Rechnung ist abgeschlossen und kann nicht mehr bearbeitet werden.'); return; } _rgCur=JSON.parse(JSON.stringify(FIN.rechnungen[i])); _rgCur._idx=i; if(!_rgCur.empfaenger||!_rgCur.empfaenger.length)_rgCur.empfaenger=['','','','']; if(!_rgCur.positionen||!_rgCur.positionen.length)_rgCur.positionen=[{anzahl:'',text:'',preis:''}]; if(!_rgCur.anrede)_rgCur.anrede='Sehr geehrte Damen und Herren'; renderRgForm(); }
 function rgPosTotal(){ return (_rgCur.positionen||[]).reduce((a,p)=>a+N(p.anzahl)*N(p.preis),0); }
 function renderRgForm(){
   if(!_rgCur){ document.getElementById('rgForm').innerHTML=''; return; }
@@ -504,6 +507,7 @@ function renderEinstellungen(){
     <label class="fld">Gruss / OK-Namen<textarea class="in" style="height:60px" oninput="FIN.rgGruss=this.value">${esc(FIN.rgGruss)}</textarea></label>
     <label class="fld">Fusszeile<input class="in" value="${esc(FIN.rgFooter)}" oninput="FIN.rgFooter=this.value"></label>
     <label class="fld" style="width:200px">Nächste Rechnungsnummer (lfd.)<input class="in num" value="${esc(FIN.rgNext)}" oninput="FIN.rgNext=parseInt(this.value)||1"></label>
+    <div style="margin-top:6px"><button class="btn btn-sm" onclick="rgUnlockAll()">Alle Rechnungen freigeben (Passwort)</button></div>
     </div>`;
 }
 
