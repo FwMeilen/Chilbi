@@ -1,6 +1,6 @@
 // ============================================================
 // Chilbi Herrliberg – Schichtplanung Backend
-// Google Apps Script  |  Cl1.152
+// Google Apps Script  |  Cl1.153
 // Schema Konfiguration: ID|Datum|Von|Bis|Schicht|Aufgabe|Max Personen|Farbe|Informationen|Geschlossen
 // Schema Anmeldungen:   ID|Name|Schicht|Aufgabe|Timestamp
 // Schema Tage:          Datum|Typ
@@ -50,6 +50,10 @@ function doPost(e) {
       return jsonResponse(saveFeuerwehren(p.rows));
     }
     if (p.action === 'gutscheinMail')      return jsonResponse(gutscheinMail(p));
+    if (p.action === 'kuerzelSave') {
+      if (p.password !== ADMIN_PW) return jsonResponse({ ok: false, error: 'Falsches Passwort' });
+      return jsonResponse(kuerzelSave(p));
+    }
     if (p.action === 'sendeSchichtMails') {
       if (p.password !== ADMIN_PW) return jsonResponse({ ok: false, error: 'Falsches Passwort' });
       return jsonResponse(sendeSchichtMails(p));
@@ -480,6 +484,17 @@ function rechnungMail(p){
   return { ok:true };
 }
 
+function kuerzelSave(p){
+  _kzWrite(SS_KUERZEL,'Tabellenblatt1',['Kürzel','Vorname','Name','Email'],(p.feuerwehr||[]).map(function(r){ return [r.kuerzel||'', r.vorname||'', r.name||'', r.email||'']; }));
+  _kzWrite(SS_KUERZEL,'Gast',['Kürzel','Vorname','Name','Email','Tel'],(p.gasthelfer||[]).map(function(r){ return [r.kuerzel||'', r.vorname||'', r.name||'', r.email||'', r.tel||'']; }));
+  return { ok:true };
+}
+function _kzWrite(ss,name,headers,rows){
+  var sh=ss.getSheetByName(name); if(!sh) sh=ss.insertSheet(name);
+  sh.clearContents();
+  sh.getRange(1,1,1,headers.length).setValues([headers]);
+  if(rows.length) sh.getRange(2,1,rows.length,headers.length).setValues(rows);
+}
 function jsonResponse(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
