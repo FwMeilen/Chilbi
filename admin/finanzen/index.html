@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="app-version" content="Cl1.167">
+<meta name="app-version" content="Cl1.168">
 <script>
 (function(){var el=document.querySelector('meta[name="app-version"]');var RUN=el?el.content:'';fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/name="app-version" content="([^"]+)"/);if(m&&RUN&&m[1]!==RUN){var tg='v='+encodeURIComponent(m[1]);if(location.search.indexOf(tg)===-1){location.replace(location.pathname+'?'+tg);}}}).catch(function(){});})();
 </script>
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.167 -->
+<!-- Cl1.168 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -72,6 +72,7 @@
     body.abr-printing #sec-abrechnung .card { break-inside:avoid; }
     body.abr-printing .kpi-i { display:none !important; }
     body.abr-printing .auswert-grid { grid-template-columns:repeat(2,1fr) !important; }
+    body.abr-printing.abr-simple #abrKennzahlen { display:none !important; }
     @page { size: A4 portrait; margin:12mm; }
   }
   #abrPrintWrap { display:none; }
@@ -95,12 +96,13 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.167</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.168</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
       <button class="btn btn-sm" onclick="loadAll()">Neu laden</button>
-      <button class="btn btn-sm" onclick="abrPrint()">🖨 Abrechnung PDF</button>
+      <button class="btn btn-sm" onclick="abrPrint()">🖨 PDF komplett</button>
+      <button class="btn btn-sm" onclick="abrPrintSimple()">🖨 PDF einfach</button>
     </div>
   </header>
   <div class="wrap">
@@ -339,7 +341,7 @@ function renderAbrechnung(){
         <div class="auswert-cell"><div class="auswert-h">Zusammensetzung Ausgaben</div><div class="auswert-row"><div style="flex:0 0 auto">${_svgDonut(ausSegs)}</div><div class="auswert-leg">${ausLegend||'<span class="muted">keine Ausgaben erfasst</span>'}</div></div></div>
       </div>
     </div>
-    <div class="card"><div class="card-title">Kennzahlen ${esc(FIN.jahr)}</div>
+    <div class="card" id="abrKennzahlen"><div class="card-title">Kennzahlen ${esc(FIN.jahr)}</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px">${kpis}</div>
     </div>`;
 }
@@ -750,10 +752,21 @@ function abrPrint(){
   var ct=clone.querySelector('.card-title'); if(ct) ct.innerHTML='Abrechnung '+esc(FIN.jahr)+' – Details';
   var wrap=document.createElement('div'); wrap.id='abrPrintWrap'; wrap.appendChild(clone);
   sec.appendChild(wrap);
+  document.body.classList.remove('abr-simple');
   document.body.classList.add('abr-printing');
   setTimeout(function(){ window.print(); }, 60);
 }
-window.addEventListener('afterprint', function(){ var w=document.getElementById('abrPrintWrap'); if(w) w.remove(); document.body.classList.remove('abr-printing'); });
+window.addEventListener('afterprint', function(){ var w=document.getElementById('abrPrintWrap'); if(w) w.remove(); document.body.classList.remove('abr-printing'); document.body.classList.remove('abr-simple'); });
+function abrPrintSimple(){
+  var sec=document.getElementById('sec-abrechnung'); if(!sec) return;
+  if(!sec.querySelector('.card')) renderAbrechnung();
+  var old=document.getElementById('abrPrintWrap'); if(old) old.remove();
+  sec.querySelectorAll('.detrow.show').forEach(function(r){ r.classList.remove('show'); });
+  sec.querySelectorAll('[id^="ico-"]').forEach(function(ic){ ic.textContent='▸'; });
+  document.body.classList.add('abr-printing');
+  document.body.classList.add('abr-simple');
+  setTimeout(function(){ window.print(); }, 60);
+}
 function twUpd(){ var t=FIN.twint; var a=document.getElementById('twAusz'); if(a) a.textContent='CHF '+F(N(t.betrag)-N(t.gebuehr)); var av=document.getElementById('twAuszVj'); if(av) av.textContent='CHF '+F(N(t.betragVj)-N(t.gebuehrVj)); renderAbrechnung(); }
 function renderTwint(){
   var t=FIN.twint;
