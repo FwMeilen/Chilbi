@@ -1,6 +1,6 @@
 // ============================================================
 // Chilbi Herrliberg – Schichtplanung Backend
-// Google Apps Script  |  Cl1.161
+// Google Apps Script  |  Cl1.162
 // Schema Konfiguration: ID|Datum|Von|Bis|Schicht|Aufgabe|Max Personen|Farbe|Informationen|Geschlossen
 // Schema Anmeldungen:   ID|Name|Schicht|Aufgabe|Timestamp
 // Schema Tage:          Datum|Typ
@@ -22,6 +22,7 @@ const SH_GAST        = 'Gast';
 const SH_EHEMALIGE   = 'Ehemalige';
 const SH_FEUERWEHR   = 'Feuerwehr';
 const SH_FEUERWEHREN = 'Feuerwehren';
+const SH_STATUS      = 'Status';
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -30,13 +31,14 @@ function doGet(e) {
     if (p.pw === ABRECHNUNG_PW_VIEW) return jsonResponse(abrLoad(true));
     return jsonResponse({ ok: false, error: 'Falsches Passwort' });
   }
-  return jsonResponse({ config: getConfig(), signups: getSignups(), tage: getTage() });
+  return jsonResponse({ config: getConfig(), signups: getSignups(), tage: getTage(), status: getStatus() });
 }
 
 function doPost(e) {
   try {
     const p = JSON.parse(e.postData.contents);
     if (p.action === 'signup')         return jsonResponse(saveSignup(p));
+    if (p.action === 'saveStatus')     return jsonResponse(saveStatus(p));
     if (p.action === 'unsignup')       return jsonResponse(removeSignup(p));
     if (p.action === 'editSignup')     return jsonResponse(editSignup(p));
     if (p.action === 'registerGuest')  return jsonResponse(registerGuest(p));
@@ -121,6 +123,38 @@ function getTage() {
     headers.forEach((h, i) => obj[h] = r[i]);
     return obj;
   });
+}
+
+function getStatus() {
+  var m = { mode:'live', vor:{}, nach:{} };
+  try {
+    var sh = SS.getSheetByName(SH_STATUS);
+    if (!sh) return m;
+    var rows = sh.getDataRange().getValues();
+    var kv = {};
+    for (var i=1; i<rows.length; i++){ if (rows[i][0] !== '') kv[String(rows[i][0])] = rows[i][1]; }
+    m.mode = kv.mode || 'live';
+    m.vor  = { titel:kv.vorTitel||'', datum:kv.vorDatum||'', ort:kv.vorOrt||'', info:kv.vorInfo||'', schluss:kv.vorSchluss||'' };
+    m.nach = { eyebrow:kv.nachEyebrow||'', titel:kv.nachTitel||'', sub:kv.nachSub||'', text:kv.nachText||'', ausblick:kv.nachAusblick||'' };
+  } catch(e) {}
+  return m;
+}
+
+function saveStatus(p) {
+  if (p.password !== ADMIN_PW) return { ok:false, error:'Falsches Passwort' };
+  var o; try { o = JSON.parse(p.statusJson || '{}'); } catch(e){ return { ok:false, error:'Ungueltige Daten' }; }
+  var v = o.vor || {}, n = o.nach || {};
+  var pairs = [
+    ['mode', o.mode || 'live'],
+    ['vorTitel', v.titel||''], ['vorDatum', v.datum||''], ['vorOrt', v.ort||''], ['vorInfo', v.info||''], ['vorSchluss', v.schluss||''],
+    ['nachEyebrow', n.eyebrow||''], ['nachTitel', n.titel||''], ['nachSub', n.sub||''], ['nachText', n.text||''], ['nachAusblick', n.ausblick||'']
+  ];
+  var sh = SS.getSheetByName(SH_STATUS);
+  if (!sh) sh = SS.insertSheet(SH_STATUS);
+  sh.clear();
+  sh.getRange(1,1,1,2).setValues([['Key','Value']]);
+  sh.getRange(2,1,pairs.length,2).setValues(pairs);
+  return { ok:true };
 }
 
 function saveSignup(p) {
