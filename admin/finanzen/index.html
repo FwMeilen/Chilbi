@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="app-version" content="Cl1.165">
+<meta name="app-version" content="Cl1.166">
 <script>
 (function(){var el=document.querySelector('meta[name="app-version"]');var RUN=el?el.content:'';fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/name="app-version" content="([^"]+)"/);if(m&&RUN&&m[1]!==RUN){var tg='v='+encodeURIComponent(m[1]);if(location.search.indexOf(tg)===-1){location.replace(location.pathname+'?'+tg);}}}).catch(function(){});})();
 </script>
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.165 -->
+<!-- Cl1.166 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -95,7 +95,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.165</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.166</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -574,6 +574,35 @@ async function rgSend(i){
   }catch(e){ status('Sendefehler: '+e.message); }
 }
 
+function showToast(msg, kind){
+  var t=document.getElementById('_toast');
+  if(!t){ t=document.createElement('div'); t.id='_toast'; t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9999;padding:10px 16px;border-radius:6px;font-size:14px;font-family:inherit;box-shadow:0 4px 16px rgba(0,0,0,.2);max-width:80vw;text-align:center;color:#fff'; document.body.appendChild(t); }
+  var ok=(kind==='ok'||kind==='success'), err=(kind==='error');
+  t.style.background=err?'#c0392b':(ok?'#1e824c':'#333');
+  t.textContent=msg; t.style.display='block'; t.style.opacity='1'; t.style.transition='';
+  clearTimeout(t._h); t._h=setTimeout(function(){ t.style.transition='opacity .4s'; t.style.opacity='0'; setTimeout(function(){ t.style.display='none'; }, 420); }, 3400);
+}
+function _hmMin(x){ x=String(x==null?'':x).trim(); if(!x) return null; var m=x.match(/^(\d{1,2})[:.h]?(\d{2})?/); if(!m) return null; var h=parseInt(m[1],10); if(isNaN(h)) return null; var mi=m[2]?parseInt(m[2],10):0; return h*60+mi; }
+function _shiftHours(cfg){ if(!cfg) return 0; var a=_hmMin(cfg.Von), b=_hmMin(cfg.Bis); if(a==null||b==null) return 0; var d=b-a; if(d<0) d+=1440; return d/60; }
+async function holHelferstunden(btn){
+  var old = btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='⟳ lädt…'; }
+  try{
+    var r=await fetch(SCRIPT_URL+'?action=all&_='+Date.now());
+    var d=JSON.parse(await r.text());
+    var byTag={}; (d.config||[]).forEach(function(row){ var tag=String(row.ID!=null?row.ID:(row.Tag||'')); byTag[tag]={Von:row.Von,Bis:row.Bis}; });
+    var tot=0, cnt=0, noTime=0;
+    (d.signups||[]).forEach(function(s){ var tag=String(s.ID!=null?s.ID:(s.Tag||'')); var h=_shiftHours(byTag[tag]); cnt++; if(h>0) tot+=h; else noTime++; });
+    tot=Math.round(tot*100)/100;
+    FIN.helferstd=String(tot);
+    renderEinstellungen(); renderAbrechnung();
+    var hint=document.getElementById('helferHint');
+    if(hint) hint.textContent='Übernommen: '+tot+' h aus '+cnt+' Anmeldungen'+(noTime?(' ('+noTime+' ohne Zeit)'):'')+'. Feld bleibt anpassbar.';
+    showToast('Helferstunden übernommen: '+tot+' h'+(noTime?(' · '+noTime+' Anmeldung(en) ohne Zeit im Schichtplan'):''),'ok');
+  }catch(e){
+    showToast('Schichtplan konnte nicht geladen werden: '+e.message,'error');
+    if(btn){ btn.disabled=false; btn.textContent=old; }
+  }
+}
 function renderEinstellungen(){
   const rolleRows=MUENZ.map(w=>`<label class="fld" style="display:inline-block;width:110px;margin-right:10px">${denLabel(w)}/Rolle<input class="in num" value="${esc(FIN.muenzProRolle[String(w)]||'')}" oninput="FIN.muenzProRolle['${w}']=this.value"></label>`).join('');
   document.getElementById('sec-einstellungen').innerHTML=`
@@ -588,6 +617,7 @@ function renderEinstellungen(){
     <div style="display:flex;gap:20px;flex-wrap:wrap">
       <label class="fld" style="width:100px">Jahr<input class="in" value="${esc(FIN.jahr)}" oninput="FIN.jahr=this.value;renderAbrechnung()"></label>
       <label class="fld" style="width:160px">Helferstunden total<input class="in num" value="${esc(FIN.helferstd)}" oninput="FIN.helferstd=this.value;renderAbrechnung()"></label>
+      <div class="fld" style="justify-content:flex-end;display:flex;flex-direction:column;max-width:240px"><button class="btn btn-sm" onclick="holHelferstunden(this)" style="height:34px">⟳ Aus Schichtplan</button><span id="helferHint" class="muted" style="font-size:11px;margin-top:4px;line-height:1.3"></span></div>
       <label class="fld" style="width:100px">Vorjahr<input class="in" value="${esc(FIN.vorjahr)}" oninput="FIN.vorjahr=this.value;renderAbrechnung()"></label>
       
     </div>
