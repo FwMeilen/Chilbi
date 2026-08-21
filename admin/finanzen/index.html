@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="app-version" content="Cl1.155">
+<meta name="app-version" content="Cl1.156">
 <script>
 (function(){var el=document.querySelector('meta[name="app-version"]');var RUN=el?el.content:'';fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/name="app-version" content="([^"]+)"/);if(m&&RUN&&m[1]!==RUN){var tg='v='+encodeURIComponent(m[1]);if(location.search.indexOf(tg)===-1){location.replace(location.pathname+'?'+tg);}}}).catch(function(){});})();
 </script>
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.155 -->
+<!-- Cl1.156 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -62,6 +62,17 @@
   .menu button[data-s="spaetzli"]{color:#c2185b;}
   .menu button[data-s="spaetzli"]:not(.active){background:#fce4ec;border-color:#f8bbd0;}
   .menu button[data-s="spaetzli"].active{background:#e91e63;border-color:#e91e63;color:#fff;}
+  @media print {
+    body.abr-printing header, body.abr-printing .menu, body.abr-printing #saveStatus { display:none !important; }
+    body.abr-printing .sec { display:none !important; }
+    body.abr-printing #sec-abrechnung { display:block !important; }
+    body.abr-printing #abrPrintWrap { break-before:page; page-break-before:always; }
+    body.abr-printing #sec-abrechnung .card { break-inside:avoid; }
+    body.abr-printing .kpi-i { display:none !important; }
+    @page { margin:13mm; }
+  }
+  #abrPrintWrap { display:none; }
+  @media print { body.abr-printing #abrPrintWrap { display:block !important; } }
 </style>
 </head>
 <body>
@@ -76,11 +87,12 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.155</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.156</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
       <button class="btn btn-sm" onclick="loadAll()">Neu laden</button>
+      <button class="btn btn-sm" onclick="abrPrint()">🖨 Abrechnung PDF</button>
     </div>
   </header>
   <div class="wrap">
@@ -630,6 +642,23 @@ function renderSpaetzli(){
     </div>`;
   spCalc();
 }
+function abrPrint(){
+  var sec=document.getElementById('sec-abrechnung'); if(!sec) return;
+  if(!sec.querySelector('.card')) renderAbrechnung();
+  var old=document.getElementById('abrPrintWrap'); if(old) old.remove();
+  sec.querySelectorAll('.detrow.show').forEach(function(r){ r.classList.remove('show'); });
+  sec.querySelectorAll('[id^="ico-"]').forEach(function(ic){ ic.textContent='▸'; });
+  var abrCard=sec.querySelector('.card');
+  var clone=abrCard.cloneNode(true);
+  clone.querySelectorAll('.detrow').forEach(function(r){ r.style.display='table-row'; });
+  clone.querySelectorAll('[id^="ico-"]').forEach(function(ic){ ic.textContent='▾'; ic.removeAttribute('id'); });
+  var ct=clone.querySelector('.card-title'); if(ct) ct.innerHTML='Abrechnung '+esc(FIN.jahr)+' – Details';
+  var wrap=document.createElement('div'); wrap.id='abrPrintWrap'; wrap.appendChild(clone);
+  sec.appendChild(wrap);
+  document.body.classList.add('abr-printing');
+  setTimeout(function(){ window.print(); }, 60);
+}
+window.addEventListener('afterprint', function(){ var w=document.getElementById('abrPrintWrap'); if(w) w.remove(); document.body.classList.remove('abr-printing'); });
 async function saveAll(){ if(VIEW_ONLY) return; status('Speichere…'); await _doSave(_buildPayload()); }
 async function autoSave(){ if(VIEW_ONLY||!PW) return; if(_snap()===_lastSnap) return; await _doSave(_buildPayload(),'✓ Auto-gespeichert'); }
 </script>
