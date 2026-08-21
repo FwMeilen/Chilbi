@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="app-version" content="Cl1.159">
+<meta name="app-version" content="Cl1.160">
 <script>
 (function(){var el=document.querySelector('meta[name="app-version"]');var RUN=el?el.content:'';fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/name="app-version" content="([^"]+)"/);if(m&&RUN&&m[1]!==RUN){var tg='v='+encodeURIComponent(m[1]);if(location.search.indexOf(tg)===-1){location.replace(location.pathname+'?'+tg);}}}).catch(function(){});})();
 </script>
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.159 -->
+<!-- Cl1.160 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--black:#1a1a1a;--red:#cc0000;--green:#0a8f38;--bg:#fff;--bg2:#f5f5f5;--gray:#ccc;--gray-mid:#ddd;--t1:#1a1a1a;--t2:#555;--t3:#999;}
@@ -94,7 +94,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.159</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.160</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -542,6 +542,14 @@ async function rgSend(i){
 function renderEinstellungen(){
   const rolleRows=MUENZ.map(w=>`<label class="fld" style="display:inline-block;width:110px;margin-right:10px">${denLabel(w)}/Rolle<input class="in num" value="${esc(FIN.muenzProRolle[String(w)]||'')}" oninput="FIN.muenzProRolle['${w}']=this.value"></label>`).join('');
   document.getElementById('sec-einstellungen').innerHTML=`
+    <div class="card"><div class="card-title">Daten / Jahresübertrag</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <button class="btn btn-sm" onclick="finExport()">⬇ CSV exportieren (Backup ${esc(FIN.jahr)})</button>
+      <label class="btn btn-sm" style="cursor:pointer;display:inline-flex;align-items:center">↪ CSV → neues Jahr (Vorjahr-Basis)<input type="file" accept=".csv,text/csv" style="display:none" onchange="finImport(this,'vorjahr')"></label>
+      <label class="btn btn-sm" style="cursor:pointer;display:inline-flex;align-items:center">CSV 1:1 wiederherstellen<input type="file" accept=".csv,text/csv" style="display:none" onchange="finImport(this,'restore')"></label>
+    </div>
+    <div class="muted" style="font-size:12px;line-height:1.6;max-width:660px">Export sichert alle Zahlen des Jahres. «Neues Jahr»: die aktuellen Beträge aus der Datei werden zu <strong>Vorjahr</strong>, die neuen Felder geleert – so hast du die Vergleichswerte fürs Folgejahr. Bargeld-Zählung (Stock/Kasse) wird nicht exportiert, nur der Netto-Wert. Nach Import prüfen und <strong>speichern</strong>.</div>
+    </div>
     <div class="card"><div class="card-title">Allgemein</div>
     <div style="display:flex;gap:20px;flex-wrap:wrap">
       <label class="fld" style="width:100px">Jahr<input class="in" value="${esc(FIN.jahr)}" oninput="FIN.jahr=this.value;renderAbrechnung()"></label>
@@ -696,6 +704,75 @@ function renderTwint(){
     <div class="muted" style="font-size:12px;margin-top:12px;line-height:1.6">Der <strong>Gesamte Zahlungsbetrag</strong> fliesst automatisch in die Einnahmen, die <strong>Transaktionsgebühr</strong> in die Ausgaben.</div>
     </div>`;
   twUpd();
+}
+function _csvCell(c){ c=String(c==null?'':c); return /[";\n\r]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c; }
+function _csvRow(arr){ return arr.map(_csvCell).join(';'); }
+function finExport(){
+  var rows=[_csvRow(['Bereich','a','b','c','d','e','f','g'])];
+  var meta=[['jahr',FIN.jahr],['vorjahr',FIN.vorjahr],['vorjahrKasse',FIN.vorjahrKasse],['kasseNetto',nettoBar()],['helferstunden',FIN.helferstd],['einKat',(FIN.einKat||[]).join(',')],['ausKat',(FIN.ausKat||[]).join(',')],['kostKat',(FIN.kostKat||[]).join(',')],['rgNext',FIN.rgNext],['spaetzli',JSON.stringify(FIN.sp)]];
+  meta.forEach(function(m){ rows.push(_csvRow(['META',m[0],m[1]])); });
+  var t=FIN.twint; rows.push(_csvRow(['TWINT',t.anzahl,t.betrag,t.gebuehr,t.anzahlVj,t.betragVj,t.gebuehrVj]));
+  FIN.einnahmen.forEach(function(r){ rows.push(_csvRow(['EIN',r.kat,r.besch,r.betrag,r.vorjahr])); });
+  FIN.ausgaben.forEach(function(r){ rows.push(_csvRow(['AUS',r.art,r.kostenart||'',r.besch,r.betrag,r.vorjahr,r.bem||'',r.vorschuss?1:'',r.rueck?1:''])); });
+  FIN.rechnungen.forEach(function(r){ rows.push(_csvRow(['RG',r.nr,r.datum,(r.empfaenger&&r.empfaenger[0])||'',r.total,r.vorjahr,r.abgeschlossen?1:'',JSON.stringify(r)])); });
+  var csv='\ufeff'+rows.join('\r\n');
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='chilbi_finanzen_'+(FIN.jahr||'export')+'.csv'; document.body.appendChild(a); a.click(); a.remove();
+}
+function _csvParseLine(line){ var out=[],cur='',q=false; for(var i=0;i<line.length;i++){ var ch=line[i]; if(q){ if(ch=='"'){ if(line[i+1]=='"'){cur+='"';i++;} else q=false; } else cur+=ch; } else { if(ch=='"') q=true; else if(ch===';'){ out.push(cur); cur=''; } else cur+=ch; } } out.push(cur); return out; }
+function finImport(input, mode){
+  var file=input.files&&input.files[0]; if(!file){ return; }
+  var rd=new FileReader();
+  rd.onload=function(){
+    try{
+      var text=String(rd.result).replace(/^\ufeff/,'');
+      var recs=text.split(/\r?\n/).filter(function(l){ return l.trim().length; }).map(_csvParseLine);
+      if(recs.length && (recs[0][0]||'').toLowerCase()==='bereich') recs.shift();
+      var meta={}, twint=null, ein=[], aus=[], rg=[];
+      recs.forEach(function(c){
+        var b=(c[0]||'').toUpperCase();
+        if(b==='META'){ meta[c[1]]=c[2]; }
+        else if(b==='TWINT'){ twint={anzahl:c[1]||'',betrag:c[2]||'',gebuehr:c[3]||'',anzahlVj:c[4]||'',betragVj:c[5]||'',gebuehrVj:c[6]||''}; }
+        else if(b==='EIN'){ ein.push({kat:c[1]||'',besch:c[2]||'',betrag:c[3]||'',vorjahr:c[4]||''}); }
+        else if(b==='AUS'){ aus.push({art:c[1]||'',kostenart:c[2]||'',besch:c[3]||'',betrag:c[4]||'',vorjahr:c[5]||'',bem:c[6]||'',vorschuss:c[7]==='1',rueck:c[8]==='1'}); }
+        else if(b==='RG'){ var o=null; try{ o=JSON.parse(c[7]); }catch(e){} rg.push(o||{nr:c[1]||'',datum:c[2]||'',empfaenger:[c[3]||''],total:N(c[4]),vorjahr:c[5]||'',abgeschlossen:c[6]==='1',positionen:[],intro:''}); }
+      });
+      var setKat=function(k){ return String(k||'').split(',').map(function(x){return x.trim();}).filter(Boolean); };
+      if(mode==='vorjahr'){
+        if(!confirm('Als NEUES JAHR übernehmen?\n\nDie aktuellen Beträge aus der Datei werden zu VORJAHR, die neuen Felder werden geleert. Das überschreibt die aktuelle Bearbeitung.')){ input.value=''; return; }
+        FIN.jahr = String((parseInt(meta.jahr)||new Date().getFullYear())+1);
+        FIN.vorjahr = String(meta.jahr||'');
+        FIN.vorjahrKasse = String(N(meta.kasseNetto)||'');
+        if(meta.einKat) FIN.einKat=setKat(meta.einKat);
+        if(meta.ausKat) FIN.ausKat=setKat(meta.ausKat);
+        if(meta.kostKat) FIN.kostKat=setKat(meta.kostKat);
+        FIN.einnahmen = ein.filter(function(r){ return !/twint/i.test(r.kat||''); }).map(function(r){ return {kat:r.kat,besch:r.besch,betrag:'',vorjahr:String(N(r.betrag)||'')}; });
+        FIN.ausgaben = aus.map(function(r){ return {art:r.art,kostenart:r.kostenart,besch:r.besch,betrag:'',vorjahr:String(N(r.betrag)||''),bem:'',vorschuss:false,rueck:false}; });
+        FIN.rechnungen = rg.map(function(r){ var o=Object.assign({},r); o.vorjahr=String(N(r.total)||''); o.total=0; o.abgeschlossen=false; return o; });
+        if(twint){ FIN.twint={anzahl:'',betrag:'',gebuehr:'',anzahlVj:String(N(twint.anzahl)||''),betragVj:String(N(twint.betrag)||''),gebuehrVj:String(N(twint.gebuehr)||'')}; }
+        ['stock','kasse'].forEach(function(side){ FIN[side].noten={}; FIN[side].muenz={}; });
+        showToast('Neues Jahr '+FIN.jahr+' vorbereitet – Vorjahreswerte gesetzt. Prüfen und speichern.', 'ok');
+      } else {
+        if(!confirm('Backup 1:1 wiederherstellen?\n\nÜberschreibt die aktuelle Bearbeitung komplett (ohne Bargeld-Zählung).')){ input.value=''; return; }
+        if(meta.jahr!=null) FIN.jahr=String(meta.jahr);
+        if(meta.vorjahr!=null) FIN.vorjahr=String(meta.vorjahr);
+        if(meta.vorjahrKasse!=null) FIN.vorjahrKasse=String(meta.vorjahrKasse);
+        if(meta.helferstunden!=null) FIN.helferstd=String(meta.helferstunden);
+        if(meta.einKat) FIN.einKat=setKat(meta.einKat);
+        if(meta.ausKat) FIN.ausKat=setKat(meta.ausKat);
+        if(meta.kostKat) FIN.kostKat=setKat(meta.kostKat);
+        if(meta.rgNext) FIN.rgNext=parseInt(meta.rgNext)||1;
+        try{ if(meta.spaetzli) FIN.sp=Object.assign(FIN.sp,JSON.parse(meta.spaetzli)); }catch(e){}
+        FIN.einnahmen=ein; FIN.ausgaben=aus; FIN.rechnungen=rg;
+        if(twint) FIN.twint=twint;
+        ['stock','kasse'].forEach(function(side){ FIN[side].noten={}; FIN[side].muenz={}; });
+        showToast('Backup wiederhergestellt. Prüfen und speichern.', 'ok');
+      }
+      renderAll();
+    }catch(e){ showToast('Import-Fehler: '+e.message, 'error'); }
+    input.value='';
+  };
+  rd.readAsText(file,'utf-8');
 }
 async function saveAll(){ if(VIEW_ONLY) return; status('Speichere…'); await _doSave(_buildPayload()); }
 async function autoSave(){ if(VIEW_ONLY||!PW) return; if(_snap()===_lastSnap) return; await _doSave(_buildPayload(),'✓ Auto-gespeichert'); }
