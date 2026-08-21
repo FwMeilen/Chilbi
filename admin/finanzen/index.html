@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
-<meta name="app-version" content="Cl1.164">
+<meta name="app-version" content="Cl1.165">
 <script>
 (function(){var el=document.querySelector('meta[name="app-version"]');var RUN=el?el.content:'';fetch(location.pathname+'?_v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){var m=t.match(/name="app-version" content="([^"]+)"/);if(m&&RUN&&m[1]!==RUN){var tg='v='+encodeURIComponent(m[1]);if(location.search.indexOf(tg)===-1){location.replace(location.pathname+'?'+tg);}}}).catch(function(){});})();
 </script>
 <meta name="robots" content="noindex,nofollow">
 <title>Chilbi – Finanzen</title>
-<!-- Cl1.164 -->
+<!-- Cl1.165 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -95,7 +95,7 @@
 
 <div id="app" style="display:none;">
   <header>
-    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.164</span></h1>
+    <h1>Chilbi Herrliberg&nbsp;–&nbsp;Finanzen <span class="ver">Cl1.165</span></h1>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="saveStatus" class="muted" style="font-size:12px;"></span>
       <button class="btn btn-red btn-sm" onclick="saveAll()">💾 Speichern</button>
@@ -347,20 +347,21 @@ function renderEinnahmen(){
   const _vjEinUsed=new Array((FIN.vj.einnahmen||[]).length).fill(false);
   const _vjMatchEin=(besch)=>{ const k=_norm(besch); if(!k) return null; for(let j=0;j<FIN.vj.einnahmen.length;j++){ if(!_vjEinUsed[j] && _norm(FIN.vj.einnahmen[j].besch)===k){ _vjEinUsed[j]=true; return FIN.vj.einnahmen[j].betrag; } } return null; };
   const rows=FIN.einnahmen.map((r,i)=>{
-    const _v=_vjMatchEin(r.besch); const vh=(_v===null)?'':`<div style="font-size:11px;color:var(--text3);margin-top:2px;line-height:1.2;white-space:nowrap">Vorjahr: CHF ${F(N(_v))}</div>`;
+    const _v=_vjMatchEin(r.besch); const vj=(_v===null)?'':`CHF ${F(N(_v))}`;
     return `<tr>
     <td><select class="in" onchange="FIN.einnahmen[${i}].kat=this.value">${FIN.einKat.map(k=>`<option${k===r.kat?' selected':''}>${esc(k)}</option>`).join('')}</select></td>
     <td><input class="in" value="${esc(r.besch)}" oninput="FIN.einnahmen[${i}].besch=this.value"></td>
-    <td><input class="in num" value="${esc(r.betrag)}" oninput="FIN.einnahmen[${i}].betrag=this.value;renderEinTot()">${vh}</td>
+    <td><input class="in num" value="${esc(r.betrag)}" oninput="FIN.einnahmen[${i}].betrag=this.value;renderEinTot()"></td>
+    <td class="num" style="color:var(--text3);white-space:nowrap">${vj}</td>
     <td style="text-align:center"><button class="btn btn-sm" style="height:26px;padding:0 8px" onclick="FIN.einnahmen.splice(${i},1);renderEinnahmen()">✕</button></td></tr>`;
   }).join('');
   document.getElementById('sec-einnahmen').innerHTML=`
     <div class="card"><div class="card-title">Einnahmen <span id="einTot" class="muted" style="font-weight:400;font-size:12px;"></span></div>
-    <table><thead><tr><th style="width:150px">Kategorie</th><th>Beschreibung</th><th class="num" style="width:120px">Betrag ${esc(FIN.jahr)}</th><th style="width:44px"></th></tr></thead>
+    <table><thead><tr><th style="width:150px">Kategorie</th><th>Beschreibung</th><th class="num" style="width:120px">Betrag ${esc(FIN.jahr)}</th><th class="num" style="width:110px;color:var(--text3)">Vorjahr</th><th style="width:44px"></th></tr></thead>
     <tbody>
-    <tr><td class="muted">—</td><td class="muted">Kasse netto (automatisch)</td><td class="num muted">CHF ${F(nettoBar())}</td><td></td></tr>
-    ${N(FIN.twint.betrag)?`<tr><td class="muted">TWINT</td><td class="muted">TWINT (automatisch)</td><td class="num muted">CHF ${F(N(FIN.twint.betrag))}</td><td></td></tr>`:''}
-    ${FIN.rechnungen.map((r,i)=>`<tr><td class="muted">Rechnung</td><td class="muted">${esc((r.empfaenger&&r.empfaenger[0])||r.betreff||'Rechnung')} (${esc(r.nr)})</td><td class="num muted">CHF ${F(N(r.total))}</td><td></td></tr>`).join('')}
+    <tr><td class="muted">—</td><td class="muted">Kasse netto (automatisch)</td><td class="num muted">CHF ${F(nettoBar())}</td><td class="num muted">${N(FIN.vj.kasseNetto)?'CHF '+F(N(FIN.vj.kasseNetto)):''}</td><td></td></tr>
+    ${N(FIN.twint.betrag)?`<tr><td class="muted">TWINT</td><td class="muted">TWINT (automatisch)</td><td class="num muted">CHF ${F(N(FIN.twint.betrag))}</td><td class="num muted">${N(FIN.vj.twint.betrag)?'CHF '+F(N(FIN.vj.twint.betrag)):''}</td><td></td></tr>`:''}
+    ${FIN.rechnungen.map((r,i)=>`<tr><td class="muted">Rechnung</td><td class="muted">${esc((r.empfaenger&&r.empfaenger[0])||r.betreff||'Rechnung')} (${esc(r.nr)})</td><td class="num muted">CHF ${F(N(r.total))}</td><td class="num muted"></td><td></td></tr>`).join('')}
     ${rows}</tbody></table>
     <button class="btn btn-sm" style="margin-top:10px" onclick="FIN.einnahmen.push({kat:FIN.einKat[0]||'',besch:'',betrag:'',vorjahr:''});renderEinnahmen()">+ Zeile</button></div>`;
   renderEinTot();
@@ -372,19 +373,20 @@ function renderAusgaben(){
   const _vjAusUsed=new Array((FIN.vj.ausgaben||[]).length).fill(false);
   const _vjMatchAus=(besch)=>{ const k=_norm(besch); if(!k) return null; for(let j=0;j<FIN.vj.ausgaben.length;j++){ if(!_vjAusUsed[j] && _norm(FIN.vj.ausgaben[j].besch)===k){ _vjAusUsed[j]=true; return FIN.vj.ausgaben[j].betrag; } } return null; };
   const rows=FIN.ausgaben.map((r,i)=>{
-    const _v=_vjMatchAus(r.besch); const vh=(_v===null)?'':`<div style="font-size:11px;color:var(--text3);margin-top:2px;line-height:1.2;white-space:nowrap">Vorjahr: CHF ${F(N(_v))}</div>`;
+    const _v=_vjMatchAus(r.besch); const vj=(_v===null)?'':`CHF ${F(N(_v))}`;
     return `<tr>
     <td><select class="in" onchange="FIN.ausgaben[${i}].art=this.value">${ausKatList().map(k=>`<option${k===r.art?' selected':''}>${esc(k)}</option>`).join('')}</select></td>
     <td><select class="in" onchange="FIN.ausgaben[${i}].kostenart=this.value"><option value=""${!r.kostenart?' selected':''}>—</option>${FIN.kostKat.map(k=>`<option${k===r.kostenart?' selected':''}>${esc(k)}</option>`).join('')}</select></td>
     <td><input class="in" value="${esc(r.besch)}" oninput="FIN.ausgaben[${i}].besch=this.value"></td>
-    <td><input class="in num" value="${esc(r.betrag)}" oninput="FIN.ausgaben[${i}].betrag=this.value;renderAusTot()">${vh}</td>
+    <td><input class="in num" value="${esc(r.betrag)}" oninput="FIN.ausgaben[${i}].betrag=this.value;renderAusTot()"></td>
+    <td class="num" style="color:var(--text3);white-space:nowrap">${vj}</td>
     <td><input class="in" value="${esc(r.bem)}" oninput="FIN.ausgaben[${i}].bem=this.value"></td>
     <td style="white-space:nowrap;text-align:center;font-size:11px">
       <label><input type="checkbox" ${r.vorschuss?'checked':''} onchange="FIN.ausgaben[${i}].vorschuss=this.checked;renderAusgaben()"> Vorschuss</label>
     </td>
     <td style="text-align:center"><button class="btn btn-sm" style="height:26px;padding:0 8px" onclick="FIN.ausgaben.splice(${i},1);renderAusgaben()">✕</button></td></tr>`;
   }).join('');
-  const _twAuto = N(FIN.twint.gebuehr)?`<tr><td class="muted">TWINT</td><td class="muted">TWINT-Gebühr</td><td class="muted">Transaktionsgebühr (automatisch)</td><td class="num muted">CHF ${F(N(FIN.twint.gebuehr))}</td><td></td><td></td><td></td></tr>`:'';
+  const _twAuto = N(FIN.twint.gebuehr)?`<tr><td class="muted">TWINT</td><td class="muted">TWINT-Gebühr</td><td class="muted">Transaktionsgebühr (automatisch)</td><td class="num muted">CHF ${F(N(FIN.twint.gebuehr))}</td><td class="num muted">${N(FIN.vj.twint.gebuehr)?'CHF '+F(N(FIN.vj.twint.gebuehr)):''}</td><td></td><td></td><td></td></tr>`:'';
   const vorSum=FIN.ausgaben.reduce((a,r)=>a+(r.vorschuss?N(r.betrag):0),0);
   const rueckSum=FIN.ausgaben.reduce((a,r)=>a+(_isRueck(r.art)?N(r.betrag):0),0);
   const offen=vorSum-rueckSum;
@@ -396,8 +398,8 @@ function renderAusgaben(){
     </div>` : '';
   document.getElementById('sec-ausgaben').innerHTML=`
     <div class="card"><div class="card-title">Ausgaben <span id="ausTot" class="muted" style="font-weight:400;font-size:12px;"></span></div>
-    <table><thead><tr><th style="width:110px">Zahlungsart</th><th style="width:110px">Kategorie</th><th>Beschreibung</th><th class="num" style="width:100px">Betrag ${esc(FIN.jahr)}</th><th style="width:120px">Bemerkung</th><th style="width:130px;text-align:center">Vorschuss</th><th style="width:40px"></th></tr></thead>
-    <tbody>${(_twAuto+rows)||'<tr><td colspan="7" class="muted" style="padding:8px">Noch keine Einträge.</td></tr>'}</tbody></table>
+    <table><thead><tr><th style="width:110px">Zahlungsart</th><th style="width:110px">Kategorie</th><th>Beschreibung</th><th class="num" style="width:100px">Betrag ${esc(FIN.jahr)}</th><th class="num" style="width:100px;color:var(--text3)">Vorjahr</th><th style="width:120px">Bemerkung</th><th style="width:130px;text-align:center">Vorschuss</th><th style="width:40px"></th></tr></thead>
+    <tbody>${(_twAuto+rows)||'<tr><td colspan="8" class="muted" style="padding:8px">Noch keine Einträge.</td></tr>'}</tbody></table>
     <button class="btn btn-sm" style="margin-top:10px" onclick="FIN.ausgaben.push({art:FIN.ausKat[0]||'',besch:'',betrag:'',vorjahr:'',bem:'',kostenart:'',vorschuss:false});renderAusgaben()">+ Zeile</button></div>
     ${vorCard}`;
   renderAusTot();
